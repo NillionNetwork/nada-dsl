@@ -1,19 +1,18 @@
 from dataclasses import dataclass
 
-from nada_types import AllTypes
+from nada_dsl.nada_types import AllTypes
+from nada_dsl.source_ref import SourceRef
 
 
 @dataclass
 class Addition:
     right: AllTypes
     left: AllTypes
-    lineno: str
-    file: str
+    source_ref: SourceRef
 
 
 @dataclass
 class Multiplication:
     right: AllTypes
     left: AllTypes
-    lineno: str
-    file: str
+    source_ref: SourceRef

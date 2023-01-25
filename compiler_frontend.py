@@ -3,11 +3,11 @@ import os
 from json import JSONEncoder
 import inspect
 
-from circuit_io import Input, Output
-from future.nada_types.collections import Array, Vector, NadaTuple, ArrayType, VectorType, NadaTupleType
-from future.nada_types.function import NadaFunction
-from future.operations import Cast, Map, Reduce, Zip, Unzip
-from operations import Addition, Multiplication
+from nada_dsl.circuit_io import Input, Output
+from nada_dsl.future.nada_types.collections import Array, Vector, NadaTuple, ArrayType, VectorType, NadaTupleType
+from nada_dsl.future.nada_types.function import NadaFunction
+from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
+from nada_dsl.operations import Addition, Multiplication
 
 
 class ClassEncoder(JSONEncoder):
@@ -17,7 +17,7 @@ class ClassEncoder(JSONEncoder):
         return {type(o).__name__: o.__dict__}
 
 
-def compile(outputs: [Output], output_file: str):
+def nada_compile(outputs: [Output], output_file: str):
     try:
         os.mkdir("target")
     except FileExistsError:
@@ -36,8 +36,9 @@ def compile(outputs: [Output], output_file: str):
 
     cwd = os.getcwd()
 
+    file_path = os.path.dirname(os.path.realpath(__file__))
     os.system(
-        f'sh -c "cd ../compiler-backend && RUST_BACKTRACE=1 cargo run -- {cwd}/target/{output_file}.nada-mir.json {output_file}"')
+        f'sh -c "cd {file_path}/../compiler-backend && RUST_BACKTRACE=1 cargo run -- {cwd}/target/{output_file}.nada-mir.json {output_file}"')
 
 
 def typed_circuit_to_untyped(outputs: [Output]) -> [dict]:
@@ -48,8 +49,7 @@ def typed_circuit_to_untyped(outputs: [Output]) -> [dict]:
             "inner": new_out,
             "name": output.name,
             "type": to_type_dict(output.inner),
-            "lineno": output.lineno,
-            "file": output.file
+            'source_ref': output.source_ref.to_dict(),
         })
     return new_outputs
 
@@ -98,7 +98,7 @@ def to_fn_dict(fn: NadaFunction):
 
 
 def process_operation(operation_wrapper):
-    from future.nada_types.function import NadaFunctionArg
+    from nada_dsl.future.nada_types.function import NadaFunctionArg
 
     ty = to_type_dict(operation_wrapper)
     operation = get_inner(operation_wrapper)
@@ -108,9 +108,8 @@ def process_operation(operation_wrapper):
             'Addition': {
                 'right': process_operation(operation.right),
                 'left': process_operation(operation.left),
-                'lineno': operation.lineno,
-                'file': operation.file,
-                'type': ty
+                'type': ty,
+                'source_ref': operation.source_ref.to_dict()
             }
         }
     elif type(operation) == Multiplication:
@@ -118,9 +117,8 @@ def process_operation(operation_wrapper):
             'Multiplication': {
                 'right': process_operation(operation.right),
                 'left': process_operation(operation.left),
-                'lineno': operation.lineno,
-                'file': operation.file,
-                'type': ty
+                'type': ty,
+                'source_ref': operation.source_ref.to_dict()
             }
         }
     elif type(operation) == Cast:
@@ -128,9 +126,8 @@ def process_operation(operation_wrapper):
             'Cast': {
                 'target': process_operation(operation.target),
                 'to': operation.to.__name__,
-                'lineno': operation.lineno,
-                'file': operation.file,
-                'type': ty
+                'type': ty,
+                'source_ref': operation.source_ref.to_dict()
             }
         }
     elif type(operation) == Input:
@@ -139,13 +136,11 @@ def process_operation(operation_wrapper):
                 'type': ty,
                 'party': {
                     "name": operation.party.name,
-                    'lineno': operation.party.lineno,
-                    'file': operation.party.file,
+                    'source_ref': operation.party.source_ref.to_dict(),
                 },
                 'name': operation.name,
                 'doc': operation.doc,
-                'lineno': operation.lineno,
-                'file': operation.file,
+                'source_ref': operation.source_ref.to_dict()
             }
         }
     elif type(operation) == Map:
@@ -154,8 +149,7 @@ def process_operation(operation_wrapper):
                 'fn': to_fn_dict(operation.fn),
                 'inner': process_operation(operation.inner),
                 'type': ty,
-                'lineno': operation.lineno,
-                'file': operation.file,
+                'source_ref': operation.source_ref.to_dict()
             }
         }
     elif type(operation) == Reduce:
@@ -164,8 +158,7 @@ def process_operation(operation_wrapper):
                 'fn': to_fn_dict(operation.fn),
                 'inner': process_operation(operation.inner),
                 'type': ty,
-                'lineno': operation.lineno,
-                'file': operation.file,
+                'source_ref': operation.source_ref.to_dict()
             }
         }
     elif type(operation) == Zip:
@@ -174,8 +167,7 @@ def process_operation(operation_wrapper):
                 'left': process_operation(operation.left),
                 'right': process_operation(operation.right),
                 'type': ty,
-                'lineno': operation.lineno,
-                'file': operation.file,
+                'source_ref': operation.source_ref.to_dict()
             }
         }
     elif type(operation) == Unzip:
@@ -183,8 +175,7 @@ def process_operation(operation_wrapper):
             'Unzip': {
                 'inner': process_operation(operation.inner),
                 'type': ty,
-                'lineno': operation.lineno,
-                'file': operation.file,
+                'source_ref': operation.source_ref.to_dict()
             }
         }
     elif type(operation) == NadaFunctionArg:

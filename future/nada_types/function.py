@@ -2,8 +2,9 @@ import inspect
 from dataclasses import dataclass
 from typing import Generic, List, Callable
 
-from future.nada_types.generics import T, R
-from nada_types import AllTypes, NadaType
+from nada_dsl import SourceRef
+from nada_dsl.future.nada_types.generics import T, R
+from nada_dsl.nada_types import NadaType
 
 
 @dataclass
@@ -17,6 +18,10 @@ class NadaFunction(NadaType, Generic[T, R]):
     args: List[NadaFunctionArg]
     function: Callable[[T], R]
     return_type: R
+    source_ref: SourceRef
+
+    def __call__(self, *args, **kwargs) -> R:
+        return self.function(*args, **kwargs)
 
 
 def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
@@ -40,4 +45,10 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
 
     inner = fn(*nada_args_type_wrapped)
     return_type = return_ty if return_ty else args.annotations['return']
-    return NadaFunction(function=fn, args=nada_args, inner=inner, return_type=return_type)
+    return NadaFunction(
+        function=fn,
+        args=nada_args,
+        inner=inner,
+        return_type=return_type,
+        source_ref=SourceRef.back_frame()
+    )

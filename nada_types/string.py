@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from nada_types import NadaType
+from . import NadaType
 
 
 class StringEncodingCompare:

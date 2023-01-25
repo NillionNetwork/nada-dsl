@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from typing import Generic, Tuple
 
-from future.nada_types.function import NadaFunction
-from future.nada_types.generics import U, T, R
-from future.nada_types.integer import PublicBigInteger
-from future.operations import Map, Zip, Reduce
-from nada_types import NadaType, AllTypesType
-from util import get_back_file_lineno
+from nada_dsl import SourceRef
+from nada_dsl.future.nada_types.function import NadaFunction
+from nada_dsl.future.nada_types.generics import U, T, R
+from nada_dsl.future.nada_types.integer import PublicBigInteger
+from nada_dsl.future.operations import Map, Zip, Reduce
+from nada_dsl.nada_types import NadaType, AllTypesType
 
 
 @dataclass
@@ -47,7 +47,7 @@ class Array(Generic[T], NadaType):
         return Array(
             size=self.size,
             inner_type=function.return_type,
-            inner=Map(inner=self, fn=function, **get_back_file_lineno())
+            inner=Map(inner=self, fn=function, source_ref=SourceRef.back_frame())
         )
 
     def zip(self: 'Array[T]', other: 'Array[U]') -> 'Array[NadaTuple[T, U]]':
@@ -56,11 +56,11 @@ class Array(Generic[T], NadaType):
         return Array(
             size=self.size,
             inner_type=NadaTuple.generic_type(self.inner_type, other.inner_type),
-            inner=Zip(left=self, right=other, **get_back_file_lineno())
+            inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame())
         )
 
     def reduce(self: 'Array[T]', function: NadaFunction[T, R]) -> R:
-        return function.return_type(Reduce(inner=self, fn=function, **get_back_file_lineno()))
+        return function.return_type(Reduce(inner=self, fn=function, source_ref=SourceRef.back_frame()))
 
     @classmethod
     def generic_type(cls, inner_type: T, size: int) -> ArrayType:
@@ -90,18 +90,18 @@ class Vector(Generic[T], NadaType):
         return Vector(
             size=self.size,
             inner_type=function.return_type,
-            inner=(Map(inner=self, fn=function, **get_back_file_lineno()))
+            inner=(Map(inner=self, fn=function, source_ref=SourceRef.back_frame()))
         )
 
     def zip(self: 'Vector[T]', other: 'Vector[R]') -> 'Vector[Tuple[T, R]]':
         return Vector(
             size=self.size,
-            inner_type=NadaTuple(self.inner_type, other.inner_type),
-            inner=Zip(self, other, **get_back_file_lineno())
+            inner_type=NadaTuple.generic_type(self.inner_type, other.inner_type),
+            inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame())
         )
 
     def reduce(self: 'Vector[T]', function: NadaFunction[T, R]) -> R:
-        return function.return_type(Reduce(inner=self, fn=function, **get_back_file_lineno()))
+        return function.return_type(Reduce(inner=self, fn=function, source_ref=SourceRef.back_frame()))
 
     @classmethod
     def generic_type(cls, inner_type: T) -> VectorType:

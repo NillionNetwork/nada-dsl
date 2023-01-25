@@ -6,11 +6,9 @@ AllTypes = Union[
 AllTypesType = Union[
     Type['PublicInteger8'], Type['PublicInteger16'], Type['PublicBigInteger'], Type['SecretInteger8'], Type[
         'SecretInteger16'], Type['SecretBigInteger']]
-TypeInner = Union['Addition', 'Multiplication', 'Input', 'Cast']
+OperationType = Union['Addition', 'Multiplication', 'Input', 'Cast', 'Map', 'Zip', 'Reduce', 'Unzip']
+
 
 @dataclass
 class NadaType:
-    inner: TypeInner
-
-
-
+    inner: OperationType

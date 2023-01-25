@@ -1,53 +1,52 @@
 from dataclasses import dataclass
 
-from future.nada_types.function import NadaFunction
-from future.nada_types.generics import T, R
-from nada_types import AllTypes, AllTypesType, TypeInner
-from util import get_back_file_lineno
+from nada_dsl import SourceRef
+from nada_dsl.future.nada_types.function import NadaFunction
+from nada_dsl.future.nada_types.generics import T, R
+from nada_dsl.nada_types import AllTypes, AllTypesType, OperationType
 
 
 @dataclass
 class Cast:
     target: AllTypes
     to: AllTypesType
-    lineno: str
-    file: str
+    source_ref: SourceRef
 
 
 @dataclass
 class Map:
-    inner: TypeInner
+    inner: OperationType
     fn: NadaFunction[T, R]
-    lineno: str
-    file: str
+    source_ref: SourceRef
 
 
 @dataclass
 class Zip:
-    left: TypeInner
-    right: TypeInner
-    lineno: str
-    file: str
+    left: OperationType
+    right: OperationType
+    source_ref: SourceRef
 
 
 @dataclass
 class Reduce:
-    inner: TypeInner
+    inner: OperationType
     fn: NadaFunction[T, R]
-    lineno: str
-    file: str
+    source_ref: SourceRef
 
 
 @dataclass
 class Unzip:
-    inner: TypeInner
-    lineno: str
-    file: str
+    inner: OperationType
+    source_ref: SourceRef
 
 
 def unzip(array='Array[NadaTuple[T, R]]') -> 'NadaTuple[Array[T], Array[R]]':
-    from future.nada_types.collections import NadaTuple, Array
+    from nada_dsl.future.nada_types.collections import NadaTuple, Array
     right_type = Array.generic_type(array.inner_type.right_type, size=array.size)
     left_type = Array.generic_type(array.inner_type.left_type, size=array.size)
 
-    return NadaTuple(right_type=right_type, left_type=left_type, inner=Unzip(inner=array, **get_back_file_lineno()))
+    return NadaTuple(
+        right_type=right_type,
+        left_type=left_type,
+        inner=Unzip(inner=array, source_ref=SourceRef.back_frame())
+    )
