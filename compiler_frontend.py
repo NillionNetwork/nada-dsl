@@ -8,6 +8,7 @@ from nada_dsl.future.nada_types.collections import Array, Vector, NadaTuple, Arr
 from nada_dsl.future.nada_types.function import NadaFunction
 from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
 from nada_dsl.operations import Addition, Multiplication
+import nada_compiler_backend as compiler_backend
 
 
 class ClassEncoder(JSONEncoder):
@@ -18,30 +19,38 @@ class ClassEncoder(JSONEncoder):
 
 
 def nada_compile(outputs: [Output], output_file: str):
+    cwd = os.getcwd()
+
     try:
         os.mkdir("target")
     except FileExistsError:
         pass
 
+    target_dir = os.path.join(cwd, "target")
+
+    compile_to_nada_pydsl_hir(output_file, outputs, target_dir)
+
+    compile_to_nada_mir(target_dir, outputs, output_file)
+
+    compiler_backend.compile(f"{cwd}/target", f"{cwd}/target/{output_file}.nada-mir.json", output_file)
+
+
+def compile_to_nada_pydsl_hir(output_file, outputs, target_dir):
     nada_pydsl_hir = json.dumps(outputs, cls=ClassEncoder, indent=2)
-    with open(f"./target/{output_file}.nada-pydsl-hir.json", "w") as file:
+    with open(f"{target_dir}/{output_file}.nada-pydsl-hir.json", "w") as file:
         file.write(nada_pydsl_hir)
 
-    outputs = typed_circuit_to_untyped(outputs)
+
+def compile_to_nada_mir(target_dir, outputs, output_file):
+    outputs = nada_dsl_to_nada_mir(outputs)
 
     nada_mir = json.dumps(outputs, indent=2)
 
-    with open(f"./target/{output_file}.nada-mir.json", "w") as file:
+    with open(f"{target_dir}/{output_file}.nada-mir.json", "w") as file:
         file.write(nada_mir)
 
-    cwd = os.getcwd()
 
-    file_path = os.path.dirname(os.path.realpath(__file__))
-    os.system(
-        f'sh -c "cd {file_path}/../compiler-backend && RUST_BACKTRACE=1 cargo run -- {cwd}/target/{output_file}.nada-mir.json {output_file}"')
-
-
-def typed_circuit_to_untyped(outputs: [Output]) -> [dict]:
+def nada_dsl_to_nada_mir(outputs: [Output]) -> [dict]:
     new_outputs = []
     for output in outputs:
         new_out = process_operation(output.inner)
@@ -81,10 +90,6 @@ def to_type_dict(op_wrapper):
         return op_wrapper.__class__.__name__
 
 
-def get_inner(op_wrapper):
-    return op_wrapper.inner
-
-
 def to_fn_dict(fn: NadaFunction):
     return {
         'args': [{
@@ -101,7 +106,7 @@ def process_operation(operation_wrapper):
     from nada_dsl.future.nada_types.function import NadaFunctionArg
 
     ty = to_type_dict(operation_wrapper)
-    operation = get_inner(operation_wrapper)
+    operation = operation_wrapper.inner
 
     if type(operation) == Addition:
         return {

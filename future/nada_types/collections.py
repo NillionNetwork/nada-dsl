@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Generic, Tuple
 
 from nada_dsl import SourceRef
+from nada_dsl.errors import NadaNotAllowedException
 from nada_dsl.future.nada_types.function import NadaFunction
 from nada_dsl.future.nada_types.generics import U, T, R
 from nada_dsl.future.nada_types.integer import PublicBigInteger
@@ -30,6 +31,7 @@ class ArrayType:
     inner_type: AllTypesType
     size: int
 
+
 @dataclass
 class Array(Generic[T], NadaType):
     """
@@ -42,6 +44,11 @@ class Array(Generic[T], NadaType):
         self.inner_type = inner_type if inner_type else type(inner)
         self.size = size
         self.inner = inner if inner_type else inner.inner
+
+    def __iter__(self):
+        raise NadaNotAllowedException(
+            "Cannot iterate/for loop over a nada Array, use functional style Array functions instead (map, reduce, zip)"
+        )
 
     def map(self: 'Array[T]', function: NadaFunction[T, U]) -> 'Array[U]':
         return Array(
@@ -85,6 +92,12 @@ class Vector(Generic[T], NadaType):
         self.inner_type = inner_type if inner_type else type(inner)
         self.size = size
         self.inner = inner if inner_type else inner.inner
+
+    def __iter__(self):
+        raise NadaNotAllowedException(
+            "Cannot iterate/for loop over a nada Vector," +
+            " use functional style Vector functions instead (map, reduce, zip)"
+        )
 
     def map(self: 'Vector[T]', function: NadaFunction[T, R]) -> 'Vector[R]':
         return Vector(
