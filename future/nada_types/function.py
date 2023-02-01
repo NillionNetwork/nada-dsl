@@ -44,11 +44,11 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
         nada_args_type_wrapped.append(arg.type(inner=arg))
 
     inner = fn(*nada_args_type_wrapped)
-    return_type = return_ty if return_ty else args.annotations['return']
+    return_type = return_ty if return_ty else args.annotations["return"]
     return NadaFunction(
         function=fn,
         args=nada_args,
         inner=inner,
         return_type=return_type,
-        source_ref=SourceRef.back_frame()
+        source_ref=SourceRef.back_frame(),
     )

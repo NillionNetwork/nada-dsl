@@ -37,6 +37,7 @@ class Array(Generic[T], NadaType):
     """
     Arrays have fixed size at compile time.
     """
+
     inner_type: T
     size: int
 
@@ -50,24 +51,26 @@ class Array(Generic[T], NadaType):
             "Cannot iterate/for loop over a nada Array, use functional style Array functions instead (map, reduce, zip)"
         )
 
-    def map(self: 'Array[T]', function: NadaFunction[T, U]) -> 'Array[U]':
+    def map(self: "Array[T]", function: NadaFunction[T, U]) -> "Array[U]":
         return Array(
             size=self.size,
             inner_type=function.return_type,
-            inner=Map(inner=self, fn=function, source_ref=SourceRef.back_frame())
+            inner=Map(inner=self, fn=function, source_ref=SourceRef.back_frame()),
         )
 
-    def zip(self: 'Array[T]', other: 'Array[U]') -> 'Array[NadaTuple[T, U]]':
+    def zip(self: "Array[T]", other: "Array[U]") -> "Array[NadaTuple[T, U]]":
         if self.size != other.size:
             raise Exception("Cannot zip arrays of different size")
         return Array(
             size=self.size,
             inner_type=NadaTuple.generic_type(self.inner_type, other.inner_type),
-            inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame())
+            inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
 
-    def reduce(self: 'Array[T]', function: NadaFunction[T, R]) -> R:
-        return function.return_type(Reduce(inner=self, fn=function, source_ref=SourceRef.back_frame()))
+    def reduce(self: "Array[T]", function: NadaFunction[T, R]) -> R:
+        return function.return_type(
+            Reduce(inner=self, fn=function, source_ref=SourceRef.back_frame())
+        )
 
     @classmethod
     def generic_type(cls, inner_type: T, size: int) -> ArrayType:
@@ -95,26 +98,28 @@ class Vector(Generic[T], NadaType):
 
     def __iter__(self):
         raise NadaNotAllowedException(
-            "Cannot iterate/for loop over a nada Vector," +
-            " use functional style Vector functions instead (map, reduce, zip)"
+            "Cannot iterate/for loop over a nada Vector,"
+            + " use functional style Vector functions instead (map, reduce, zip)"
         )
 
-    def map(self: 'Vector[T]', function: NadaFunction[T, R]) -> 'Vector[R]':
+    def map(self: "Vector[T]", function: NadaFunction[T, R]) -> "Vector[R]":
         return Vector(
             size=self.size,
             inner_type=function.return_type,
-            inner=(Map(inner=self, fn=function, source_ref=SourceRef.back_frame()))
+            inner=(Map(inner=self, fn=function, source_ref=SourceRef.back_frame())),
         )
 
-    def zip(self: 'Vector[T]', other: 'Vector[R]') -> 'Vector[Tuple[T, R]]':
+    def zip(self: "Vector[T]", other: "Vector[R]") -> "Vector[Tuple[T, R]]":
         return Vector(
             size=self.size,
             inner_type=NadaTuple.generic_type(self.inner_type, other.inner_type),
-            inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame())
+            inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
 
-    def reduce(self: 'Vector[T]', function: NadaFunction[T, R]) -> R:
-        return function.return_type(Reduce(inner=self, fn=function, source_ref=SourceRef.back_frame()))
+    def reduce(self: "Vector[T]", function: NadaFunction[T, R]) -> R:
+        return function.return_type(
+            Reduce(inner=self, fn=function, source_ref=SourceRef.back_frame())
+        )
 
     @classmethod
     def generic_type(cls, inner_type: T) -> VectorType:

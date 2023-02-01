@@ -37,4 +37,3 @@ class Output:
         self.inner = inner
         self.name = name
         self.source_ref = SourceRef.back_frame()
-

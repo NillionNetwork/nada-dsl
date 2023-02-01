@@ -40,13 +40,14 @@ class Unzip:
     source_ref: SourceRef
 
 
-def unzip(array='Array[NadaTuple[T, R]]') -> 'NadaTuple[Array[T], Array[R]]':
+def unzip(array="Array[NadaTuple[T, R]]") -> "NadaTuple[Array[T], Array[R]]":
     from nada_dsl.future.nada_types.collections import NadaTuple, Array
+
     right_type = Array.generic_type(array.inner_type.right_type, size=array.size)
     left_type = Array.generic_type(array.inner_type.left_type, size=array.size)
 
     return NadaTuple(
         right_type=right_type,
         left_type=left_type,
-        inner=Unzip(inner=array, source_ref=SourceRef.back_frame())
+        inner=Unzip(inner=array, source_ref=SourceRef.back_frame()),
     )

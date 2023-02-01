@@ -4,7 +4,14 @@ from json import JSONEncoder
 import inspect
 
 from nada_dsl.circuit_io import Input, Output
-from nada_dsl.future.nada_types.collections import Array, Vector, NadaTuple, ArrayType, VectorType, NadaTupleType
+from nada_dsl.future.nada_types.collections import (
+    Array,
+    Vector,
+    NadaTuple,
+    ArrayType,
+    VectorType,
+    NadaTupleType,
+)
 from nada_dsl.future.nada_types.function import NadaFunction
 from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
 from nada_dsl.operations import Addition, Multiplication
@@ -32,7 +39,9 @@ def nada_compile(outputs: [Output], output_file: str):
 
     compile_to_nada_mir(target_dir, outputs, output_file)
 
-    compiler_backend.compile(f"{cwd}/target", f"{cwd}/target/{output_file}.nada-mir.json", output_file)
+    compiler_backend.compile(
+        f"{cwd}/target", f"{cwd}/target/{output_file}.nada-mir.json", output_file
+    )
 
 
 def compile_to_nada_pydsl_hir(output_file, outputs, target_dir):
@@ -54,12 +63,14 @@ def nada_dsl_to_nada_mir(outputs: [Output]) -> [dict]:
     new_outputs = []
     for output in outputs:
         new_out = process_operation(output.inner)
-        new_outputs.append({
-            "inner": new_out,
-            "name": output.name,
-            "type": to_type_dict(output.inner),
-            'source_ref': output.source_ref.to_dict(),
-        })
+        new_outputs.append(
+            {
+                "inner": new_out,
+                "name": output.name,
+                "type": to_type_dict(output.inner),
+                "source_ref": output.source_ref.to_dict(),
+            }
+        )
     return new_outputs
 
 
@@ -68,15 +79,11 @@ def to_type_dict(op_wrapper):
         return {
             "Array": {
                 "size": op_wrapper.size,
-                "inner_type": to_type_dict(op_wrapper.inner_type)
+                "inner_type": to_type_dict(op_wrapper.inner_type),
             }
         }
     elif type(op_wrapper) == Vector or type(op_wrapper) == VectorType:
-        return {
-            "Vector": {
-                "inner_type": to_type_dict(op_wrapper.inner_type)
-            }
-        }
+        return {"Vector": {"inner_type": to_type_dict(op_wrapper.inner_type)}}
     elif type(op_wrapper) == NadaTuple or type(op_wrapper) == NadaTupleType:
         return {
             "NadaTuple": {
@@ -92,13 +99,10 @@ def to_type_dict(op_wrapper):
 
 def to_fn_dict(fn: NadaFunction):
     return {
-        'args': [{
-            'name': arg.name,
-            'type': arg.type.__name__
-        } for arg in fn.args],
-        'function': fn.function.__name__,
-        'inner': process_operation(fn.inner),
-        'return_type': fn.return_type.__name__,
+        "args": [{"name": arg.name, "type": arg.type.__name__} for arg in fn.args],
+        "function": fn.function.__name__,
+        "inner": process_operation(fn.inner),
+        "return_type": fn.return_type.__name__,
     }
 
 
@@ -110,84 +114,84 @@ def process_operation(operation_wrapper):
 
     if type(operation) == Addition:
         return {
-            'Addition': {
-                'right': process_operation(operation.right),
-                'left': process_operation(operation.left),
-                'type': ty,
-                'source_ref': operation.source_ref.to_dict()
+            "Addition": {
+                "right": process_operation(operation.right),
+                "left": process_operation(operation.left),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif type(operation) == Multiplication:
         return {
-            'Multiplication': {
-                'right': process_operation(operation.right),
-                'left': process_operation(operation.left),
-                'type': ty,
-                'source_ref': operation.source_ref.to_dict()
+            "Multiplication": {
+                "right": process_operation(operation.right),
+                "left": process_operation(operation.left),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif type(operation) == Cast:
         return {
-            'Cast': {
-                'target': process_operation(operation.target),
-                'to': operation.to.__name__,
-                'type': ty,
-                'source_ref': operation.source_ref.to_dict()
+            "Cast": {
+                "target": process_operation(operation.target),
+                "to": operation.to.__name__,
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif type(operation) == Input:
         return {
-            'Input': {
-                'type': ty,
-                'party': {
+            "Input": {
+                "type": ty,
+                "party": {
                     "name": operation.party.name,
-                    'source_ref': operation.party.source_ref.to_dict(),
+                    "source_ref": operation.party.source_ref.to_dict(),
                 },
-                'name': operation.name,
-                'doc': operation.doc,
-                'source_ref': operation.source_ref.to_dict()
+                "name": operation.name,
+                "doc": operation.doc,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif type(operation) == Map:
         return {
-            'Map': {
-                'fn': to_fn_dict(operation.fn),
-                'inner': process_operation(operation.inner),
-                'type': ty,
-                'source_ref': operation.source_ref.to_dict()
+            "Map": {
+                "fn": to_fn_dict(operation.fn),
+                "inner": process_operation(operation.inner),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif type(operation) == Reduce:
         return {
-            'Reduce': {
-                'fn': to_fn_dict(operation.fn),
-                'inner': process_operation(operation.inner),
-                'type': ty,
-                'source_ref': operation.source_ref.to_dict()
+            "Reduce": {
+                "fn": to_fn_dict(operation.fn),
+                "inner": process_operation(operation.inner),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif type(operation) == Zip:
         return {
-            'Zip': {
-                'left': process_operation(operation.left),
-                'right': process_operation(operation.right),
-                'type': ty,
-                'source_ref': operation.source_ref.to_dict()
+            "Zip": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif type(operation) == Unzip:
         return {
-            'Unzip': {
-                'inner': process_operation(operation.inner),
-                'type': ty,
-                'source_ref': operation.source_ref.to_dict()
+            "Unzip": {
+                "inner": process_operation(operation.inner),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif type(operation) == NadaFunctionArg:
         return {
-            'NadaFunctionArg': {
-                'name': operation.name,
-                'type': operation.type.__name__,
+            "NadaFunctionArg": {
+                "name": operation.name,
+                "type": operation.type.__name__,
             }
         }
 

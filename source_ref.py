@@ -9,7 +9,7 @@ class SourceRef:
     source_snippet: str
 
     @classmethod
-    def back_frame(cls) -> 'SourceRef':
+    def back_frame(cls) -> "SourceRef":
         back_stackframe = inspect.currentframe().f_back.f_back
         lineno = back_stackframe.f_lineno
         return cls(
@@ -26,7 +26,9 @@ class SourceRef:
         except OSError:
             return ""
 
-        if "__file__" in code.f_locals:  # is a file we can calculate src snippet from lineno
+        if (
+            "__file__" in code.f_locals
+        ):  # is a file we can calculate src snippet from lineno
             lines = src.splitlines()
             src_from = lineno - 3 if lineno > 3 else 0
             src_to = lineno + 3 if lineno + 3 < len(lines) else len(lines)
