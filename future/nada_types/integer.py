@@ -13,7 +13,7 @@ class PublicInteger8(NadaType):
     def __add__(
         self, other: Union["PublicInteger8", "SecretInteger8"]
     ) -> Union["PublicInteger8", "SecretInteger8"]:
-        addition = Addition(right=self, left=other, source_ref=SourceRef.back_frame())
+        addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
         if type(other) == PublicInteger8:
             return PublicInteger8(inner=addition)
         elif type(other) == SecretInteger8:
@@ -25,7 +25,7 @@ class PublicInteger8(NadaType):
         self, other: Union["PublicInteger8", "SecretInteger8"]
     ) -> Union["PublicInteger8", "SecretInteger8"]:
         multiplication = Multiplication(
-            right=self, left=other, source_ref=SourceRef.back_frame()
+            left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if type(other) == PublicInteger8:
             return PublicInteger8(inner=multiplication)
@@ -45,7 +45,7 @@ class PublicInteger16(NadaType):
     def __add__(
         self, other: Union["PublicInteger16", "SecretInteger16"]
     ) -> Union["PublicInteger16", "SecretInteger16"]:
-        addition = Addition(right=self, left=other, source_ref=SourceRef.back_frame())
+        addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
         if type(other) == PublicInteger16:
             return PublicInteger16(inner=addition)
         elif type(other) == SecretInteger16:
@@ -57,7 +57,7 @@ class PublicInteger16(NadaType):
         self, other: Union["PublicInteger16", "SecretInteger16"]
     ) -> Union["PublicInteger16", "SecretInteger16"]:
         multiplication = Multiplication(
-            right=self, left=other, source_ref=SourceRef.back_frame()
+            left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if type(other) == PublicInteger16:
             return PublicInteger16(inner=multiplication)
@@ -72,7 +72,7 @@ class PublicBigInteger(NadaType):
     def __add__(
         self, other: Union["PublicBigInteger", "SecretBigInteger"]
     ) -> Union["PublicBigInteger", "SecretBigInteger"]:
-        addition = Addition(right=self, left=other, source_ref=SourceRef.back_frame())
+        addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
         if type(other) == PublicBigInteger:
             return PublicBigInteger(inner=addition)
         elif type(other) == SecretBigInteger:
@@ -84,7 +84,7 @@ class PublicBigInteger(NadaType):
         self, other: Union["PublicBigInteger", "SecretBigInteger"]
     ) -> Union["PublicBigInteger", "SecretBigInteger"]:
         multiplication = Multiplication(
-            right=self, left=other, source_ref=SourceRef.back_frame()
+            left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if type(other) == PublicBigInteger:
             return PublicBigInteger(inner=multiplication)
@@ -99,7 +99,7 @@ class SecretInteger8(NadaType):
     def __add__(
         self, other: Union["PublicInteger8", "SecretInteger8"]
     ) -> Union["SecretInteger8"]:
-        addition = Addition(right=self, left=other, source_ref=SourceRef.back_frame())
+        addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
         if type(other) == PublicInteger8 or type(other) == SecretInteger8:
             return SecretInteger8(inner=addition)
         else:
@@ -109,7 +109,7 @@ class SecretInteger8(NadaType):
         self, other: Union["PublicInteger8", "SecretInteger8"]
     ) -> Union["SecretInteger8"]:
         multiplication = Multiplication(
-            right=self, left=other, source_ref=SourceRef.back_frame()
+            left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if type(other) == PublicInteger8 or type(other) == SecretInteger8:
             return SecretInteger8(inner=multiplication)
@@ -127,7 +127,7 @@ class SecretInteger16(NadaType):
     def __add__(
         self, other: Union["PublicInteger16", "SecretInteger16"]
     ) -> Union["SecretInteger16"]:
-        addition = Addition(right=self, left=other, source_ref=SourceRef.back_frame())
+        addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
         if type(other) == PublicInteger16 or type(other) == SecretInteger16:
             return SecretInteger16(inner=addition)
         else:
@@ -137,7 +137,7 @@ class SecretInteger16(NadaType):
         self, other: Union["PublicInteger16", "SecretInteger16"]
     ) -> Union["SecretInteger16"]:
         multiplication = Multiplication(
-            right=self, left=other, source_ref=SourceRef.back_frame()
+            left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if type(other) == PublicInteger16 or type(other) == SecretInteger16:
             return SecretInteger16(inner=multiplication)

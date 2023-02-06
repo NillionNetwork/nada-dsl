@@ -9,7 +9,7 @@ from nada_dsl.source_ref import SourceRef
 @dataclass
 class SecretBigInteger(NadaType):
     def __add__(self, other: Union["SecretBigInteger"]) -> Union["SecretBigInteger"]:
-        addition = Addition(right=self, left=other, source_ref=SourceRef.back_frame())
+        addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
         if type(other) == SecretBigInteger:
             return SecretBigInteger(inner=addition)
         else:
@@ -17,7 +17,7 @@ class SecretBigInteger(NadaType):
 
     def __mul__(self, other: Union["SecretBigInteger"]) -> Union["SecretBigInteger"]:
         multiplication = Multiplication(
-            right=self, left=other, source_ref=SourceRef.back_frame()
+            left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if type(other) == SecretBigInteger:
             return SecretBigInteger(inner=multiplication)
