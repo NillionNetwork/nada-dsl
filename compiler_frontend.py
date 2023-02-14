@@ -25,7 +25,12 @@ class ClassEncoder(JSONEncoder):
         return {type(o).__name__: o.__dict__}
 
 
-def nada_compile(outputs: [Output], output_file: str):
+def nada_compile(
+    outputs: [Output],
+    output_file: str,
+    is_hir_json_required=False,
+    is_bytecode_json_required=False,
+):
     cwd = os.getcwd()
 
     try:
@@ -35,26 +40,29 @@ def nada_compile(outputs: [Output], output_file: str):
 
     target_dir = os.path.join(cwd, "target")
 
-    compile_to_nada_pydsl_hir(output_file, outputs, target_dir)
+    compile_to_nada_pydsl_hir(output_file, outputs, target_dir, is_hir_json_required)
 
     compile_to_nada_mir(target_dir, outputs, output_file)
 
     compiler_backend.compile(
-        f"{cwd}/target", f"{cwd}/target/{output_file}.nada-mir.json", output_file
+        f"{cwd}/target",
+        f"{cwd}/target/{output_file}.nada-mir.json",
+        output_file,
+        is_bytecode_json_required,
     )
 
 
-def compile_to_nada_pydsl_hir(output_file, outputs, target_dir):
+def compile_to_nada_pydsl_hir(output_file, outputs, target_dir, is_hir_json_required):
     nada_pydsl_hir = json.dumps(outputs, cls=ClassEncoder, indent=2)
-    with open(f"{target_dir}/{output_file}.nada-pydsl-hir.json", "w") as file:
-        file.write(nada_pydsl_hir)
+    if is_hir_json_required:
+        with open(f"{target_dir}/{output_file}.nada-pydsl-hir.json", "w") as file:
+            file.write(nada_pydsl_hir)
 
 
 def compile_to_nada_mir(target_dir, outputs, output_file):
     outputs = nada_dsl_to_nada_mir(outputs)
 
     nada_mir = json.dumps(outputs, indent=2)
-
     with open(f"{target_dir}/{output_file}.nada-mir.json", "w") as file:
         file.write(nada_mir)
 
