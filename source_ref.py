@@ -1,6 +1,9 @@
+import os
+import sys
 from dataclasses import dataclass
 import inspect
 
+ROOT_PATH = os.path.dirname(sys.modules['__main__'].__file__) + "/"
 
 @dataclass
 class SourceRef:
@@ -14,7 +17,7 @@ class SourceRef:
         lineno = back_stackframe.f_lineno
         return cls(
             lineno=lineno,
-            file=back_stackframe.f_code.co_filename,
+            file=back_stackframe.f_code.co_filename.replace(ROOT_PATH, ""),
             source_snippet=SourceRef.try_get_source_snippet(back_stackframe, lineno),
         )
 
