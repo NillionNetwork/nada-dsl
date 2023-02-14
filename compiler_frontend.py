@@ -31,6 +31,7 @@ def nada_compile(
     output_file: str,
     is_hir_json_required=False,
     is_bytecode_json_required=False,
+    is_jit_json_required=False,
 ):
     cwd = os.getcwd()
 
@@ -50,6 +51,7 @@ def nada_compile(
         f"{cwd}/target/{output_file}.nada-mir.json",
         output_file,
         is_bytecode_json_required,
+        is_jit_json_required
     )
 
 
