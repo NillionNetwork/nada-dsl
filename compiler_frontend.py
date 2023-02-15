@@ -15,7 +15,7 @@ from nada_dsl.future.nada_types.collections import (
 from nada_dsl.future.nada_types.function import NadaFunction
 from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
 from nada_dsl.operations import Addition, Multiplication
-import nada_compiler_backend as compiler_backend
+import nada_compiler_backend_python as compiler_backend
 
 
 class ClassEncoder(JSONEncoder):
