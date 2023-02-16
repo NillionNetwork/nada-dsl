@@ -3,6 +3,7 @@ import os
 from json import JSONEncoder
 import inspect
 
+from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output
 from nada_dsl.future.nada_types.collections import (
     Array,
@@ -60,14 +61,14 @@ def compile_to_nada_pydsl_hir(output_file, outputs, target_dir, is_hir_json_requ
 
 
 def compile_to_nada_mir(target_dir, outputs, output_file):
-    outputs = nada_dsl_to_nada_mir(outputs)
+    circuit = nada_dsl_to_nada_mir(outputs)
 
-    nada_mir = json.dumps(outputs, indent=2)
+    nada_mir = json.dumps(circuit, indent=2)
     with open(f"{target_dir}/{output_file}.nada-mir.json", "w") as file:
         file.write(nada_mir)
 
 
-def nada_dsl_to_nada_mir(outputs: [Output]) -> [dict]:
+def nada_dsl_to_nada_mir(outputs: [Output]):
     new_outputs = []
     for output in outputs:
         new_out = process_operation(output.inner)
@@ -79,7 +80,11 @@ def nada_dsl_to_nada_mir(outputs: [Output]) -> [dict]:
                 "source_ref": output.source_ref.to_dict(),
             }
         )
-    return new_outputs
+
+    return {
+        "outputs": new_outputs,
+        "source_ref": SourceRef.circuit_frame().to_dict(),
+    }
 
 
 def to_type_dict(op_wrapper):
