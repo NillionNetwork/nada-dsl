@@ -41,7 +41,8 @@ def nada_compile(
 
     target_dir = os.path.join(cwd, "target")
 
-    compile_to_nada_pydsl_hir(output_file, outputs, target_dir, is_hir_json_required)
+    if is_hir_json_required:
+        compile_to_nada_pydsl_hir(output_file, outputs, target_dir)
 
     compile_to_nada_mir(target_dir, outputs, output_file)
 
@@ -53,16 +54,14 @@ def nada_compile(
     )
 
 
-def compile_to_nada_pydsl_hir(output_file, outputs, target_dir, is_hir_json_required):
+def compile_to_nada_pydsl_hir(output_file, outputs, target_dir):
     nada_pydsl_hir = json.dumps(outputs, cls=ClassEncoder, indent=2)
-    if is_hir_json_required:
-        with open(f"{target_dir}/{output_file}.nada-pydsl-hir.json", "w") as file:
-            file.write(nada_pydsl_hir)
+    with open(f"{target_dir}/{output_file}.nada-pydsl-hir.json", "w") as file:
+        file.write(nada_pydsl_hir)
 
 
 def compile_to_nada_mir(target_dir, outputs, output_file):
     circuit = nada_dsl_to_nada_mir(outputs)
-
     nada_mir = json.dumps(circuit, indent=2)
     with open(f"{target_dir}/{output_file}.nada-mir.json", "w") as file:
         file.write(nada_mir)
