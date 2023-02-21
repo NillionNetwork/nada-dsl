@@ -8,6 +8,7 @@ AllTypes = Union[
     "SecretInteger8",
     "SecretInteger16",
     "SecretBigInteger",
+    "SecretBoolean",
 ]
 AllTypesType = Union[
     Type["PublicInteger8"],
@@ -18,7 +19,15 @@ AllTypesType = Union[
     Type["SecretBigInteger"],
 ]
 OperationType = Union[
-    "Addition", "Multiplication", "Input", "Cast", "Map", "Zip", "Reduce", "Unzip"
+    "Addition",
+    "Multiplication",
+    "Input",
+    "Cast",
+    "Map",
+    "Zip",
+    "Reduce",
+    "Unzip",
+    "CompareLessThan",
 ]
 
 

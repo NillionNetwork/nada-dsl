@@ -2,6 +2,7 @@ import json
 import os
 from json import JSONEncoder
 import inspect
+from typing import List
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output
@@ -15,7 +16,7 @@ from nada_dsl.future.nada_types.collections import (
 )
 from nada_dsl.future.nada_types.function import NadaFunction
 from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
-from nada_dsl.operations import Addition, Multiplication
+from nada_dsl.operations import Addition, Multiplication, CompareLessThan
 import nada_compiler_backend_python as compiler_backend
 
 
@@ -27,7 +28,7 @@ class ClassEncoder(JSONEncoder):
 
 
 def nada_compile(
-    outputs: [Output],
+    outputs: List[Output],
     output_file: str,
     is_hir_json_required=False,
     is_bytecode_json_required=False,
@@ -67,7 +68,7 @@ def compile_to_nada_mir(target_dir, outputs, output_file):
         file.write(nada_mir)
 
 
-def nada_dsl_to_nada_mir(outputs: [Output]):
+def nada_dsl_to_nada_mir(outputs: List[Output]):
     new_outputs = []
     for output in outputs:
         new_out = process_operation(output.inner)
@@ -195,6 +196,15 @@ def process_operation(operation_wrapper):
         return {
             "Unzip": {
                 "inner": process_operation(operation.inner),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == CompareLessThan:
+        return {
+            "CompareLessThan": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }

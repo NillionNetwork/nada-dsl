@@ -16,3 +16,10 @@ class Multiplication:
     right: AllTypes
     left: AllTypes
     source_ref: SourceRef
+
+
+@dataclass
+class CompareLessThan:
+    left: AllTypes
+    right: AllTypes
+    source_ref: SourceRef
