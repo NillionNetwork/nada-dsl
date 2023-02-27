@@ -17,6 +17,7 @@ from input_single import outputs as input_single
 from integer import outputs as integer
 from multiplication_simple import outputs as multiplication_simple
 from output_multiple import outputs as output_multiple
+from import_file import outputs as import_file
 
 mir_files_directory = os.path.join(os.path.dirname(os.path.realpath(__file__)), f"../tests/resources/mir/")
 
@@ -29,6 +30,7 @@ testdata = [
     (integer, 'current.integer'),
     (multiplication_simple, 'current.multiplication_simple'),
     (output_multiple, 'current.output_multiple'),
+    (import_file, 'current.import_file'),
 ]
 
 test_ids = [
@@ -40,6 +42,7 @@ test_ids = [
     'integer',
     'multiplication_simple',
     'output_multiple',
+    'import_file',
 ]
 
 

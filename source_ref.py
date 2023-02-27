@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass
 import inspect
 
+USED_SOURCES = {}
 
 @dataclass
 class SourceRef:
@@ -11,20 +12,9 @@ class SourceRef:
     length: int
 
     @classmethod
-    def circuit_frame(cls) -> "SourceRef":
-        back_stackframe = inspect.currentframe().f_back.f_back.f_back.f_back
-        source_snippet = inspect.getsource(back_stackframe)
-        return cls(
-            file=os.path.basename(back_stackframe.f_code.co_filename),
-            source_snippet=source_snippet,
-        )
-
-    @classmethod
     def back_frame(cls) -> "SourceRef":
-        lineno = inspect.currentframe().f_back.f_back.f_lineno
-        backend_frame = inspect.currentframe()
-        while "__file__" not in backend_frame.f_locals:
-            backend_frame = backend_frame.f_back
+        backend_frame = inspect.currentframe().f_back.f_back
+        lineno = backend_frame.f_lineno
         (offset, length, snippet) = SourceRef.try_get_line_info(backend_frame, lineno)
         return cls(
             lineno=lineno,
@@ -34,10 +24,17 @@ class SourceRef:
         )
 
     @staticmethod
-    def try_get_line_info(code, lineno) -> (int, int):
+    def try_get_line_info(backend_frame, lineno) -> (int, int):
+        filename = os.path.basename(backend_frame.f_code.co_filename)
+
         src = None
         try:
-            src = inspect.getsource(code)
+            if filename not in USED_SOURCES:
+                with open(f"{backend_frame.f_code.co_filename}") as file:
+                    src = file.read()
+                USED_SOURCES[filename] = src
+            else:
+                src = USED_SOURCES[filename]
         except OSError:
             return ""
 
@@ -57,3 +54,6 @@ class SourceRef:
             "file": self.file,
             "length": self.length,
         }
+    @staticmethod
+    def get_sources():
+        return USED_SOURCES

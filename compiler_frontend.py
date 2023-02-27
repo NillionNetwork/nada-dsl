@@ -83,17 +83,10 @@ def nada_dsl_to_nada_mir(outputs: List[Output]):
 
     return {
         "outputs": new_outputs,
-        "sources": get_sources(),
+        "source_files": SourceRef.get_sources(),
     }
 
 
-def get_sources():
-    back_stackframe = inspect.currentframe().f_back.f_back.f_back.f_back
-    source_snippet = inspect.getsource(back_stackframe)
-    return [{
-        "file": os.path.basename(back_stackframe.f_code.co_filename),
-        "snippet": source_snippet,
-    }]
 
 
 def to_type_dict(op_wrapper):
