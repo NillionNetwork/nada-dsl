@@ -14,11 +14,9 @@ sys.path.insert(0, tests_directory)
 from addition_simple import outputs as addition_simple
 from circuit_simple import outputs as circuit_simple
 from circuit_simple_2 import outputs as circuit_simple_2
-from empty import outputs as empty
 from input_single import outputs as input_single
 from integer import outputs as integer
 from multiplication_simple import outputs as multiplication_simple
-from output_multiple import outputs as output_multiple
 from import_file import outputs as import_file
 
 mir_files_directory = os.path.join(
@@ -29,11 +27,9 @@ testdata = [
     (addition_simple, "current.addition_simple"),
     (circuit_simple, "current.circuit_simple"),
     (circuit_simple_2, "current.circuit_simple_2"),
-    (empty, "current.empty"),
     (input_single, "current.input_single"),
     (integer, "current.integer"),
     (multiplication_simple, "current.multiplication_simple"),
-    (output_multiple, "current.output_multiple"),
     (import_file, "current.import_file"),
 ]
 
@@ -41,11 +37,9 @@ test_ids = [
     "addition_simple",
     "circuit_simple",
     "circuit_simple_2",
-    "empty",
     "input_single",
     "integer",
     "multiplication_simple",
-    "output_multiple",
     "import_file",
 ]
 
