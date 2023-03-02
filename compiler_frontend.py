@@ -6,6 +6,7 @@ from typing import List
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output
+from nada_dsl.nada_types.float import SecretFixedFloatPoint
 from nada_dsl.future.nada_types.collections import (
     Array,
     Vector,
@@ -87,8 +88,6 @@ def nada_dsl_to_nada_mir(outputs: List[Output]):
     }
 
 
-
-
 def to_type_dict(op_wrapper):
     if type(op_wrapper) == Array or type(op_wrapper) == ArrayType:
         return {
@@ -104,6 +103,12 @@ def to_type_dict(op_wrapper):
             "NadaTuple": {
                 "left_type": to_type_dict(op_wrapper.left_type),
                 "right_type": to_type_dict(op_wrapper.right_type),
+            }
+        }
+    elif type(op_wrapper) == SecretFixedFloatPoint:
+        return {
+            "SecretFixedFloatPoint": {
+                "decimals": op_wrapper.decimals,
             }
         }
     elif inspect.isclass(op_wrapper):

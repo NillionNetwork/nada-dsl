@@ -4,6 +4,7 @@ import inspect
 
 USED_SOURCES = {}
 
+
 @dataclass
 class SourceRef:
     file: str
@@ -54,6 +55,7 @@ class SourceRef:
             "file": self.file,
             "length": self.length,
         }
+
     @staticmethod
     def get_sources():
         return USED_SOURCES
