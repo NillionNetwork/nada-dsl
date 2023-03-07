@@ -8,5 +8,5 @@ class StringEncodingCompare:
 
 
 @dataclass
-class String(NadaType):
+class SecretString(NadaType):
     encoding: StringEncodingCompare

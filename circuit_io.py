@@ -30,6 +30,7 @@ class Input:
 @dataclass
 class Output:
     inner: AllTypes
+    party: Party
     name: str
     source_ref: SourceRef
 
