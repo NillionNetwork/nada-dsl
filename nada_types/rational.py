@@ -8,27 +8,28 @@ from nada_dsl.nada_types.boolean import SecretBoolean
 
 
 @dataclass
-class SecretFixedFloatPoint(NadaType):
+class SecretFixedPointRational(NadaType):
     decimals: int
 
-    def __add__(self, other: "SecretFixedFloatPoint") -> "SecretFixedFloatPoint":
+    def __add__(self, other: "SecretFixedPointRational") -> "SecretFixedPointRational":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == SecretFixedFloatPoint and other.decimals == self.decimals:
-            return SecretFixedFloatPoint(inner=addition, decimals=self.decimals)
+        if type(other) == SecretFixedPointRational and other.decimals == self.decimals:
+            return SecretFixedPointRational(inner=addition, decimals=self.decimals)
         else:
             raise Exception(f"Cannot add {self} {other}")
 
-    def __mul__(self, other: "SecretFixedFloatPoint") -> "SecretFixedFloatPoint":
+    def __mul__(self, other: "SecretFixedPointRational") -> "SecretFixedPointRational":
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == SecretFixedFloatPoint and other.decimals == self.decimals:
-            return SecretFixedFloatPoint(inner=multiplication, decimals=self.decimals)
+        if type(other) == SecretFixedPointRational and other.decimals == self.decimals:
+            decimals = self.decimals+other.decimals
+            return SecretFixedPointRational(inner=multiplication, decimals=decimals)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
 
-    def __lt__(self, other: "SecretFixedFloatPoint") -> "SecretBoolean":
-        if type(other) == SecretFixedFloatPoint and other.decimals == self.decimals:
+    def __lt__(self, other: "SecretFixedPointRational") -> "SecretBoolean":
+        if type(other) == SecretFixedPointRational and other.decimals == self.decimals:
             return SecretBoolean(
                 inner=CompareLessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()

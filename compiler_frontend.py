@@ -6,7 +6,7 @@ from typing import List
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output
-from nada_dsl.nada_types.float import SecretFixedFloatPoint
+from nada_dsl.nada_types.rational import SecretFixedPointRational
 from nada_dsl.future.nada_types.collections import (
     Array,
     Vector,
@@ -105,9 +105,9 @@ def to_type_dict(op_wrapper):
                 "right_type": to_type_dict(op_wrapper.right_type),
             }
         }
-    elif type(op_wrapper) == SecretFixedFloatPoint:
+    elif type(op_wrapper) == SecretFixedPointRational:
         return {
-            "SecretFixedFloatPoint": {
+            "SecretFixedPointRational": {
                 "decimals": op_wrapper.decimals,
             }
         }

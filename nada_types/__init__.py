@@ -9,7 +9,7 @@ AllTypes = Union[
     "SecretInteger16",
     "SecretBigInteger",
     "SecretBoolean",
-    "SecretFixedFloatPoint",
+    "SecretFixedPointRational",
 ]
 AllTypesType = Union[
     Type["PublicInteger8"],
@@ -18,7 +18,7 @@ AllTypesType = Union[
     Type["SecretInteger8"],
     Type["SecretInteger16"],
     Type["SecretBigInteger"],
-    Type["SecretFixedFloatPoint"],
+    Type["SecretFixedPointRational"],
 ]
 OperationType = Union[
     "Addition",

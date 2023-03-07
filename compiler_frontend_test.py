@@ -11,18 +11,18 @@ tests_directory = os.path.join(
 )
 
 sys.path.insert(0, tests_directory)
-from addition_fixed_float_point import outputs as addition_fixed_float_point
-from addition_fixed_float_point_error import outputs as addition_fixed_float_point_error
+from addition_fixed_point_rational import outputs as addition_fixed_point_rational
+from addition_fixed_point_rational_error import outputs as addition_fixed_point_rational_error
 from addition_simple import outputs as addition_simple
 from circuit_simple import outputs as circuit_simple
 from circuit_simple_2 import outputs as circuit_simple_2
-from fixed_float_point import outputs as fixed_float_point
+from fixed_point_rational import outputs as fixed_point_rational
 from import_file import outputs as import_file
 from input_single import outputs as input_single
 from integer import outputs as integer
-from multiplication_fixed_float_point import outputs as multiplication_fixed_float_point
-from multiplication_fixed_float_point_error import (
-    outputs as multiplication_fixed_float_point_error,
+from multiplication_fixed_point_rational import outputs as multiplication_fixed_point_rational
+from multiplication_fixed_point_rational_error import (
+    outputs as multiplication_fixed_point_rational_error,
 )
 from multiplication_simple import outputs as multiplication_simple
 
@@ -31,28 +31,28 @@ mir_files_directory = os.path.join(
 )
 
 testdata = [
-    (addition_fixed_float_point, "current.addition_fixed_float_point"),
+    (addition_fixed_point_rational, "current.addition_fixed_point_rational"),
     (addition_simple, "current.addition_simple"),
     (circuit_simple, "current.circuit_simple"),
     (circuit_simple_2, "current.circuit_simple_2"),
-    (fixed_float_point, "current.fixed_float_point"),
+    (fixed_point_rational, "current.fixed_point_rational"),
     (import_file, "current.import_file"),
     (input_single, "current.input_single"),
     (integer, "current.integer"),
-    (multiplication_fixed_float_point, "current.multiplication_fixed_float_point"),
+    (multiplication_fixed_point_rational, "current.multiplication_fixed_point_rational"),
     (multiplication_simple, "current.multiplication_simple"),
 ]
 
 test_ids = [
-    "addition_fixed_float_point",
+    "addition_fixed_point_rational",
     "addition_simple",
     "circuit_simple",
     "circuit_simple_2",
-    "fixed_float_point",
+    "fixed_point_rational",
     "import_file",
     "input_single",
     "integer",
-    "multiplication_fixed_float_point",
+    "multiplication_fixed_point_rational",
     "multiplication_simple",
 ]
 
@@ -70,13 +70,13 @@ def test_compile_to_nada_mir(outputs, expected_file_name):
 
 
 error_testdata = [
-    addition_fixed_float_point_error,
-    multiplication_fixed_float_point_error,
+    addition_fixed_point_rational_error,
+    multiplication_fixed_point_rational_error,
 ]
 
 error_test_ids = [
-    "addition_fixed_float_point_error",
-    "multiplication_fixed_float_point_error",
+    "addition_fixed_point_rational_error",
+    "multiplication_fixed_point_rational_error",
 ]
 
 
