@@ -21,9 +21,6 @@ from import_file import outputs as import_file
 from input_single import outputs as input_single
 from integer import outputs as integer
 from multiplication_fixed_point_rational import outputs as multiplication_fixed_point_rational
-from multiplication_fixed_point_rational_error import (
-    outputs as multiplication_fixed_point_rational_error,
-)
 from multiplication_simple import outputs as multiplication_simple
 
 mir_files_directory = os.path.join(
@@ -71,12 +68,10 @@ def test_compile_to_nada_mir(outputs, expected_file_name):
 
 error_testdata = [
     addition_fixed_point_rational_error,
-    multiplication_fixed_point_rational_error,
 ]
 
 error_test_ids = [
     "addition_fixed_point_rational_error",
-    "multiplication_fixed_point_rational_error",
 ]
 
 

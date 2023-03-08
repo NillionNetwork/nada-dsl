@@ -22,7 +22,7 @@ class SecretFixedPointRational(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == SecretFixedPointRational and other.decimals == self.decimals:
+        if type(other) == SecretFixedPointRational:
             decimals = self.decimals+other.decimals
             return SecretFixedPointRational(inner=multiplication, decimals=decimals)
         else:
