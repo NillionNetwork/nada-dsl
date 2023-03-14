@@ -9,12 +9,12 @@ from nada_dsl.nada_types.boolean import SecretBoolean
 
 @dataclass
 class SecretFixedPointRational(NadaType):
-    decimals: int
+    digits: int
 
     def __add__(self, other: "SecretFixedPointRational") -> "SecretFixedPointRational":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == SecretFixedPointRational and other.decimals == self.decimals:
-            return SecretFixedPointRational(inner=addition, decimals=self.decimals)
+        if type(other) == SecretFixedPointRational and other.digits == self.digits:
+            return SecretFixedPointRational(inner=addition, digits=self.digits)
         else:
             raise Exception(f"Cannot add {self} {other}")
 
@@ -23,13 +23,13 @@ class SecretFixedPointRational(NadaType):
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if type(other) == SecretFixedPointRational:
-            decimals = self.decimals+other.decimals
-            return SecretFixedPointRational(inner=multiplication, decimals=decimals)
+            digits = self.digits+other.digits
+            return SecretFixedPointRational(inner=multiplication, digits=digits)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
 
     def __lt__(self, other: "SecretFixedPointRational") -> "SecretBoolean":
-        if type(other) == SecretFixedPointRational and other.decimals == self.decimals:
+        if type(other) == SecretFixedPointRational and other.digits == self.digits:
             return SecretBoolean(
                 inner=CompareLessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()

@@ -34,7 +34,8 @@ class Output:
     name: str
     source_ref: SourceRef
 
-    def __init__(self, inner, name):
+    def __init__(self, inner, name, party):
         self.inner = inner
         self.name = name
+        self.party = party
         self.source_ref = SourceRef.back_frame()

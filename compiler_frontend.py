@@ -77,6 +77,10 @@ def nada_dsl_to_nada_mir(outputs: List[Output]):
             {
                 "inner": new_out,
                 "name": output.name,
+                "party": {
+                    "name": output.party.name,
+                    "source_ref": output.party.source_ref.to_dict(),
+                },
                 "type": to_type_dict(output.inner),
                 "source_ref": output.source_ref.to_dict(),
             }
@@ -108,7 +112,7 @@ def to_type_dict(op_wrapper):
     elif type(op_wrapper) == SecretFixedPointRational:
         return {
             "SecretFixedPointRational": {
-                "decimals": op_wrapper.decimals,
+                "digits": op_wrapper.digits,
             }
         }
     elif inspect.isclass(op_wrapper):
