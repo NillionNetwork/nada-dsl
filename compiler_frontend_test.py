@@ -22,7 +22,7 @@ from input_single import outputs as input_single
 from integer import outputs as integer
 from multiplication_fixed_point_rational import outputs as multiplication_fixed_point_rational
 from multiplication_simple import outputs as multiplication_simple
-from string import outputs as string
+from secret_string import outputs as secret_string
 
 mir_files_directory = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), f"../tests/resources/mir/"
@@ -39,7 +39,7 @@ testdata = [
     (integer, "current.integer"),
     (multiplication_fixed_point_rational, "current.multiplication_fixed_point_rational"),
     (multiplication_simple, "current.multiplication_simple"),
-    (string, "current.string"),
+    (secret_string, "current.secret_string"),
 ]
 
 test_ids = [
@@ -53,7 +53,7 @@ test_ids = [
     "integer",
     "multiplication_fixed_point_rational",
     "multiplication_simple",
-    "string",
+    "secret_string",
 ]
 
 
