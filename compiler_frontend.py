@@ -28,12 +28,11 @@ class ClassEncoder(JSONEncoder):
         return {type(o).__name__: o.__dict__}
 
 
-def nada_compile(
-    outputs: List[Output],
-    output_file: str,
-    is_hir_json_required=False,
-    is_bytecode_json_required=False,
-):
+def get_target_dir() -> str:
+    env_dir = os.environ.get("NADA_TARGET_DIR")
+    if env_dir:
+        return env_dir
+
     cwd = os.getcwd()
 
     try:
@@ -41,7 +40,16 @@ def nada_compile(
     except FileExistsError:
         pass
 
-    target_dir = os.path.join(cwd, "target")
+    return os.path.join(cwd, "target")
+
+
+def nada_compile(
+    outputs: List[Output],
+    output_file: str,
+    is_hir_json_required=False,
+    is_bytecode_json_required=False,
+):
+    target_dir = get_target_dir()
 
     if is_hir_json_required:
         compile_to_nada_pydsl_hir(output_file, outputs, target_dir)
@@ -49,8 +57,8 @@ def nada_compile(
     compile_to_nada_mir(target_dir, outputs, output_file)
 
     compiler_backend.compile(
-        f"{cwd}/target",
-        f"{cwd}/target/{output_file}.nada-mir.json",
+        f"{target_dir}",
+        f"{target_dir}/{output_file}.nada-mir.json",
         output_file,
         is_bytecode_json_required,
     )
