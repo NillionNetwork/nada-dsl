@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from typing import Tuple
 import inspect
 
 USED_SOURCES = {}
@@ -25,7 +26,7 @@ class SourceRef:
         )
 
     @staticmethod
-    def try_get_line_info(backend_frame, lineno) -> (int, int):
+    def try_get_line_info(backend_frame, lineno) -> Tuple[int, int, str]:
         filename = os.path.basename(backend_frame.f_code.co_filename)
 
         src = None
@@ -37,7 +38,7 @@ class SourceRef:
             else:
                 src = USED_SOURCES[filename]
         except OSError:
-            return ""
+            return 0, 0, ""
 
         lines = src.splitlines()
         if lineno < len(lines):

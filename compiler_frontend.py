@@ -2,7 +2,7 @@ import json
 import os
 from json import JSONEncoder
 import inspect
-from typing import List
+from typing import List, Optional, Dict, Any
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output
@@ -18,7 +18,6 @@ from nada_dsl.future.nada_types.collections import (
 from nada_dsl.future.nada_types.function import NadaFunction
 from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
 from nada_dsl.operations import Addition, Multiplication, CompareLessThan
-import nada_compiler_backend_python as compiler_backend
 
 
 class ClassEncoder(JSONEncoder):
@@ -26,6 +25,24 @@ class ClassEncoder(JSONEncoder):
         if inspect.isclass(o):
             return o.__name__
         return {type(o).__name__: o.__dict__}
+
+
+class CompilationPlaceholder:
+    outputs: Optional[List[Output]] = None
+
+    def initialize(self, outputs: List[Output]) -> None:
+        if self.outputs is not None:
+            raise Exception("only one `nada_compile` call is allowed per program")
+        self.outputs = outputs
+
+    def retrieve(self) -> str:
+        if self.outputs is None:
+            raise Exception("no `nada_compile` calls found")
+        compiled = nada_dsl_to_nada_mir(self.outputs)
+        return json.dumps(compiled)
+
+
+COMPILATION_PLACEHOLDER = CompilationPlaceholder()
 
 
 def get_target_dir() -> str:
@@ -43,25 +60,12 @@ def get_target_dir() -> str:
     return os.path.join(cwd, "target")
 
 
-def nada_compile(
-    outputs: List[Output],
-    output_file: str,
-    is_hir_json_required=False,
-    is_bytecode_json_required=False,
-):
-    target_dir = get_target_dir()
+def nada_compile(outputs: List[Output]):
+    COMPILATION_PLACEHOLDER.initialize(outputs)
 
-    if is_hir_json_required:
-        compile_to_nada_pydsl_hir(output_file, outputs, target_dir)
 
-    compile_to_nada_mir(target_dir, outputs, output_file)
-
-    compiler_backend.compile(
-        f"{target_dir}",
-        f"{target_dir}/{output_file}.nada-mir.json",
-        output_file,
-        is_bytecode_json_required,
-    )
+def nada_retrieve() -> str:
+    return COMPILATION_PLACEHOLDER.retrieve()
 
 
 def compile_to_nada_pydsl_hir(output_file, outputs, target_dir):
@@ -77,7 +81,7 @@ def compile_to_nada_mir(target_dir, outputs, output_file):
         file.write(nada_mir)
 
 
-def nada_dsl_to_nada_mir(outputs: List[Output]):
+def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
     new_outputs = []
     for output in outputs:
         new_out = process_operation(output.inner)
