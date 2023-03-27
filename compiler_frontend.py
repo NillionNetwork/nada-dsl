@@ -19,6 +19,9 @@ from nada_dsl.future.nada_types.function import NadaFunction
 from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
 from nada_dsl.operations import Addition, Multiplication, CompareLessThan
 
+INPUTS = {}
+PARTIES = {}
+
 
 class ClassEncoder(JSONEncoder):
     def default(self, o):
@@ -64,23 +67,45 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
     new_outputs = []
     for output in outputs:
         new_out = process_operation(output.inner)
+        party = output.party
+        PARTIES[party.name] = party
         new_outputs.append(
             {
                 "inner": new_out,
                 "name": output.name,
-                "party": {
-                    "name": output.party.name,
-                    "source_ref": output.party.source_ref.to_dict(),
-                },
+                "party": party.name,
                 "type": to_type_dict(output.inner),
                 "source_ref": output.source_ref.to_dict(),
             }
         )
 
     return {
+        "parties": to_party_list(PARTIES),
+        "inputs": to_input_list(INPUTS),
         "outputs": new_outputs,
         "source_files": SourceRef.get_sources(),
     }
+
+
+def to_party_list(parties):
+    return [
+        {
+            "name": party.name,
+            "source_ref": party.source_ref.to_dict(),
+        } for party in parties.values()
+    ]
+
+
+def to_input_list(inputs):
+    return [
+        {
+            "name": program_input.name,
+            "type": program_type,
+            "party": program_input.party.name,
+            "doc": program_input.doc,
+            "source_ref": program_input.source_ref.to_dict(),
+        } for program_input, program_type in inputs.items()
+    ]
 
 
 def to_type_dict(op_wrapper):
@@ -155,16 +180,11 @@ def process_operation(operation_wrapper):
             }
         }
     elif type(operation) == Input:
+        INPUTS[operation] = ty
+        PARTIES[operation.party.name] = operation.party
         return {
-            "Input": {
-                "type": ty,
-                "party": {
-                    "name": operation.party.name,
-                    "source_ref": operation.party.source_ref.to_dict(),
-                },
-                "name": operation.name,
-                "doc": operation.doc,
-                "source_ref": operation.source_ref.to_dict(),
+            "InputReference": {
+                "refers_to": operation.name,
             }
         }
     elif type(operation) == Map:
