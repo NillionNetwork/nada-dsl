@@ -5,7 +5,7 @@ from nada_dsl import SourceRef
 from nada_dsl.nada_types import NadaType
 from nada_dsl.future.operations import Cast
 from nada_dsl.operations import Addition, Multiplication, CompareLessThan
-from nada_dsl.nada_types.signed_integer import SecretBigUnsignedInteger
+from nada_dsl.nada_types.unsigned_integer import SecretBigUnsignedInteger
 from nada_dsl.nada_types.boolean import SecretBoolean
 
 
