@@ -27,24 +27,6 @@ class ClassEncoder(JSONEncoder):
         return {type(o).__name__: o.__dict__}
 
 
-class CompilationPlaceholder:
-    outputs: Optional[List[Output]] = None
-
-    def initialize(self, outputs: List[Output]) -> None:
-        if self.outputs is not None:
-            raise Exception("only one `nada_compile` call is allowed per program")
-        self.outputs = outputs
-
-    def retrieve(self) -> str:
-        if self.outputs is None:
-            raise Exception("no `nada_compile` calls found")
-        compiled = nada_dsl_to_nada_mir(self.outputs)
-        return json.dumps(compiled)
-
-
-COMPILATION_PLACEHOLDER = CompilationPlaceholder()
-
-
 def get_target_dir() -> str:
     env_dir = os.environ.get("NADA_TARGET_DIR")
     if env_dir:
@@ -60,12 +42,9 @@ def get_target_dir() -> str:
     return os.path.join(cwd, "target")
 
 
-def nada_compile(outputs: List[Output]):
-    COMPILATION_PLACEHOLDER.initialize(outputs)
-
-
-def nada_retrieve() -> str:
-    return COMPILATION_PLACEHOLDER.retrieve()
+def nada_compile(outputs: List[Output]) -> str:
+    compiled = nada_dsl_to_nada_mir(outputs)
+    return json.dumps(compiled)
 
 
 def compile_to_nada_pydsl_hir(output_file, outputs, target_dir):
