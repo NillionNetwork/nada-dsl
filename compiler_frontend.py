@@ -65,6 +65,8 @@ def compile_to_nada_mir(target_dir, outputs, output_file):
 
 def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
     new_outputs = []
+    PARTIES.clear()
+    INPUTS.clear()
     for output in outputs:
         new_out = process_operation(output.inner)
         party = output.party
