@@ -94,7 +94,8 @@ def to_party_list(parties):
         {
             "name": party.name,
             "source_ref": party.source_ref.to_dict(),
-        } for party in parties.values()
+        }
+        for party in parties.values()
     ]
 
 
@@ -106,7 +107,8 @@ def to_input_list(inputs):
             "party": program_input.party.name,
             "doc": program_input.doc,
             "source_ref": program_input.source_ref.to_dict(),
-        } for program_input, program_type in inputs.items()
+        }
+        for program_input, program_type in inputs.items()
     ]
 
 

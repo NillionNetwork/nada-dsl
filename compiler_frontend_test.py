@@ -1,91 +1,100 @@
-import os
-import sys
-import json
 import pytest
+import operator
 
-from deepdiff import DeepDiff
-from nada_dsl.compiler_frontend import nada_dsl_to_nada_mir
-
-tests_directory = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), f"../tests/resources/programs/current/"
+from nada_dsl import *
+from nada_dsl.compiler_frontend import (
+    nada_dsl_to_nada_mir,
+    to_input_list,
+    to_type_dict,
+    process_operation,
 )
 
-sys.path.insert(0, tests_directory)
-from addition_fixed_point_rational import nada_main as addition_fixed_point_rational
-from addition_fixed_point_rational_error import (
-    nada_main as addition_fixed_point_rational_error,
+
+def input_reference(ref) -> str:
+    return ref["InputReference"]["refers_to"]
+
+
+def create_input(clazz, name: str, party: str, **kwargs):
+    return clazz(Input(name=name, party=Party(party)), **kwargs)
+
+
+def create_output(root: AllTypes, name: str, party: str) -> Output:
+    return Output(root, name, Party(party))
+
+
+def test_root_conversion():
+    input = create_input(SecretBigInteger, "input", "input_party")
+    output = create_output(input, "output", "output_party")
+    mir = nada_dsl_to_nada_mir([output])
+    assert len(mir["parties"]) == 2
+    assert len(mir["inputs"]) == 1
+    assert len(mir["outputs"]) == 1
+    assert "source_files" in mir
+
+    mir_output = mir["outputs"][0]
+    assert mir_output["name"] == "output"
+    assert mir_output["type"] == "SecretBigInteger"
+    assert mir_output["party"] == "output_party"
+    assert list(mir_output["inner"].keys()) == ["InputReference"]
+
+
+def test_input_conversion():
+    input = Input(name="input", party=Party("party"))
+    converted_inputs = to_input_list({input: "SecretBigInteger"})
+    assert len(converted_inputs) == 1
+
+    converted = converted_inputs[0]
+    assert converted["name"] == "input"
+    assert converted["party"] == "party"
+    assert converted["type"] == "SecretBigInteger"
+
+
+@pytest.mark.parametrize(
+    ("input_type", "type_name", "kwargs"),
+    [
+        (SecretBigInteger, "SecretBigInteger", {}),
+        (SecretString, "SecretString", {"encoding": "Woop"}),
+        (SecretBoolean, "SecretBoolean", {}),
+    ],
 )
-from addition_simple import nada_main as addition_simple
-from circuit_simple import nada_main as circuit_simple
-from circuit_simple_2 import nada_main as circuit_simple_2
-from fixed_point_rational import nada_main as fixed_point_rational
-from import_file import nada_main as import_file
-from input_single import nada_main as input_single
-from integer import nada_main as integer
-from multiplication_fixed_point_rational import (
-    nada_main as multiplication_fixed_point_rational,
+def test_simple_type_conversion(input_type, type_name, kwargs):
+    input = create_input(input_type, "name", "party", **kwargs)
+    converted_input = to_type_dict(input)
+    assert converted_input == type_name
+
+
+def test_fixed_point_rational_type_conversion():
+    input = create_input(SecretFixedPointRational, "name", "party", digits=3)
+    converted_input = to_type_dict(input)
+    expected = {"SecretFixedPointRational": {"digits": 3}}
+    assert converted_input == expected
+
+
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.add, "Addition", "SecretBigInteger"),
+        (operator.mul, "Multiplication", "SecretBigInteger"),
+        (operator.lt, "CompareLessThan", "SecretBoolean"),
+    ],
 )
-from multiplication_simple import nada_main as multiplication_simple
-from secret_string import nada_main as secret_string
+def test_binary_operator(operator, name, ty):
+    left = create_input(SecretBigInteger, "left", "party")
+    right = create_input(SecretBigInteger, "right", "party")
+    program_operation = operator(left, right)
+    op = process_operation(program_operation)
+    assert list(op.keys()) == [name]
 
-mir_files_directory = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), f"../tests/resources/mir/"
-)
+    inner = op[name]
 
-testdata = [
-    (addition_fixed_point_rational, "addition_fixed_point_rational"),
-    (addition_simple, "addition_simple"),
-    (circuit_simple, "circuit_simple"),
-    (circuit_simple_2, "circuit_simple_2"),
-    (fixed_point_rational, "fixed_point_rational"),
-    (import_file, "import_file"),
-    (input_single, "input_single"),
-    (integer, "integer"),
-    (
-        multiplication_fixed_point_rational,
-        "multiplication_fixed_point_rational",
-    ),
-    (multiplication_simple, "multiplication_simple"),
-    (secret_string, "secret_string"),
-]
-
-test_ids = [
-    "addition_fixed_point_rational",
-    "addition_simple",
-    "circuit_simple",
-    "circuit_simple_2",
-    "fixed_point_rational",
-    "import_file",
-    "input_single",
-    "integer",
-    "multiplication_fixed_point_rational",
-    "multiplication_simple",
-    "secret_string",
-]
+    assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
+    assert inner["type"] == ty
 
 
-@pytest.mark.parametrize(("outputs", "expected_file_name"), testdata, ids=test_ids)
-def test_compile_to_nada_mir(outputs, expected_file_name):
-    mir_model = nada_dsl_to_nada_mir(outputs())
-
-    file = open(f"{mir_files_directory}{expected_file_name}.nada-mir.json")
-    expected_mir_model = json.load(file)
-
-    assert not DeepDiff(
-        mir_model, expected_mir_model, exclude_paths="root['source_files']"
-    ).pretty()
-
-
-error_testdata = [
-    addition_fixed_point_rational_error,
-]
-
-error_test_ids = [
-    "addition_fixed_point_rational_error",
-]
-
-
-@pytest.mark.parametrize("outputs", error_testdata, ids=error_test_ids)
-def test_error_in_compile_to_nada_mir(outputs):
+@pytest.mark.parametrize("operator", [operator.add, operator.lt])
+def test_fixed_point_rational_digit_checks(operator):
+    left = create_input(SecretFixedPointRational, "left", "party", digits=3)
+    right = create_input(SecretFixedPointRational, "right", "party", digits=4)
     with pytest.raises(Exception):
-        nada_dsl_to_nada_mir(outputs())
+        operator(left, right)
