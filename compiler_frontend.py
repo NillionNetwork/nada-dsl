@@ -108,7 +108,7 @@ def to_input_list(inputs):
             "doc": program_input.doc,
             "source_ref": program_input.source_ref.to_dict(),
         }
-        for program_input, program_type in inputs.items()
+        for (program_input, program_type) in inputs.values()
     ]
 
 
@@ -184,7 +184,10 @@ def process_operation(operation_wrapper):
             }
         }
     elif type(operation) == Input:
-        INPUTS[operation] = ty
+        if operation.name in INPUTS and id(INPUTS[operation.name][0]) != id(operation):
+            raise Exception(f"Input is duplicated: {operation.name}")
+        else:
+            INPUTS[operation.name] = (operation, ty)
         PARTIES[operation.party.name] = operation.party
         return {
             "InputReference": {

@@ -49,6 +49,16 @@ def test_input_conversion():
     assert converted["type"] == "SecretBigInteger"
 
 
+def test_duplicated_inputs_checks():
+    left = create_input(SecretBigInteger, "left", "party")
+    right = create_input(SecretBigInteger, "left", "party")
+    new_int = left + right
+    output = create_output(new_int, "output", "party")
+
+    with pytest.raises(Exception):
+        nada_dsl_to_nada_mir([output])
+
+
 @pytest.mark.parametrize(
     ("input_type", "type_name", "kwargs"),
     [
