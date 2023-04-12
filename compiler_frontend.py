@@ -100,16 +100,17 @@ def to_party_list(parties):
 
 
 def to_input_list(inputs):
-    return [
-        {
-            "name": program_input.name,
-            "type": program_type,
-            "party": program_input.party.name,
-            "doc": program_input.doc,
-            "source_ref": program_input.source_ref.to_dict(),
-        }
-        for (program_input, program_type) in inputs.values()
-    ]
+    input_list = []
+    for party_inputs in inputs.values():
+        for (program_input, program_type) in party_inputs.values():
+            input_list.append({
+                "name": program_input.name,
+                "type": program_type,
+                "party": program_input.party.name,
+                "doc": program_input.doc,
+                "source_ref": program_input.source_ref.to_dict(),
+            })
+    return input_list
 
 
 def to_type_dict(op_wrapper):
@@ -184,11 +185,14 @@ def process_operation(operation_wrapper):
             }
         }
     elif type(operation) == Input:
-        if operation.name in INPUTS and id(INPUTS[operation.name][0]) != id(operation):
+        party_name = operation.party.name
+        if operation.name in INPUTS and id(INPUTS[party_name][operation.name][0]) != id(operation):
             raise Exception(f"Input is duplicated: {operation.name}")
         else:
-            INPUTS[operation.name] = (operation, ty)
-        PARTIES[operation.party.name] = operation.party
+            if party_name not in INPUTS:
+                INPUTS[party_name] = {}
+            INPUTS[party_name][operation.name] = (operation, ty)
+        PARTIES[party_name] = operation.party
         return {
             "InputReference": {
                 "refers_to": operation.name,
