@@ -7,7 +7,16 @@ from nada_dsl.compiler_frontend import (
     to_input_list,
     to_type_dict,
     process_operation,
+    INPUTS,
+    PARTIES
 )
+
+
+@pytest.fixture(autouse=True)
+def clean_inputs():
+    PARTIES.clear()
+    INPUTS.clear()
+    yield
 
 
 def input_reference(ref) -> str:
@@ -40,7 +49,12 @@ def test_root_conversion():
 
 def test_input_conversion():
     input = Input(name="input", party=Party("party"))
-    converted_inputs = to_input_list({input: "SecretBigInteger"})
+    inputs = {
+        "party": {
+            "input": (input, "SecretBigInteger")
+        }
+    }
+    converted_inputs = to_input_list(inputs)
     assert len(converted_inputs) == 1
 
     converted = converted_inputs[0]
@@ -50,8 +64,9 @@ def test_input_conversion():
 
 
 def test_duplicated_inputs_checks():
-    left = create_input(SecretBigInteger, "left", "party")
-    right = create_input(SecretBigInteger, "left", "party")
+    party = Party("party")
+    left = SecretBigInteger(Input(name="left", party=party))
+    right = SecretBigInteger(Input(name="left", party=party))
     new_int = left + right
     output = create_output(new_int, "output", "party")
 

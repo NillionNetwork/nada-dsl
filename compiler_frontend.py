@@ -186,13 +186,13 @@ def process_operation(operation_wrapper):
         }
     elif type(operation) == Input:
         party_name = operation.party.name
-        if operation.name in INPUTS and id(INPUTS[party_name][operation.name][0]) != id(operation):
+        PARTIES[party_name] = operation.party
+        if party_name not in INPUTS:
+            INPUTS[party_name] = {}
+        if operation.name in INPUTS[party_name] and id(INPUTS[party_name][operation.name][0]) != id(operation):
             raise Exception(f"Input is duplicated: {operation.name}")
         else:
-            if party_name not in INPUTS:
-                INPUTS[party_name] = {}
             INPUTS[party_name][operation.name] = (operation, ty)
-        PARTIES[party_name] = operation.party
         return {
             "InputReference": {
                 "refers_to": operation.name,
