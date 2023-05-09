@@ -6,15 +6,15 @@ from nada_dsl.source_ref import SourceRef
 
 @dataclass
 class Addition:
-    right: AllTypes
     left: AllTypes
+    right: AllTypes
     source_ref: SourceRef
 
 
 @dataclass
 class Multiplication:
-    right: AllTypes
     left: AllTypes
+    right: AllTypes
     source_ref: SourceRef
 
 

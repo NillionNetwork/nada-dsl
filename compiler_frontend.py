@@ -160,8 +160,8 @@ def process_operation(operation_wrapper):
     if type(operation) == Addition:
         return {
             "Addition": {
-                "right": process_operation(operation.right),
                 "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
@@ -169,8 +169,8 @@ def process_operation(operation_wrapper):
     elif type(operation) == Multiplication:
         return {
             "Multiplication": {
-                "right": process_operation(operation.right),
                 "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }

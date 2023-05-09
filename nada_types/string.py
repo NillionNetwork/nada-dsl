@@ -10,3 +10,7 @@ class StringEncodingCompare:
 @dataclass
 class SecretString(NadaType):
     encoding: StringEncodingCompare
+
+@dataclass
+class PublicString(NadaType):
+    encoding: StringEncodingCompare

@@ -5,3 +5,7 @@ from nada_dsl.nada_types import NadaType
 @dataclass
 class SecretBoolean(NadaType):
     pass
+
+@dataclass
+class PublicBoolean(NadaType):
+    pass
