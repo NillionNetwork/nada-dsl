@@ -8,7 +8,7 @@ from nada_dsl.compiler_frontend import (
     to_type_dict,
     process_operation,
     INPUTS,
-    PARTIES
+    PARTIES,
 )
 
 
@@ -49,11 +49,7 @@ def test_root_conversion():
 
 def test_input_conversion():
     input = Input(name="input", party=Party("party"))
-    inputs = {
-        "party": {
-            "input": (input, "SecretBigInteger")
-        }
-    }
+    inputs = {"party": {"input": (input, "SecretBigInteger")}}
     converted_inputs = to_input_list(inputs)
     assert len(converted_inputs) == 1
 
@@ -80,6 +76,9 @@ def test_duplicated_inputs_checks():
         (SecretBigInteger, "SecretBigInteger", {}),
         (SecretString, "SecretString", {"encoding": "Woop"}),
         (SecretBoolean, "SecretBoolean", {}),
+        (PublicBigInteger, "PublicBigInteger", {}),
+        (PublicString, "PublicString", {}),
+        (PublicBoolean, "PublicBoolean", {}),
     ],
 )
 def test_simple_type_conversion(input_type, type_name, kwargs):
@@ -117,9 +116,39 @@ def test_binary_operator(operator, name, ty):
     assert inner["type"] == ty
 
 
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.add, "Addition", "PublicBigInteger"),
+        (operator.mul, "Multiplication", "PublicBigInteger"),
+        (operator.lt, "CompareLessThan", "PublicBoolean"),
+    ],
+)
+def test_binary_operator_public(operator, name, ty):
+    left = create_input(PublicBigInteger, "left", "party")
+    right = create_input(PublicBigInteger, "right", "party")
+    program_operation = operator(left, right)
+    op = process_operation(program_operation)
+    assert list(op.keys()) == [name]
+
+    inner = op[name]
+
+    assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
+    assert inner["type"] == ty
+
+
 @pytest.mark.parametrize("operator", [operator.add, operator.lt])
 def test_fixed_point_rational_digit_checks(operator):
     left = create_input(SecretFixedPointRational, "left", "party", digits=3)
     right = create_input(SecretFixedPointRational, "right", "party", digits=4)
+    with pytest.raises(Exception):
+        operator(left, right)
+
+
+@pytest.mark.parametrize("operator", [operator.add, operator.lt])
+def test_fixed_point_rational_digit_checks_public(operator):
+    left = create_input(PublicFixedPointRational, "left", "party", digits=3)
+    right = create_input(PublicFixedPointRational, "right", "party", digits=4)
     with pytest.raises(Exception):
         operator(left, right)

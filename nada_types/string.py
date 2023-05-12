@@ -11,6 +11,7 @@ class StringEncodingCompare:
 class SecretString(NadaType):
     encoding: StringEncodingCompare
 
+
 @dataclass
 class PublicString(NadaType):
-    encoding: StringEncodingCompare
+    pass
