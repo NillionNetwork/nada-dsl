@@ -10,7 +10,6 @@ AllTypes = Union[
     "PublicBigUnsignedInteger",
     "PublicBoolean",
     "PublicFixedPointRational",
-
     "SecretInteger8",
     "SecretInteger16",
     "SecretBigInteger",
@@ -29,7 +28,6 @@ AllTypesType = Union[
     Type["PublicBigUnsignedInteger"],
     Type["PublicBoolean"],
     Type["PublicFixedPointRational"],
-
     Type["SecretInteger8"],
     Type["SecretInteger16"],
     Type["SecretBigInteger"],
@@ -41,14 +39,23 @@ AllTypesType = Union[
 ]
 OperationType = Union[
     "Addition",
+    "Subtraction",
     "Multiplication",
+    "Division",
+    "Modulo",
+    "RightShift",
+    "LeftShift",
+    "CompareLessThan",
+    "CompareGreaterThan",
+    "CompareLessOrEqualThan",
+    "CompareGreaterOrEqualThan",
+    "Equals",
     "Input",
     "Cast",
     "Map",
     "Zip",
     "Reduce",
     "Unzip",
-    "CompareLessThan",
 ]
 
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Union
 
 from . import NadaType
-from nada_dsl.operations import Addition, Multiplication, CompareLessThan
+from nada_dsl.operations import *
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
 
@@ -10,56 +10,131 @@ from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
 @dataclass
 class SecretBigUnsignedInteger(NadaType):
     def __add__(self, other: "SecretBigUnsignedInteger") -> "SecretBigUnsignedInteger":
-        addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+        operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, SecretBigUnsignedInteger):
-            return SecretBigUnsignedInteger(inner=addition)
+            return SecretBigUnsignedInteger(inner=operation)
         else:
-            raise Exception(f"Cannot add {self} {other}")
+            raise Exception(f"Cannot add {self} and {other}")
 
     def __mul__(self, other: "SecretBigUnsignedInteger") -> "SecretBigUnsignedInteger":
-        multiplication = Multiplication(
+        operation = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if isinstance(other, SecretBigUnsignedInteger):
-            return SecretBigUnsignedInteger(inner=multiplication)
+            return SecretBigUnsignedInteger(inner=operation)
         else:
-            raise Exception(f"Cannot multiply {self} * {other}")
+            raise Exception(f"Cannot multiply {self} and {other}")
 
     def __lt__(self, other: "SecretBigUnsignedInteger") -> "SecretBoolean":
+        operation = CompareLessThan(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
         if isinstance(other, SecretBigUnsignedInteger):
-            return SecretBoolean(
-                inner=CompareLessThan(
-                    left=self, right=other, source_ref=SourceRef.back_frame()
-                )
-            )
+            return SecretBoolean(inner=operation)
         else:
-            raise Exception(f"Cannot compare {self} with {other}")
+            raise Exception(f"Cannot compare {self} and {other}")
 
 
 @dataclass
 class PublicBigUnsignedInteger(NadaType):
     def __add__(self, other: "PublicBigUnsignedInteger") -> "PublicBigUnsignedInteger":
-        addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+        operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicBigUnsignedInteger):
-            return PublicBigUnsignedInteger(inner=addition)
+            return PublicBigUnsignedInteger(inner=operation)
         else:
-            raise Exception(f"Cannot add {self} {other}")
+            raise Exception(f"Cannot add {self} and {other}")
 
-    def __mul__(self, other: "PublicBigUnsignedInteger") -> "PublicBigUnsignedInteger":
-        multiplication = Multiplication(
+    def __sub__(self, other: "PublicBigUnsignedInteger") -> "PublicBigUnsignedInteger":
+        operation = Subtraction(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if isinstance(other, PublicBigUnsignedInteger):
-            return PublicBigUnsignedInteger(inner=multiplication)
+            return PublicBigUnsignedInteger(inner=operation)
         else:
-            raise Exception(f"Cannot multiply {self} * {other}")
+            raise Exception(f"Cannot subtract {self} and {other}")
+
+    def __mul__(self, other: "PublicBigUnsignedInteger") -> "PublicBigUnsignedInteger":
+        operation = Multiplication(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, PublicBigUnsignedInteger):
+            return PublicBigUnsignedInteger(inner=operation)
+        else:
+            raise Exception(f"Cannot multiply {self} and {other}")
+
+    def __div__(self, other: "PublicBigUnsignedInteger") -> "PublicBigUnsignedInteger":
+        operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicBigUnsignedInteger):
+            return PublicBigUnsignedInteger(inner=operation)
+        else:
+            raise Exception(f"Cannot divide {self} and {other}")
+
+    def __mod__(self, other: "PublicBigUnsignedInteger") -> "PublicBigUnsignedInteger":
+        operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicBigUnsignedInteger):
+            return PublicBigUnsignedInteger(inner=operation)
+        else:
+            raise Exception(f"Cannot calculate the modulo of {self} and {other}")
+
+    def __rshift__(
+        self, other: "PublicBigUnsignedInteger"
+    ) -> "PublicBigUnsignedInteger":
+        operation = RightShift(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, PublicBigUnsignedInteger):
+            return PublicBigUnsignedInteger(inner=operation)
+        else:
+            raise Exception(f"Cannot calculate the modulo of {self} and {other}")
+
+    def __lshift__(
+        self, other: "PublicBigUnsignedInteger"
+    ) -> "PublicBigUnsignedInteger":
+        operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicBigUnsignedInteger):
+            return PublicBigUnsignedInteger(inner=operation)
+        else:
+            raise Exception(f"Cannot calculate the modulo of {self} and {other}")
 
     def __lt__(self, other: "PublicBigUnsignedInteger") -> "PublicBoolean":
+        operation = CompareLessThan(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
         if isinstance(other, PublicBigUnsignedInteger):
-            return PublicBoolean(
-                inner=CompareLessThan(
-                    left=self, right=other, source_ref=SourceRef.back_frame()
-                )
-            )
+            return PublicBoolean(inner=operation)
         else:
-            raise Exception(f"Cannot compare {self} with {other}")
+            raise Exception(f"Cannot compare {self} and {other}")
+
+    def __gt__(self, other: "PublicBigUnsignedInteger") -> "PublicBoolean":
+        operation = CompareGreaterThan(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, PublicBigUnsignedInteger):
+            return PublicBoolean(inner=operation)
+        else:
+            raise Exception(f"Cannot compare {self} and {other}")
+
+    def __lte__(self, other: "PublicBigUnsignedInteger") -> "PublicBoolean":
+        operation = CompareLessOrEqualThan(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, PublicBigUnsignedInteger):
+            return PublicBoolean(inner=operation)
+        else:
+            raise Exception(f"Cannot compare {self} and {other}")
+
+    def __gte__(self, other: "PublicBigUnsignedInteger") -> "PublicBoolean":
+        operation = CompareGreaterOrEqualThan(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, PublicBigUnsignedInteger):
+            return PublicBoolean(inner=operation)
+        else:
+            raise Exception(f"Cannot compare {self} and {other}")
+
+    def __eq__(self, other: "PublicBigUnsignedInteger") -> "PublicBoolean":
+        operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicBigUnsignedInteger):
+            return PublicBoolean(inner=operation)
+        else:
+            raise Exception(f"Cannot compare {self} and {other}")
