@@ -22,8 +22,8 @@ class NadaTuple(Generic[T, U], NadaType):
     left_type: T
 
     @classmethod
-    def generic_type(cls, rigth_type: U, left_type: T) -> NadaTupleType:
-        return NadaTupleType(right_type=rigth_type, left_type=left_type)
+    def generic_type(cls, right_type: U, left_type: T) -> NadaTupleType:
+        return NadaTupleType(right_type=right_type, left_type=left_type)
 
 
 @dataclass
