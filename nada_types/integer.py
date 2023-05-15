@@ -26,7 +26,7 @@ class SecretBigInteger(NadaType):
         if isinstance(other, SecretBigInteger):
             return SecretBigInteger(inner=operation)
         else:
-            raise TypeError(f"Cannot add {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __mul__(self, other: "SecretBigInteger") -> "SecretBigInteger":
         operation = Multiplication(
@@ -35,7 +35,7 @@ class SecretBigInteger(NadaType):
         if isinstance(other, SecretBigInteger):
             return SecretBigInteger(inner=operation)
         else:
-            raise TypeError(f"Cannot multiply {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(self, other: "SecretBigInteger") -> "SecretBoolean":
         operation = CompareLessThan(
@@ -44,7 +44,7 @@ class SecretBigInteger(NadaType):
         if isinstance(other, SecretBigInteger):
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Cannot compare {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
 
 @dataclass
@@ -54,7 +54,7 @@ class PublicBigInteger(NadaType):
         if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
         else:
-            raise TypeError(f"Cannot add {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(self, other: "PublicBigInteger") -> "PublicBigInteger":
         operation = Subtraction(
@@ -63,7 +63,7 @@ class PublicBigInteger(NadaType):
         if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
         else:
-            raise TypeError(f"Cannot subtract {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(self, other: "PublicBigInteger") -> "PublicBigInteger":
         operation = Multiplication(
@@ -72,21 +72,21 @@ class PublicBigInteger(NadaType):
         if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
         else:
-            raise TypeError(f"Cannot multiply {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __div__(self, other: "PublicBigInteger") -> "PublicBigInteger":
         operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
         else:
-            raise TypeError(f"Cannot divide {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(self, other: "PublicBigInteger") -> "PublicBigInteger":
         operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
         else:
-            raise TypeError(f"Cannot calculate the modulo of {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __rshift__(self, other: "PublicBigInteger") -> "PublicBigInteger":
         operation = RightShift(
@@ -95,14 +95,14 @@ class PublicBigInteger(NadaType):
         if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
         else:
-            raise TypeError(f"Cannot calculate the modulo of {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lshift__(self, other: "PublicBigInteger") -> "PublicBigInteger":
         operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
         else:
-            raise TypeError(f"Cannot calculate the modulo of {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __lt__(self, other: "PublicBigInteger") -> "PublicBoolean":
         operation = CompareLessThan(
@@ -111,7 +111,7 @@ class PublicBigInteger(NadaType):
         if isinstance(other, PublicBigInteger):
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Cannot compare {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(self, other: "PublicBigInteger") -> "PublicBoolean":
         operation = CompareGreaterThan(
@@ -120,7 +120,7 @@ class PublicBigInteger(NadaType):
         if isinstance(other, PublicBigInteger):
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Cannot compare {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __lte__(self, other: "PublicBigInteger") -> "PublicBoolean":
         operation = CompareLessOrEqualThan(
@@ -129,7 +129,7 @@ class PublicBigInteger(NadaType):
         if isinstance(other, PublicBigInteger):
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Cannot compare {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __gte__(self, other: "PublicBigInteger") -> "PublicBoolean":
         operation = CompareGreaterOrEqualThan(
@@ -138,11 +138,11 @@ class PublicBigInteger(NadaType):
         if isinstance(other, PublicBigInteger):
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Cannot compare {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(self, other: "PublicBigInteger") -> "PublicBoolean":
         operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicBigInteger):
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Cannot compare {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")

@@ -15,7 +15,7 @@ class SecretFixedPointRational(NadaType):
         if isinstance(other, SecretFixedPointRational) and other.digits == self.digits:
             return SecretFixedPointRational(inner=addition, digits=self.digits)
         else:
-            raise TypeError(f"Cannot add {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __mul__(self, other: "SecretFixedPointRational") -> "SecretFixedPointRational":
         multiplication = Multiplication(
@@ -25,7 +25,7 @@ class SecretFixedPointRational(NadaType):
             digits = self.digits + other.digits
             return SecretFixedPointRational(inner=multiplication, digits=digits)
         else:
-            raise TypeError(f"Cannot multiply {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(self, other: "SecretFixedPointRational") -> "SecretBoolean":
         if isinstance(other, SecretFixedPointRational) and other.digits == self.digits:
@@ -35,7 +35,7 @@ class SecretFixedPointRational(NadaType):
                 )
             )
         else:
-            raise TypeError(f"Cannot compare {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
 
 @dataclass
@@ -47,7 +47,7 @@ class PublicFixedPointRational(NadaType):
         if isinstance(other, PublicFixedPointRational) and other.digits == self.digits:
             return PublicFixedPointRational(inner=operation, digits=self.digits)
         else:
-            raise TypeError(f"Cannot add {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __mul__(self, other: "PublicFixedPointRational") -> "PublicFixedPointRational":
         operation = Multiplication(
@@ -57,7 +57,7 @@ class PublicFixedPointRational(NadaType):
             digits = self.digits + other.digits
             return PublicFixedPointRational(inner=operation, digits=digits)
         else:
-            raise TypeError(f"Cannot multiply {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(self, other: "PublicFixedPointRational") -> "PublicBoolean":
         operation = CompareLessThan(
@@ -66,4 +66,4 @@ class PublicFixedPointRational(NadaType):
         if isinstance(other, PublicFixedPointRational) and other.digits == self.digits:
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Cannot compare {self} and {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")

@@ -13,7 +13,7 @@ class SecretBoolean(NadaType):
         if isinstance(other, SecretBoolean):
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Cannot check {self} and {other} for equality")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 
 
 @dataclass
@@ -23,4 +23,4 @@ class PublicBoolean(NadaType):
         if isinstance(other, PublicBoolean):
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Cannot check {self} and {other} for equality")
+            raise TypeError(f"Invalid operation: {self} == {other}")

@@ -20,7 +20,7 @@ class PublicUnsignedInteger8(NadaType):
         elif isinstance(other, SecretUnsignedInteger8):
             return SecretUnsignedInteger8(inner=addition)
         else:
-            raise TypeError(f"Cannot add {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __mul__(
         self, other: Union["PublicUnsignedInteger8", "SecretUnsignedInteger8"]
@@ -33,7 +33,7 @@ class PublicUnsignedInteger8(NadaType):
         elif isinstance(other, SecretUnsignedInteger8):
             return SecretUnsignedInteger8(inner=multiplication)
         else:
-            raise TypeError(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def cast(self, to: Type["PublicUnsignedInteger16"]) -> "PublicUnsignedInteger16":
         return PublicUnsignedInteger16(
@@ -50,7 +50,7 @@ class PublicUnsignedInteger8(NadaType):
                 )
             )
         else:
-            raise TypeError(f"Cannot compare {self} with {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
 
 @dataclass
@@ -64,7 +64,7 @@ class PublicUnsignedInteger16(NadaType):
         elif isinstance(other, SecretUnsignedInteger16):
             return SecretUnsignedInteger16(inner=addition)
         else:
-            raise TypeError(f"Cannot add {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __mul__(
         self, other: Union["PublicUnsignedInteger16", "SecretUnsignedInteger16"]
@@ -77,7 +77,7 @@ class PublicUnsignedInteger16(NadaType):
         elif isinstance(other, SecretUnsignedInteger16):
             return SecretUnsignedInteger16(inner=multiplication)
         else:
-            raise TypeError(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(
         self, other: Union["PublicUnsignedInteger16", "SecretUnsignedInteger16"]
@@ -89,7 +89,7 @@ class PublicUnsignedInteger16(NadaType):
                 )
             )
         else:
-            raise TypeError(f"Cannot compare {self} with {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
 
 @dataclass
@@ -103,7 +103,7 @@ class PublicBigUnsignedInteger(NadaType):
         elif isinstance(other, SecretBigUnsignedInteger):
             return SecretBigUnsignedInteger(inner=addition)
         else:
-            raise TypeError(f"Cannot add {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __mul__(
         self, other: Union["PublicBigUnsignedInteger", "SecretBigUnsignedInteger"]
@@ -116,7 +116,7 @@ class PublicBigUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger16):
             return SecretBigUnsignedInteger(inner=multiplication)
         else:
-            raise TypeError(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
 
 @dataclass
@@ -130,7 +130,7 @@ class SecretUnsignedInteger8(NadaType):
         ):
             return SecretUnsignedInteger8(inner=addition)
         else:
-            raise TypeError(f"Cannot add {self} {other}")
+            raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __mul__(
         self, other: Union["PublicUnsignedInteger8", "SecretUnsignedInteger8"]
@@ -143,7 +143,7 @@ class SecretUnsignedInteger8(NadaType):
         ):
             return SecretUnsignedInteger8(inner=multiplication)
         else:
-            raise TypeError(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def cast(self, to: Type["SecretUnsignedInteger16"]) -> "SecretUnsignedInteger16":
         return SecretUnsignedInteger16(
@@ -160,7 +160,7 @@ class SecretUnsignedInteger8(NadaType):
                 )
             )
         else:
-            raise TypeError(f"Cannot compare {self} with {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
 
 @dataclass
@@ -174,7 +174,7 @@ class SecretUnsignedInteger16(NadaType):
         ):
             return SecretUnsignedInteger16(inner=addition)
         else:
-            raise TypeError(f"Cannot add {self} {other}")
+            raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __mul__(
         self, other: Union["PublicUnsignedInteger16", "SecretUnsignedInteger16"]
@@ -187,7 +187,7 @@ class SecretUnsignedInteger16(NadaType):
         ):
             return SecretUnsignedInteger16(inner=multiplication)
         else:
-            raise TypeError(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(
         self, other: Union["PublicUnsignedInteger16", "SecretUnsignedInteger16"]
@@ -199,4 +199,4 @@ class SecretUnsignedInteger16(NadaType):
                 )
             )
         else:
-            raise TypeError(f"Cannot compare {self} with {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
