@@ -20,7 +20,7 @@ class PublicInteger8(NadaType):
         elif isinstance(other, SecretInteger8):
             return SecretInteger8(inner=addition)
         else:
-            raise Exception(f"Cannot add {self} + {other}")
+            raise TypeError(f"Cannot add {self} + {other}")
 
     def __mul__(
         self, other: Union["PublicInteger8", "SecretInteger8"]
@@ -33,7 +33,7 @@ class PublicInteger8(NadaType):
         elif isinstance(other, SecretInteger8):
             return SecretInteger8(inner=multiplication)
         else:
-            raise Exception(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Cannot multiply {self} * {other}")
 
     def cast(self, to: Type["PublicInteger16"]) -> "PublicInteger16":
         return PublicInteger16(
@@ -50,7 +50,7 @@ class PublicInteger8(NadaType):
                 )
             )
         else:
-            raise Exception(f"Cannot compare {self} with {other}")
+            raise TypeError(f"Cannot compare {self} with {other}")
 
 
 @dataclass
@@ -64,7 +64,7 @@ class PublicInteger16(NadaType):
         elif isinstance(other, SecretInteger16):
             return SecretInteger16(inner=addition)
         else:
-            raise Exception(f"Cannot add {self} + {other}")
+            raise TypeError(f"Cannot add {self} + {other}")
 
     def __mul__(
         self, other: Union["PublicInteger16", "SecretInteger16"]
@@ -77,7 +77,7 @@ class PublicInteger16(NadaType):
         elif isinstance(other, SecretInteger16):
             return SecretInteger16(inner=multiplication)
         else:
-            raise Exception(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Cannot multiply {self} * {other}")
 
     def __lt__(
         self, other: Union["PublicInteger16", "SecretInteger16"]
@@ -89,7 +89,7 @@ class PublicInteger16(NadaType):
                 )
             )
         else:
-            raise Exception(f"Cannot compare {self} with {other}")
+            raise TypeError(f"Cannot compare {self} with {other}")
 
 
 @dataclass
@@ -103,7 +103,7 @@ class PublicBigInteger(NadaType):
         elif isinstance(other, SecretBigInteger):
             return SecretBigInteger(inner=addition)
         else:
-            raise Exception(f"Cannot add {self} + {other}")
+            raise TypeError(f"Cannot add {self} + {other}")
 
     def __mul__(
         self, other: Union["PublicBigInteger", "SecretBigInteger"]
@@ -116,7 +116,7 @@ class PublicBigInteger(NadaType):
         elif isinstance(other, SecretInteger16):
             return SecretBigInteger(inner=multiplication)
         else:
-            raise Exception(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Cannot multiply {self} * {other}")
 
 
 @dataclass
@@ -128,7 +128,7 @@ class SecretInteger8(NadaType):
         if isinstance(other, PublicInteger8) or isinstance(other, SecretInteger8):
             return SecretInteger8(inner=addition)
         else:
-            raise Exception(f"Cannot add {self} {other}")
+            raise TypeError(f"Cannot add {self} {other}")
 
     def __mul__(
         self, other: Union["PublicInteger8", "SecretInteger8"]
@@ -139,7 +139,7 @@ class SecretInteger8(NadaType):
         if isinstance(other, PublicInteger8) or isinstance(other, SecretInteger8):
             return SecretInteger8(inner=multiplication)
         else:
-            raise Exception(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Cannot multiply {self} * {other}")
 
     def cast(self, to: Type["SecretInteger16"]) -> "SecretInteger16":
         return SecretInteger16(
@@ -156,7 +156,7 @@ class SecretInteger8(NadaType):
                 )
             )
         else:
-            raise Exception(f"Cannot compare {self} with {other}")
+            raise TypeError(f"Cannot compare {self} with {other}")
 
 
 @dataclass
@@ -168,7 +168,7 @@ class SecretInteger16(NadaType):
         if isinstance(other, PublicInteger16) or isinstance(other, SecretInteger16):
             return SecretInteger16(inner=addition)
         else:
-            raise Exception(f"Cannot add {self} {other}")
+            raise TypeError(f"Cannot add {self} {other}")
 
     def __mul__(
         self, other: Union["PublicInteger16", "SecretInteger16"]
@@ -179,7 +179,7 @@ class SecretInteger16(NadaType):
         if isinstance(other, PublicInteger16) or isinstance(other, SecretInteger16):
             return SecretInteger16(inner=multiplication)
         else:
-            raise Exception(f"Cannot multiply {self} * {other}")
+            raise TypeError(f"Cannot multiply {self} * {other}")
 
     def __lt__(
         self, other: Union["PublicInteger16", "SecretInteger16"]
@@ -191,4 +191,4 @@ class SecretInteger16(NadaType):
                 )
             )
         else:
-            raise Exception(f"Cannot compare {self} with {other}")
+            raise TypeError(f"Cannot compare {self} with {other}")
