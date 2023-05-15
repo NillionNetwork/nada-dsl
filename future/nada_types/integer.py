@@ -15,9 +15,9 @@ class PublicInteger8(NadaType):
         self, other: Union["PublicInteger8", "SecretInteger8"]
     ) -> Union["PublicInteger8", "SecretInteger8"]:
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicInteger8:
+        if isinstance(other, PublicInteger8):
             return PublicInteger8(inner=addition)
-        elif type(other) == SecretInteger8:
+        elif isinstance(other, SecretInteger8):
             return SecretInteger8(inner=addition)
         else:
             raise Exception(f"Cannot add {self} + {other}")
@@ -28,9 +28,9 @@ class PublicInteger8(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicInteger8:
+        if isinstance(other, PublicInteger8):
             return PublicInteger8(inner=multiplication)
-        elif type(other) == SecretInteger8:
+        elif isinstance(other, SecretInteger8):
             return SecretInteger8(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
@@ -59,9 +59,9 @@ class PublicInteger16(NadaType):
         self, other: Union["PublicInteger16", "SecretInteger16"]
     ) -> Union["PublicInteger16", "SecretInteger16"]:
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicInteger16:
+        if isinstance(other, PublicInteger16):
             return PublicInteger16(inner=addition)
-        elif type(other) == SecretInteger16:
+        elif isinstance(other, SecretInteger16):
             return SecretInteger16(inner=addition)
         else:
             raise Exception(f"Cannot add {self} + {other}")
@@ -72,9 +72,9 @@ class PublicInteger16(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicInteger16:
+        if isinstance(other, PublicInteger16):
             return PublicInteger16(inner=multiplication)
-        elif type(other) == SecretInteger16:
+        elif isinstance(other, SecretInteger16):
             return SecretInteger16(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
@@ -98,9 +98,9 @@ class PublicBigInteger(NadaType):
         self, other: Union["PublicBigInteger", "SecretBigInteger"]
     ) -> Union["PublicBigInteger", "SecretBigInteger"]:
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicBigInteger:
+        if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=addition)
-        elif type(other) == SecretBigInteger:
+        elif isinstance(other, SecretBigInteger):
             return SecretBigInteger(inner=addition)
         else:
             raise Exception(f"Cannot add {self} + {other}")
@@ -111,9 +111,9 @@ class PublicBigInteger(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicBigInteger:
+        if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=multiplication)
-        elif type(other) == SecretInteger16:
+        elif isinstance(other, SecretInteger16):
             return SecretBigInteger(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
@@ -125,7 +125,7 @@ class SecretInteger8(NadaType):
         self, other: Union["PublicInteger8", "SecretInteger8"]
     ) -> "SecretInteger8":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicInteger8 or type(other) == SecretInteger8:
+        if isinstance(other, PublicInteger8) or isinstance(other, SecretInteger8):
             return SecretInteger8(inner=addition)
         else:
             raise Exception(f"Cannot add {self} {other}")
@@ -136,7 +136,7 @@ class SecretInteger8(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicInteger8 or type(other) == SecretInteger8:
+        if isinstance(other, PublicInteger8) or isinstance(other, SecretInteger8):
             return SecretInteger8(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
@@ -165,7 +165,7 @@ class SecretInteger16(NadaType):
         self, other: Union["PublicInteger16", "SecretInteger16"]
     ) -> "SecretInteger16":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicInteger16 or type(other) == SecretInteger16:
+        if isinstance(other, PublicInteger16) or isinstance(other, SecretInteger16):
             return SecretInteger16(inner=addition)
         else:
             raise Exception(f"Cannot add {self} {other}")
@@ -176,7 +176,7 @@ class SecretInteger16(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicInteger16 or type(other) == SecretInteger16:
+        if isinstance(other, PublicInteger16) or isinstance(other, SecretInteger16):
             return SecretInteger16(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")

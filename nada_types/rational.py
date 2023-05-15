@@ -13,7 +13,7 @@ class SecretFixedPointRational(NadaType):
 
     def __add__(self, other: "SecretFixedPointRational") -> "SecretFixedPointRational":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == SecretFixedPointRational and other.digits == self.digits:
+        if isinstance(other, SecretFixedPointRational) and other.digits == self.digits:
             return SecretFixedPointRational(inner=addition, digits=self.digits)
         else:
             raise Exception(f"Cannot add {self} {other}")
@@ -22,14 +22,14 @@ class SecretFixedPointRational(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == SecretFixedPointRational:
-            digits = self.digits+other.digits
+        if isinstance(other, SecretFixedPointRational):
+            digits = self.digits + other.digits
             return SecretFixedPointRational(inner=multiplication, digits=digits)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
 
     def __lt__(self, other: "SecretFixedPointRational") -> "SecretBoolean":
-        if type(other) == SecretFixedPointRational and other.digits == self.digits:
+        if isinstance(other, SecretFixedPointRational) and other.digits == self.digits:
             return SecretBoolean(
                 inner=CompareLessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()
@@ -44,7 +44,7 @@ class PublicFixedPointRational(NadaType):
 
     def __add__(self, other: "PublicFixedPointRational") -> "PublicFixedPointRational":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicFixedPointRational and other.digits == self.digits:
+        if isinstance(other, PublicFixedPointRational) and other.digits == self.digits:
             return PublicFixedPointRational(inner=addition, digits=self.digits)
         else:
             raise Exception(f"Cannot add {self} {other}")
@@ -53,14 +53,14 @@ class PublicFixedPointRational(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicFixedPointRational:
-            digits = self.digits+other.digits
+        if isinstance(other, PublicFixedPointRational):
+            digits = self.digits + other.digits
             return PublicFixedPointRational(inner=multiplication, digits=digits)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
 
     def __lt__(self, other: "PublicFixedPointRational") -> "PublicBoolean":
-        if type(other) == PublicFixedPointRational and other.digits == self.digits:
+        if isinstance(other, PublicFixedPointRational) and other.digits == self.digits:
             return PublicBoolean(
                 inner=CompareLessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()

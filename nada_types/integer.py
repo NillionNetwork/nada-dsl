@@ -11,7 +11,7 @@ from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
 class SecretBigInteger(NadaType):
     def __add__(self, other: "SecretBigInteger") -> "SecretBigInteger":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == SecretBigInteger:
+        if isinstance(other, SecretBigInteger):
             return SecretBigInteger(inner=addition)
         else:
             raise Exception(f"Cannot add {self} {other}")
@@ -20,13 +20,13 @@ class SecretBigInteger(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == SecretBigInteger:
+        if isinstance(other, SecretBigInteger):
             return SecretBigInteger(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
 
     def __lt__(self, other: "SecretBigInteger") -> "SecretBoolean":
-        if type(other) == SecretBigInteger:
+        if isinstance(other, SecretBigInteger):
             return SecretBoolean(
                 inner=CompareLessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()
@@ -39,7 +39,7 @@ class SecretBigInteger(NadaType):
 class PublicBigInteger(NadaType):
     def __add__(self, other: "PublicBigInteger") -> "PublicBigInteger":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicBigInteger:
+        if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=addition)
         else:
             raise Exception(f"Cannot add {self} {other}")
@@ -48,13 +48,13 @@ class PublicBigInteger(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicBigInteger:
+        if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
 
     def __lt__(self, other: "PublicBigInteger") -> "PublicBoolean":
-        if type(other) == PublicBigInteger:
+        if isinstance(other, PublicBigInteger):
             return PublicBoolean(
                 inner=CompareLessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()

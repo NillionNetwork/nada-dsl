@@ -15,9 +15,9 @@ class PublicUnsignedInteger8(NadaType):
         self, other: Union["PublicUnsignedInteger8", "SecretUnsignedInteger8"]
     ) -> Union["PublicUnsignedInteger8", "SecretUnsignedInteger8"]:
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicUnsignedInteger8:
+        if isinstance(other, PublicUnsignedInteger8):
             return PublicUnsignedInteger8(inner=addition)
-        elif type(other) == SecretUnsignedInteger8:
+        elif isinstance(other, SecretUnsignedInteger8):
             return SecretUnsignedInteger8(inner=addition)
         else:
             raise Exception(f"Cannot add {self} + {other}")
@@ -28,9 +28,9 @@ class PublicUnsignedInteger8(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicUnsignedInteger8:
+        if isinstance(other, PublicUnsignedInteger8):
             return PublicUnsignedInteger8(inner=multiplication)
-        elif type(other) == SecretUnsignedInteger8:
+        elif isinstance(other, SecretUnsignedInteger8):
             return SecretUnsignedInteger8(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
@@ -59,9 +59,9 @@ class PublicUnsignedInteger16(NadaType):
         self, other: Union["PublicUnsignedInteger16", "SecretUnsignedInteger16"]
     ) -> Union["PublicUnsignedInteger16", "SecretUnsignedInteger16"]:
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicUnsignedInteger16:
+        if isinstance(other, PublicUnsignedInteger16):
             return PublicUnsignedInteger16(inner=addition)
-        elif type(other) == SecretUnsignedInteger16:
+        elif isinstance(other, SecretUnsignedInteger16):
             return SecretUnsignedInteger16(inner=addition)
         else:
             raise Exception(f"Cannot add {self} + {other}")
@@ -72,9 +72,9 @@ class PublicUnsignedInteger16(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicUnsignedInteger16:
+        if isinstance(other, PublicUnsignedInteger16):
             return PublicUnsignedInteger16(inner=multiplication)
-        elif type(other) == SecretUnsignedInteger16:
+        elif isinstance(other, SecretUnsignedInteger16):
             return SecretUnsignedInteger16(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
@@ -98,9 +98,9 @@ class PublicBigUnsignedInteger(NadaType):
         self, other: Union["PublicBigUnsignedInteger", "SecretBigUnsignedInteger"]
     ) -> Union["PublicBigUnsignedInteger", "SecretBigUnsignedInteger"]:
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicBigUnsignedInteger:
+        if isinstance(other, PublicBigUnsignedInteger):
             return PublicBigUnsignedInteger(inner=addition)
-        elif type(other) == SecretBigUnsignedInteger:
+        elif isinstance(other, SecretBigUnsignedInteger):
             return SecretBigUnsignedInteger(inner=addition)
         else:
             raise Exception(f"Cannot add {self} + {other}")
@@ -111,9 +111,9 @@ class PublicBigUnsignedInteger(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicBigUnsignedInteger:
+        if isinstance(other, PublicBigUnsignedInteger):
             return PublicBigUnsignedInteger(inner=multiplication)
-        elif type(other) == SecretUnsignedInteger16:
+        elif isinstance(other, SecretUnsignedInteger16):
             return SecretBigUnsignedInteger(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
@@ -125,7 +125,9 @@ class SecretUnsignedInteger8(NadaType):
         self, other: Union["PublicUnsignedInteger8", "SecretUnsignedInteger8"]
     ) -> "SecretUnsignedInteger8":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicUnsignedInteger8 or type(other) == SecretUnsignedInteger8:
+        if isinstance(other, PublicUnsignedInteger8) or isinstance(
+            other, SecretUnsignedInteger8
+        ):
             return SecretUnsignedInteger8(inner=addition)
         else:
             raise Exception(f"Cannot add {self} {other}")
@@ -136,7 +138,9 @@ class SecretUnsignedInteger8(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicUnsignedInteger8 or type(other) == SecretUnsignedInteger8:
+        if isinstance(other, PublicUnsignedInteger8) or isinstance(
+            other, SecretUnsignedInteger8
+        ):
             return SecretUnsignedInteger8(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
@@ -165,7 +169,9 @@ class SecretUnsignedInteger16(NadaType):
         self, other: Union["PublicUnsignedInteger16", "SecretUnsignedInteger16"]
     ) -> "SecretUnsignedInteger16":
         addition = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if type(other) == PublicUnsignedInteger16 or type(other) == SecretUnsignedInteger16:
+        if isinstance(other, PublicUnsignedInteger16) or isinstance(
+            other, SecretUnsignedInteger16
+        ):
             return SecretUnsignedInteger16(inner=addition)
         else:
             raise Exception(f"Cannot add {self} {other}")
@@ -176,7 +182,9 @@ class SecretUnsignedInteger16(NadaType):
         multiplication = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if type(other) == PublicUnsignedInteger16 or type(other) == SecretUnsignedInteger16:
+        if isinstance(other, PublicUnsignedInteger16) or isinstance(
+            other, SecretUnsignedInteger16
+        ):
             return SecretUnsignedInteger16(inner=multiplication)
         else:
             raise Exception(f"Cannot multiply {self} * {other}")
