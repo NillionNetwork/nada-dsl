@@ -17,29 +17,44 @@ from nada_dsl.operations import (
 )
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
+from typing import Union
 
 
 @dataclass
 class SecretBigInteger(NadaType):
-    def __add__(self, other: "SecretBigInteger") -> "SecretBigInteger":
+    def __add__(
+        self, other: Union["SecretBigInteger", "PublicBigInteger"]
+    ) -> "SecretBigInteger":
         operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretBigInteger):
+        if isinstance(other, SecretBigInteger) or isinstance(other, PublicBigInteger):
             return SecretBigInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
-    def __mul__(self, other: "SecretBigInteger") -> "SecretBigInteger":
+    def __mul__(
+        self, other: Union["SecretBigInteger", "PublicBigInteger"]
+    ) -> "SecretBigInteger":
         operation = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretBigInteger):
+        if isinstance(other, SecretBigInteger) or isinstance(other, PublicBigInteger):
             return SecretBigInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
+<<<<<<< HEAD
     def __lt__(self, other: "SecretBigInteger") -> "SecretBoolean":
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, SecretBigInteger):
+=======
+    def __lt__(
+        self, other: Union["SecretBigInteger", "PublicBigInteger"]
+    ) -> "SecretBoolean":
+        operation = CompareLessThan(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, SecretBigInteger) or isinstance(other, PublicBigInteger):
+>>>>>>> 8792a6e6 (Add public + secret operations)
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")

@@ -17,29 +17,42 @@ from nada_dsl.operations import (
 )
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
+from typing import Union
 
 
 @dataclass
 class SecretBigUnsignedInteger(NadaType):
-    def __add__(self, other: "SecretBigUnsignedInteger") -> "SecretBigUnsignedInteger":
+    def __add__(
+        self, other: Union["SecretBigUnsignedInteger", "PublicBigUnsignedInteger"]
+    ) -> "SecretBigUnsignedInteger":
         operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretBigUnsignedInteger):
+        if isinstance(other, SecretBigUnsignedInteger) or isinstance(
+            other, PublicBigUnsignedInteger
+        ):
             return SecretBigUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
-    def __mul__(self, other: "SecretBigUnsignedInteger") -> "SecretBigUnsignedInteger":
+    def __mul__(
+        self, other: Union["SecretBigUnsignedInteger", "PublicBigUnsignedInteger"]
+    ) -> "SecretBigUnsignedInteger":
         operation = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretBigUnsignedInteger):
+        if isinstance(other, SecretBigUnsignedInteger) or isinstance(
+            other, PublicBigUnsignedInteger
+        ):
             return SecretBigUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
-    def __lt__(self, other: "SecretBigUnsignedInteger") -> "SecretBoolean":
+    def __lt__(
+        self, other: Union["SecretBigUnsignedInteger", "PublicBigUnsignedInteger"]
+    ) -> "SecretBoolean":
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretBigUnsignedInteger):
+        if isinstance(other, SecretBigUnsignedInteger) or isinstance(
+            other, PublicBigUnsignedInteger
+        ):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
