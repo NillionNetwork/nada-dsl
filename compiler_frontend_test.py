@@ -99,7 +99,7 @@ def test_fixed_point_rational_type_conversion():
     [
         (operator.add, "Addition", "SecretBigInteger"),
         (operator.mul, "Multiplication", "SecretBigInteger"),
-        (operator.lt, "CompareLessThan", "SecretBoolean"),
+        (operator.lt, "LessThan", "SecretBoolean"),
     ],
 )
 def test_binary_operator(operator, name, ty):
@@ -121,7 +121,7 @@ def test_binary_operator(operator, name, ty):
     [
         (operator.add, "Addition", "PublicBigInteger"),
         (operator.mul, "Multiplication", "PublicBigInteger"),
-        (operator.lt, "CompareLessThan", "PublicBoolean"),
+        (operator.lt, "LessThan", "PublicBoolean"),
     ],
 )
 def test_binary_operator_public(operator, name, ty):

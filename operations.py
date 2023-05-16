@@ -54,28 +54,28 @@ class LeftShift:
 
 
 @dataclass
-class CompareLessThan:
+class LessThan:
     left: AllTypes
     right: AllTypes
     source_ref: SourceRef
 
 
 @dataclass
-class CompareGreaterThan:
+class GreaterThan:
     left: AllTypes
     right: AllTypes
     source_ref: SourceRef
 
 
 @dataclass
-class CompareLessOrEqualThan:
+class LessOrEqualThan:
     left: AllTypes
     right: AllTypes
     source_ref: SourceRef
 
 
 @dataclass
-class CompareGreaterOrEqualThan:
+class GreaterOrEqualThan:
     left: AllTypes
     right: AllTypes
     source_ref: SourceRef

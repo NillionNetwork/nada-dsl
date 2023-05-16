@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from . import NadaType
-from nada_dsl.operations import Addition, Multiplication, CompareLessThan
+from nada_dsl.operations import Addition, Multiplication, LessThan
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
 
@@ -30,7 +30,7 @@ class SecretFixedPointRational(NadaType):
     def __lt__(self, other: "SecretFixedPointRational") -> "SecretBoolean":
         if isinstance(other, SecretFixedPointRational) and other.digits == self.digits:
             return SecretBoolean(
-                inner=CompareLessThan(
+                inner=LessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()
                 )
             )
@@ -60,9 +60,7 @@ class PublicFixedPointRational(NadaType):
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(self, other: "PublicFixedPointRational") -> "PublicBoolean":
-        operation = CompareLessThan(
-            left=self, right=other, source_ref=SourceRef.back_frame()
-        )
+        operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicFixedPointRational) and other.digits == self.digits:
             return PublicBoolean(inner=operation)
         else:

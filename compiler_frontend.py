@@ -17,7 +17,7 @@ from nada_dsl.future.nada_types.collections import (
 )
 from nada_dsl.future.nada_types.function import NadaFunction
 from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
-from nada_dsl.operations import Addition, Multiplication, CompareLessThan
+from nada_dsl.operations import Addition, Multiplication, LessThan
 
 INPUTS = {}
 PARTIES = {}
@@ -102,14 +102,16 @@ def to_party_list(parties):
 def to_input_list(inputs):
     input_list = []
     for party_inputs in inputs.values():
-        for (program_input, program_type) in party_inputs.values():
-            input_list.append({
-                "name": program_input.name,
-                "type": program_type,
-                "party": program_input.party.name,
-                "doc": program_input.doc,
-                "source_ref": program_input.source_ref.to_dict(),
-            })
+        for program_input, program_type in party_inputs.values():
+            input_list.append(
+                {
+                    "name": program_input.name,
+                    "type": program_type,
+                    "party": program_input.party.name,
+                    "doc": program_input.doc,
+                    "source_ref": program_input.source_ref.to_dict(),
+                }
+            )
     return input_list
 
 
@@ -189,7 +191,9 @@ def process_operation(operation_wrapper):
         PARTIES[party_name] = operation.party
         if party_name not in INPUTS:
             INPUTS[party_name] = {}
-        if operation.name in INPUTS[party_name] and id(INPUTS[party_name][operation.name][0]) != id(operation):
+        if operation.name in INPUTS[party_name] and id(
+            INPUTS[party_name][operation.name][0]
+        ) != id(operation):
             raise Exception(f"Input is duplicated: {operation.name}")
         else:
             INPUTS[party_name][operation.name] = (operation, ty)
@@ -233,9 +237,9 @@ def process_operation(operation_wrapper):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-    elif type(operation) == CompareLessThan:
+    elif type(operation) == LessThan:
         return {
-            "CompareLessThan": {
+            "LessThan": {
                 "left": process_operation(operation.left),
                 "right": process_operation(operation.right),
                 "type": ty,

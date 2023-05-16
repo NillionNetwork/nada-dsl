@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from . import NadaType
 from nada_dsl.operations import (
     Addition,
-    CompareGreaterOrEqualThan,
-    CompareGreaterThan,
-    CompareLessOrEqualThan,
-    CompareLessThan,
+    GreaterOrEqualThan,
+    GreaterThan,
+    LessOrEqualThan,
+    LessThan,
     Division,
     Equals,
     LeftShift,
@@ -38,9 +38,7 @@ class SecretBigInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(self, other: "SecretBigInteger") -> "SecretBoolean":
-        operation = CompareLessThan(
-            left=self, right=other, source_ref=SourceRef.back_frame()
-        )
+        operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, SecretBigInteger):
             return SecretBoolean(inner=operation)
         else:
@@ -105,16 +103,14 @@ class PublicBigInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __lt__(self, other: "PublicBigInteger") -> "PublicBoolean":
-        operation = CompareLessThan(
-            left=self, right=other, source_ref=SourceRef.back_frame()
-        )
+        operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicBigInteger):
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(self, other: "PublicBigInteger") -> "PublicBoolean":
-        operation = CompareGreaterThan(
+        operation = GreaterThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if isinstance(other, PublicBigInteger):
@@ -123,7 +119,7 @@ class PublicBigInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __lte__(self, other: "PublicBigInteger") -> "PublicBoolean":
-        operation = CompareLessOrEqualThan(
+        operation = LessOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if isinstance(other, PublicBigInteger):
@@ -132,7 +128,7 @@ class PublicBigInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __gte__(self, other: "PublicBigInteger") -> "PublicBoolean":
-        operation = CompareGreaterOrEqualThan(
+        operation = GreaterOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
         if isinstance(other, PublicBigInteger):

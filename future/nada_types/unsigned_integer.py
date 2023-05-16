@@ -4,7 +4,7 @@ from typing import Union, Type
 from nada_dsl import SourceRef
 from nada_dsl.nada_types import NadaType
 from nada_dsl.future.operations import Cast
-from nada_dsl.operations import Addition, Multiplication, CompareLessThan
+from nada_dsl.operations import Addition, Multiplication, LessThan
 from nada_dsl.nada_types.unsigned_integer import SecretBigUnsignedInteger
 from nada_dsl.nada_types.boolean import SecretBoolean
 
@@ -45,7 +45,7 @@ class PublicUnsignedInteger8(NadaType):
     ) -> "SecretBoolean":
         if type(other) in [PublicUnsignedInteger8, SecretUnsignedInteger8]:
             return SecretBoolean(
-                inner=CompareLessThan(
+                inner=LessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()
                 )
             )
@@ -84,7 +84,7 @@ class PublicUnsignedInteger16(NadaType):
     ) -> "SecretBoolean":
         if type(other) in [PublicUnsignedInteger16, SecretUnsignedInteger16]:
             return SecretBoolean(
-                inner=CompareLessThan(
+                inner=LessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()
                 )
             )
@@ -155,7 +155,7 @@ class SecretUnsignedInteger8(NadaType):
     ) -> "SecretBoolean":
         if type(other) in [PublicUnsignedInteger8, SecretUnsignedInteger8]:
             return SecretBoolean(
-                inner=CompareLessThan(
+                inner=LessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()
                 )
             )
@@ -194,7 +194,7 @@ class SecretUnsignedInteger16(NadaType):
     ) -> "SecretBoolean":
         if type(other) in [PublicUnsignedInteger16, SecretUnsignedInteger16]:
             return SecretBoolean(
-                inner=CompareLessThan(
+                inner=LessThan(
                     left=self, right=other, source_ref=SourceRef.back_frame()
                 )
             )
