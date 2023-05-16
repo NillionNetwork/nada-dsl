@@ -42,19 +42,11 @@ class SecretBigInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
-<<<<<<< HEAD
-    def __lt__(self, other: "SecretBigInteger") -> "SecretBoolean":
-        operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretBigInteger):
-=======
     def __lt__(
         self, other: Union["SecretBigInteger", "PublicBigInteger"]
     ) -> "SecretBoolean":
-        operation = CompareLessThan(
-            left=self, right=other, source_ref=SourceRef.back_frame()
-        )
+        operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, SecretBigInteger) or isinstance(other, PublicBigInteger):
->>>>>>> 8792a6e6 (Add public + secret operations)
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
