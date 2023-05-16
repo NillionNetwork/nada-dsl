@@ -17,7 +17,20 @@ from nada_dsl.future.nada_types.collections import (
 )
 from nada_dsl.future.nada_types.function import NadaFunction
 from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
-from nada_dsl.operations import Addition, Multiplication, LessThan
+from nada_dsl.operations import (
+    Addition,
+    Subtraction,
+    Multiplication,
+    Division,
+    Modulo,
+    RightShift,
+    LeftShift,
+    LessThan,
+    GreaterThan,
+    LessOrEqualThan,
+    GreaterOrEqualThan,
+    Equals,
+)
 
 INPUTS = {}
 PARTIES = {}
@@ -168,9 +181,99 @@ def process_operation(operation_wrapper):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
+    elif type(operation) == Subtraction:
+        return {
+            "Subtraction": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
     elif type(operation) == Multiplication:
         return {
             "Multiplication": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == Division:
+        return {
+            "Division": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == Modulo:
+        return {
+            "Modulo": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == RightShift:
+        return {
+            "RightShift": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == LeftShift:
+        return {
+            "LeftShift": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == LessThan:
+        return {
+            "LessThan": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == GreaterThan:
+        return {
+            "GreaterThan": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == LessOrEqualThan:
+        return {
+            "LessOrEqualThan": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == GreaterOrEqualThan:
+        return {
+            "GreaterOrEqualThan": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif type(operation) == Equals:
+        return {
+            "Equals": {
                 "left": process_operation(operation.left),
                 "right": process_operation(operation.right),
                 "type": ty,
@@ -233,15 +336,6 @@ def process_operation(operation_wrapper):
         return {
             "Unzip": {
                 "inner": process_operation(operation.inner),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == LessThan:
-        return {
-            "LessThan": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }

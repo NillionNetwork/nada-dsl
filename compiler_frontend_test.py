@@ -120,8 +120,17 @@ def test_binary_operator(operator, name, ty):
     ("operator", "name", "ty"),
     [
         (operator.add, "Addition", "PublicBigInteger"),
+        (operator.sub, "Subtraction", "PublicBigInteger"),
         (operator.mul, "Multiplication", "PublicBigInteger"),
+        (operator.truediv, "Division", "PublicBigInteger"),
+        (operator.mod, "Modulo", "PublicBigInteger"),
+        (operator.rshift, "RightShift", "PublicBigInteger"),
+        (operator.lshift, "LeftShift", "PublicBigInteger"),
         (operator.lt, "LessThan", "PublicBoolean"),
+        (operator.gt, "GreaterThan", "PublicBoolean"),
+        (operator.le, "LessOrEqualThan", "PublicBoolean"),
+        (operator.ge, "GreaterOrEqualThan", "PublicBoolean"),
+        (operator.eq, "Equals", "PublicBoolean"),
     ],
 )
 def test_binary_operator_public(operator, name, ty):
