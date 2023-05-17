@@ -79,7 +79,7 @@ class PublicBigInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
-    def __div__(self, other: "PublicBigInteger") -> "PublicBigInteger":
+    def __truediv__(self, other: "PublicBigInteger") -> "PublicBigInteger":
         operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
@@ -125,7 +125,7 @@ class PublicBigInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
-    def __lte__(self, other: "PublicBigInteger") -> "PublicBoolean":
+    def __le__(self, other: "PublicBigInteger") -> "PublicBoolean":
         operation = LessOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
@@ -134,7 +134,7 @@ class PublicBigInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
-    def __gte__(self, other: "PublicBigInteger") -> "PublicBoolean":
+    def __ge__(self, other: "PublicBigInteger") -> "PublicBoolean":
         operation = GreaterOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )

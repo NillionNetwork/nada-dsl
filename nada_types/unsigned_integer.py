@@ -85,7 +85,9 @@ class PublicBigUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
-    def __div__(self, other: "PublicBigUnsignedInteger") -> "PublicBigUnsignedInteger":
+    def __truediv__(
+        self, other: "PublicBigUnsignedInteger"
+    ) -> "PublicBigUnsignedInteger":
         operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicBigUnsignedInteger):
             return PublicBigUnsignedInteger(inner=operation)
@@ -135,7 +137,7 @@ class PublicBigUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
-    def __lte__(self, other: "PublicBigUnsignedInteger") -> "PublicBoolean":
+    def __le__(self, other: "PublicBigUnsignedInteger") -> "PublicBoolean":
         operation = LessOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
@@ -144,7 +146,7 @@ class PublicBigUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
-    def __gte__(self, other: "PublicBigUnsignedInteger") -> "PublicBoolean":
+    def __ge__(self, other: "PublicBigUnsignedInteger") -> "PublicBoolean":
         operation = GreaterOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
