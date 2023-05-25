@@ -3,10 +3,10 @@ from typing import Generic, Tuple
 
 from nada_dsl import SourceRef
 from nada_dsl.errors import NadaNotAllowedException
-from nada_dsl.future.nada_types.function import NadaFunction
-from nada_dsl.future.nada_types.generics import U, T, R
+from nada_dsl.nada_types.function import NadaFunction
+from nada_dsl.nada_types.generics import U, T, R
 from nada_dsl.nada_types.integer import PublicBigInteger
-from nada_dsl.future.operations import Map, Zip, Reduce
+from nada_dsl.operations import Map, Zip, Reduce
 from nada_dsl.nada_types import NadaType, AllTypesType
 
 

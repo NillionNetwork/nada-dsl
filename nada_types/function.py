@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Generic, List, Callable
 
 from nada_dsl import SourceRef
-from nada_dsl.future.nada_types.generics import T, R
+from nada_dsl.nada_types.generics import T, R
 from nada_dsl.nada_types import NadaType
 
 

@@ -7,7 +7,7 @@ from typing import List, Optional, Dict, Any
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output
 from nada_dsl.nada_types.rational import SecretFixedPointRational
-from nada_dsl.future.nada_types.collections import (
+from nada_dsl.nada_types.collections import (
     Array,
     Vector,
     NadaTuple,
@@ -15,8 +15,9 @@ from nada_dsl.future.nada_types.collections import (
     VectorType,
     NadaTupleType,
 )
-from nada_dsl.future.nada_types.function import NadaFunction
-from nada_dsl.future.operations import Cast, Map, Reduce, Zip, Unzip
+from nada_dsl.nada_types.function import NadaFunction
+from nada_dsl.operations import Map, Reduce, Zip, Unzip
+from nada_dsl.future.operations import Cast
 from nada_dsl.operations import (
     Addition,
     Subtraction,
@@ -167,7 +168,7 @@ def to_fn_dict(fn: NadaFunction):
 
 
 def process_operation(operation_wrapper):
-    from nada_dsl.future.nada_types.function import NadaFunctionArg
+    from nada_dsl.nada_types.function import NadaFunctionArg
 
     ty = to_type_dict(operation_wrapper)
     operation = operation_wrapper.inner
