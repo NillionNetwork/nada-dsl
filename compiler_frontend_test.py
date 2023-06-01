@@ -27,6 +27,10 @@ def create_input(clazz, name: str, party: str, **kwargs):
     return clazz(Input(name=name, party=Party(party)), **kwargs)
 
 
+def create_collection(clazz, inner_input, size, **kwargs):
+    return clazz(inner_input, size, **kwargs)
+
+
 def create_output(root: AllTypes, name: str, party: str) -> Output:
     return Output(root, name, Party(party))
 
@@ -92,6 +96,16 @@ def test_fixed_point_rational_type_conversion():
     converted_input = to_type_dict(input)
     expected = {"SecretFixedPointRational": {"digits": 3}}
     assert converted_input == expected
+
+
+@pytest.mark.parametrize(
+    ("input_type", "type_name", "size"), [(Array, "Array", 10), (Vector, "Vector", 10)]
+)
+def test_array_type_conversion(input_type, type_name, size):
+    inner_input = create_input(SecretBigInteger, "name", "party", **{})
+    input = create_collection(input_type, inner_input, size, **{})
+    converted_input = to_type_dict(input)
+    assert list(converted_input.keys()) == [type_name]
 
 
 @pytest.mark.parametrize(
@@ -161,3 +175,52 @@ def test_fixed_point_rational_digit_checks_public(operator):
     right = create_input(PublicFixedPointRational, "right", "party", digits=4)
     with pytest.raises(Exception):
         operator(left, right)
+
+
+@pytest.mark.parametrize(
+    ("input_type", "input_name"),
+    [(Array, "Array"), (Vector, "Vector")],
+)
+def test_zip(input_type, input_name):
+    inner_input = create_input(SecretBigInteger, "left", "party", **{})
+    left = create_collection(input_type, inner_input, 10, **{})
+    inner_input = create_input(SecretBigInteger, "right", "party", **{})
+    right = create_collection(input_type, inner_input, 10, **{})
+    zipped = left.zip(right)
+    op = process_operation(zipped)
+    assert list(op.keys()) == ["Zip"]
+
+    inner = op["Zip"]
+
+    assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
+    assert inner["type"][input_name]["inner_type"] == {
+        "NadaTuple": {"left_type": "SecretBigInteger", "right_type": "SecretBigInteger"}
+    }
+
+
+@pytest.mark.parametrize(
+    ("input_type", "input_name"),
+    [(Array, "Array"), (Vector, "Vector")],
+)
+def test_unzip(input_type, input_name):
+    inner_input = create_input(SecretBigInteger, "left", "party", **{})
+    left = create_collection(input_type, inner_input, 10, **{})
+    inner_input = create_input(SecretBigInteger, "right", "party", **{})
+    right = create_collection(input_type, inner_input, 10, **{})
+    unzipped = unzip(left.zip(right))
+    op = process_operation(unzipped)
+
+    assert list(op.keys()) == ["Unzip"]
+
+    inner = op["Unzip"]
+
+    assert list(inner["inner"].keys()) == [
+        "Zip"
+    ]  # We don't check Zip operation because it has its test
+    assert inner["type"] == {
+        "NadaTuple": {
+            "left_type": {"Array": {"inner_type": "SecretBigInteger", "size": 10}},
+            "right_type": {"Array": {"inner_type": "SecretBigInteger", "size": 10}},
+        }
+    }
