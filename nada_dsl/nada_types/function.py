@@ -15,6 +15,7 @@ class NadaFunctionArg(Generic[T]):
 
 @dataclass
 class NadaFunction(NadaType, Generic[T, R]):
+    id: int
     args: List[NadaFunctionArg]
     function: Callable[[T], R]
     return_type: R
@@ -46,6 +47,7 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
     inner = fn(*nada_args_type_wrapped)
     return_type = return_ty if return_ty else args.annotations["return"]
     return NadaFunction(
+        id=id(fn),
         function=fn,
         args=nada_args,
         inner=inner,

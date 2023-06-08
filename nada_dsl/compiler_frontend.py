@@ -36,6 +36,7 @@ from nada_dsl.operations import (
 
 INPUTS = {}
 PARTIES = {}
+FUNCTIONS = {}
 
 
 class ClassEncoder(JSONEncoder):
@@ -99,6 +100,7 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
     return {
         "parties": to_party_list(PARTIES),
         "inputs": to_input_list(INPUTS),
+        "functions": to_function_list(FUNCTIONS),
         "outputs": new_outputs,
         "source_files": SourceRef.get_sources(),
     }
@@ -129,6 +131,12 @@ def to_input_list(inputs):
             )
     return input_list
 
+
+def to_function_list(functions):
+    function_list = []
+    for function in functions.values():
+        function_list.append(to_fn_dict(function))
+    return function_list
 
 def to_type_dict(op_wrapper):
     if type(op_wrapper) == Array or type(op_wrapper) == ArrayType:
@@ -167,6 +175,7 @@ def to_type_dict(op_wrapper):
 
 def to_fn_dict(fn: NadaFunction):
     return {
+        "id": fn.id,
         "args": [{"name": arg.name, "type": arg.type.__name__} for arg in fn.args],
         "function": fn.function.__name__,
         "inner": process_operation(fn.inner),
@@ -314,18 +323,22 @@ def process_operation(operation_wrapper):
             }
         }
     elif type(operation) == Map:
+        if operation.fn.id not in FUNCTIONS:
+            FUNCTIONS[operation.fn.id] = operation.fn
         return {
             "Map": {
-                "fn": to_fn_dict(operation.fn),
+                "fn": operation.fn.id,
                 "inner": process_operation(operation.inner),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif type(operation) == Reduce:
+        if operation.fn.id not in FUNCTIONS:
+            FUNCTIONS[operation.fn.id] = operation.fn
         return {
             "Reduce": {
-                "fn": to_fn_dict(operation.fn),
+                "fn": operation.fn.id,
                 "inner": process_operation(operation.inner),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
