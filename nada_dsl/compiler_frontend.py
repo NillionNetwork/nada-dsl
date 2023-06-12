@@ -98,9 +98,9 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
         )
 
     return {
+        "functions": to_function_list(FUNCTIONS),
         "parties": to_party_list(PARTIES),
         "inputs": to_input_list(INPUTS),
-        "functions": to_function_list(FUNCTIONS),
         "outputs": new_outputs,
         "source_files": SourceRef.get_sources(),
     }
@@ -363,7 +363,8 @@ def process_operation(operation_wrapper):
         }
     elif type(operation) == NadaFunctionArg:
         return {
-            "NadaFunctionArg": {
+            "NadaFunctionArgRef": {
+                "function_id": operation.function_id,
                 "name": operation.name,
                 "type": operation.type.__name__,
             }

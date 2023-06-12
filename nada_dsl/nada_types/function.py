@@ -9,6 +9,7 @@ from nada_dsl.nada_types import NadaType
 
 @dataclass
 class NadaFunctionArg(Generic[T]):
+    function_id: int
     name: str
     type: T
 
@@ -37,7 +38,7 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
     nada_args = []
     for idx, arg in enumerate(args.args):
         arg_type = args_ty[arg] if args_ty else args.annotations[arg]
-        nada_arg = NadaFunctionArg(name=arg, type=arg_type)
+        nada_arg = NadaFunctionArg(function_id=id(fn), name=arg, type=arg_type)
         nada_args.append(nada_arg)
 
     nada_args_type_wrapped = []
