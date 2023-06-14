@@ -54,9 +54,13 @@ class SecretBigInteger(NadaType):
 
 @dataclass
 class PublicBigInteger(NadaType):
-    def __add__(self, other: "PublicBigInteger") -> "PublicBigInteger":
+    def __add__(
+        self, other: Union["SecretBigInteger", "PublicBigInteger"]
+    ) -> Union["SecretBigInteger", "PublicBigInteger"]:
         operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, PublicBigInteger):
+        if isinstance(other, SecretBigInteger):
+            return SecretBigInteger(inner=operation)
+        elif isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
@@ -70,11 +74,15 @@ class PublicBigInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
-    def __mul__(self, other: "PublicBigInteger") -> "PublicBigInteger":
+    def __mul__(
+        self, other: Union["SecretBigInteger", "PublicBigInteger"]
+    ) -> Union["SecretBigInteger", "PublicBigInteger"]:
         operation = Multiplication(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, PublicBigInteger):
+        if isinstance(other, SecretBigInteger):
+            return SecretBigInteger(inner=operation)
+        elif isinstance(other, PublicBigInteger):
             return PublicBigInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")

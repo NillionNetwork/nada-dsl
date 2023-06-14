@@ -161,6 +161,48 @@ def test_binary_operator_public(operator, name, ty):
     assert inner["type"] == ty
 
 
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.add, "Addition", "SecretBigInteger"),
+        (operator.mul, "Multiplication", "SecretBigInteger"),
+    ],
+)
+def test_binary_operator_public_secret(operator, name, ty):
+    left = create_input(PublicBigInteger, "left", "party")
+    right = create_input(SecretBigInteger, "right", "party")
+    program_operation = operator(left, right)
+    op = process_operation(program_operation)
+    assert list(op.keys()) == [name]
+
+    inner = op[name]
+
+    assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
+    assert inner["type"] == ty
+
+
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.add, "Addition", "SecretBigInteger"),
+        (operator.mul, "Multiplication", "SecretBigInteger"),
+    ],
+)
+def test_binary_operator_secret_public(operator, name, ty):
+    left = create_input(SecretBigInteger, "left", "party")
+    right = create_input(PublicBigInteger, "right", "party")
+    program_operation = operator(left, right)
+    op = process_operation(program_operation)
+    assert list(op.keys()) == [name]
+
+    inner = op[name]
+
+    assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
+    assert inner["type"] == ty
+
+
 @pytest.mark.parametrize("operator", [operator.add, operator.lt])
 def test_fixed_point_rational_digit_checks(operator):
     left = create_input(SecretFixedPointRational, "left", "party", digits=3)
