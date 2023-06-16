@@ -78,7 +78,7 @@ def test_duplicated_inputs_checks():
     ("input_type", "type_name", "kwargs"),
     [
         (SecretBigInteger, "SecretBigInteger", {}),
-        (SecretString, "SecretString", {"encoding": "Woop"}),
+        (SecretString, "SecretString", {}),
         (SecretBoolean, "SecretBoolean", {}),
         (PublicBigInteger, "PublicBigInteger", {}),
         (PublicString, "PublicString", {}),
