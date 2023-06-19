@@ -78,10 +78,8 @@ def test_duplicated_inputs_checks():
     ("input_type", "type_name", "kwargs"),
     [
         (SecretBigInteger, "SecretBigInteger", {}),
-        (SecretString, "SecretString", {}),
         (SecretBoolean, "SecretBoolean", {}),
         (PublicBigInteger, "PublicBigInteger", {}),
-        (PublicString, "PublicString", {}),
         (PublicBoolean, "PublicBoolean", {}),
     ],
 )
@@ -89,6 +87,13 @@ def test_simple_type_conversion(input_type, type_name, kwargs):
     input = create_input(input_type, "name", "party", **kwargs)
     converted_input = to_type_dict(input)
     assert converted_input == type_name
+
+
+def test_string_type_conversion():
+    input = create_input(SecretString, "name", "party", length=3)
+    converted_input = to_type_dict(input)
+    expected = {"SecretString": {"length": 3}}
+    assert converted_input == expected
 
 
 def test_fixed_point_rational_type_conversion():

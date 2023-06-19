@@ -5,9 +5,9 @@ from . import NadaType
 
 @dataclass
 class SecretString(NadaType):
-    pass
+    length: int
 
 
 @dataclass
 class PublicString(NadaType):
-    pass
+    length: int
