@@ -193,7 +193,7 @@ def test_binary_operator_public_secret(operator, name, ty):
     [
         (operator.add, "Addition", "SecretInteger"),
         (operator.sub, "Subtraction", "SecretInteger"),
-        (operator.mul, "Multiplication", "SecretInteger"),        
+        (operator.mul, "Multiplication", "SecretInteger"),
     ],
 )
 def test_binary_operator_secret_public(operator, name, ty):
@@ -213,7 +213,7 @@ def test_binary_operator_secret_public(operator, name, ty):
 @pytest.mark.parametrize("operator", 
                         [
                             operator.add,
-                            operator.sub, 
+                            operator.sub,
                             operator.lt,
                             operator.gt,
                             operator.le,
