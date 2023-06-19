@@ -136,21 +136,27 @@ def to_input_list(inputs):
 
 def to_function_list(functions):
     function_list = []
-    for function in functions.values():
+    while len(functions) > 0:
+        function = functions.pop(list(functions.keys())[0])
         function_list.append(to_fn_dict(function))
     return function_list
 
 
 def to_type_dict(op_wrapper):
     if type(op_wrapper) == Array or type(op_wrapper) == ArrayType:
+        size = {"size": op_wrapper.size} if op_wrapper.size else {}
+        from typing import TypeVar
+        inner_type = "T" if type(op_wrapper.inner_type) == TypeVar else to_type_dict(op_wrapper.inner_type)
         return {
             "Array": {
-                "size": op_wrapper.size,
-                "inner_type": to_type_dict(op_wrapper.inner_type),
+                "inner_type": inner_type,
+                **size
             }
         }
     elif type(op_wrapper) == Vector or type(op_wrapper) == VectorType:
-        return {"Vector": {"inner_type": to_type_dict(op_wrapper.inner_type)}}
+        from typing import TypeVar
+        inner_type = "T" if type(op_wrapper.inner_type) == TypeVar else to_type_dict(op_wrapper.inner_type)
+        return {"Vector": {"inner_type": inner_type}}
     elif type(op_wrapper) == NadaTuple or type(op_wrapper) == NadaTupleType:
         return {
             "NadaTuple": {
@@ -164,6 +170,7 @@ def to_type_dict(op_wrapper):
                 "digits": op_wrapper.digits,
             }
         }
+
     elif inspect.isclass(op_wrapper):
         return op_wrapper.__name__
     else:
@@ -173,10 +180,11 @@ def to_type_dict(op_wrapper):
 def to_fn_dict(fn: NadaFunction):
     return {
         "id": fn.id,
-        "args": [{"name": arg.name, "type": arg.type.__name__} for arg in fn.args],
+        "args": [{"name": arg.name, "type": to_type_dict(arg.type)} for arg in fn.args],
         "function": fn.function.__name__,
         "inner": process_operation(fn.inner),
-        "return_type": fn.return_type.__name__,
+        "return_type": to_type_dict(fn.return_type),
+        "source_ref": fn.source_ref.to_dict()
     }
 
 
@@ -236,6 +244,7 @@ def process_operation(operation_wrapper):
         return {
             "InputReference": {
                 "refers_to": operation.name,
+                "type": ty,
             }
         }
     elif isinstance(operation, Map):
@@ -272,10 +281,9 @@ def process_operation(operation_wrapper):
         return {
             "NadaFunctionArgRef": {
                 "function_id": operation.function_id,
-                "name": operation.name,
-                "type": operation.type.__name__,
+                "refers_to": operation.name,
+                "type": to_type_dict(operation.type),
             }
         }
-
     else:
         raise Exception(f"Compilation of Operation {operation} not supported")

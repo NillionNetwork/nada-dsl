@@ -26,6 +26,17 @@ class NadaFunction(NadaType, Generic[T, R]):
         return self.function(*args, **kwargs)
 
 
+def inner_type(ty):
+    from nada_dsl import Vector, Array
+    origin_ty = getattr(ty, "__origin__", ty)
+    if origin_ty == Array or origin_ty == Vector:
+        inner_ty = getattr(ty, "__args__", None)
+        inner_ty = inner_type(inner_ty[0]) if inner_ty else T
+        return origin_ty.init_as_template_type(inner_ty)
+    else:
+        return origin_ty(inner=None)
+
+
 def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
     """
     Can be use also for lambdas
@@ -38,12 +49,16 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
     nada_args = []
     for idx, arg in enumerate(args.args):
         arg_type = args_ty[arg] if args_ty else args.annotations[arg]
+        arg_type = inner_type(arg_type)
         nada_arg = NadaFunctionArg(function_id=id(fn), name=arg, type=arg_type)
         nada_args.append(nada_arg)
 
     nada_args_type_wrapped = []
+    from copy import copy
     for arg in nada_args:
-        nada_args_type_wrapped.append(arg.type(inner=arg))
+        arg_type = copy(arg.type)
+        arg_type.inner = arg
+        nada_args_type_wrapped.append(arg_type)
 
     inner = fn(*nada_args_type_wrapped)
     return_type = return_ty if return_ty else args.annotations["return"]

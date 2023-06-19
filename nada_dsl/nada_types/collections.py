@@ -1,3 +1,4 @@
+import copy
 from dataclasses import dataclass
 from typing import Generic, Tuple
 
@@ -26,6 +27,12 @@ class NadaTuple(Generic[T, U], NadaType):
         return NadaTupleType(right_type=right_type, left_type=left_type)
 
 
+def get_inner_type(inner_type):
+    inner_type = copy.copy(inner_type)
+    setattr(inner_type, "inner", None)
+    return inner_type
+
+
 @dataclass
 class ArrayType:
     inner_type: AllTypesType
@@ -42,9 +49,9 @@ class Array(Generic[T], NadaType):
     size: int
 
     def __init__(self, inner, size, inner_type=None):
-        self.inner_type = inner_type if inner_type else type(inner)
+        self.inner_type = inner_type if not inner or inner_type else get_inner_type(inner)
         self.size = size
-        self.inner = inner if inner_type else inner.inner
+        self.inner = inner if inner_type else getattr(inner, "inner", None)
 
     def __iter__(self):
         raise NadaNotAllowedException(
@@ -76,6 +83,10 @@ class Array(Generic[T], NadaType):
     def generic_type(cls, inner_type: T, size: int) -> ArrayType:
         return ArrayType(inner_type=inner_type, size=size)
 
+    @classmethod
+    def init_as_template_type(cls, inner_type) -> "Array[T]":
+        return Array(inner=None, inner_type=inner_type, size=None)
+
 
 @dataclass
 class VectorType:
@@ -92,9 +103,9 @@ class Vector(Generic[T], NadaType):
     size: PublicInteger
 
     def __init__(self, inner, size, inner_type=None):
-        self.inner_type = inner_type if inner_type else type(inner)
+        self.inner_type = inner_type if not inner or inner_type else get_inner_type(inner)
         self.size = size
-        self.inner = inner if inner_type else inner.inner
+        self.inner = inner if inner_type else getattr(inner, "inner", None)
 
     def __iter__(self):
         raise NadaNotAllowedException(
@@ -124,3 +135,7 @@ class Vector(Generic[T], NadaType):
     @classmethod
     def generic_type(cls, inner_type: T) -> VectorType:
         return VectorType(inner_type=inner_type)
+
+    @classmethod
+    def init_as_template_type(cls, inner_type) -> "Vector[T]":
+        return Vector(inner=None, inner_type=inner_type, size=None)

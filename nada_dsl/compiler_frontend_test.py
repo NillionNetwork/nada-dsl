@@ -6,9 +6,11 @@ from nada_dsl.compiler_frontend import (
     nada_dsl_to_nada_mir,
     to_input_list,
     to_type_dict,
+    to_fn_dict,
     process_operation,
     INPUTS,
     PARTIES,
+    FUNCTIONS
 )
 
 
@@ -16,6 +18,7 @@ from nada_dsl.compiler_frontend import (
 def clean_inputs():
     PARTIES.clear()
     INPUTS.clear()
+    FUNCTIONS.clear()
     yield
 
 
@@ -278,3 +281,166 @@ def test_unzip(input_type, input_name):
             "right_type": {"Array": {"inner_type": "SecretInteger", "size": 10}},
         }
     }
+
+
+@pytest.mark.parametrize(
+    ("input_type", "input_name"),
+    [(Array, "Array"), (Vector, "Vector")],
+)
+def test_map(input_type, input_name):
+    @nada_fn
+    def nada_function(a: SecretInteger) -> SecretInteger:
+        return a + a
+
+    inner_input = create_input(SecretInteger, "inner", "party", **{})
+    left = create_collection(input_type, inner_input, 10, **{})
+    map_operation = left.map(nada_function)
+    op = process_operation(map_operation)
+    assert list(op.keys()) == ["Map"]
+    inner = op["Map"]
+    assert inner["fn"] in FUNCTIONS
+    assert list(inner["type"].keys()) == [input_name]
+    assert input_reference(inner["inner"]) == "inner"
+    assert inner["type"][input_name]["inner_type"] == "SecretInteger"
+
+
+@pytest.mark.parametrize(
+    ("input_type", "input_name"),
+    [(Array, "Array"), (Vector, "Vector")],
+)
+def test_reduce(input_type, input_name):
+    @nada_fn
+    def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
+        return a + b
+
+    inner_input = create_input(SecretInteger, "inner", "party", **{})
+    left = create_collection(input_type, inner_input, 10, **{})
+    reduce_operation = left.reduce(nada_function)
+    op = process_operation(reduce_operation)
+    assert list(op.keys()) == ["Reduce"]
+    inner = op["Reduce"]
+    assert inner["fn"] in FUNCTIONS
+    assert inner["type"] == "SecretInteger"
+    assert input_reference(inner["inner"]) == "inner"
+
+
+def check_arg(arg: NadaFunctionArg, arg_name, arg_type):
+    assert arg["name"] == arg_name
+    assert arg["type"] == arg_type
+
+
+def check_nada_function_arg_ref(arg_ref, function_id, name, ty):
+    assert list(arg_ref.keys()) == ["NadaFunctionArgRef"]
+    assert arg_ref["NadaFunctionArgRef"]["function_id"] == function_id
+    assert arg_ref["NadaFunctionArgRef"]["refers_to"] == name
+    assert arg_ref["NadaFunctionArgRef"]["type"] == ty
+
+
+def test_nada_function_simple():
+    @nada_fn
+    def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
+        return a + b
+
+    nada_function = to_fn_dict(nada_function)
+    assert nada_function["function"] == "nada_function"
+    args = nada_function["args"]
+    assert len(args) == 2
+    check_arg(args[0], "a", "SecretInteger")
+    check_arg(args[1], "b", "SecretInteger")
+    assert nada_function["return_type"] == "SecretInteger"
+    assert list(nada_function["inner"].keys()) == ["Addition"]
+    addition = nada_function["inner"]["Addition"]
+    check_nada_function_arg_ref(addition["left"], nada_function["id"], "a", "SecretInteger")
+    check_nada_function_arg_ref(addition["right"], nada_function["id"], "b", "SecretInteger")
+
+
+def test_nada_function_using_inputs():
+    c = create_input(SecretInteger, "c", "party", **{})
+
+    @nada_fn
+    def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
+        return a + b + c
+
+    nada_function = to_fn_dict(nada_function)
+    assert nada_function["function"] == "nada_function"
+    args = nada_function["args"]
+    assert len(args) == 2
+    check_arg(args[0], "a", "SecretInteger")
+    check_arg(args[1], "b", "SecretInteger")
+    assert nada_function["return_type"] == "SecretInteger"
+    assert list(nada_function["inner"].keys()) == ["Addition"]
+    addition = nada_function["inner"]["Addition"]
+    assert input_reference(addition["right"]) == "c"
+    assert list(addition["left"].keys()) == ["Addition"]
+    addition = addition["left"]["Addition"]
+    check_nada_function_arg_ref(addition["left"], nada_function["id"], "a", "SecretInteger")
+    check_nada_function_arg_ref(addition["right"], nada_function["id"], "b", "SecretInteger")
+
+
+def test_nada_function_using_operations():
+    c = create_input(SecretInteger, "c", "party", **{})
+    d = create_input(SecretInteger, "d", "party", **{})
+
+    @nada_fn
+    def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
+        return a + b + c + d
+
+    nada_function = to_fn_dict(nada_function)
+    assert nada_function["function"] == "nada_function"
+    args = nada_function["args"]
+    assert len(args) == 2
+    check_arg(args[0], "a", "SecretInteger")
+    check_arg(args[1], "b", "SecretInteger")
+    assert nada_function["return_type"] == "SecretInteger"
+    assert list(nada_function["inner"].keys()) == ["Addition"]
+    addition = nada_function["inner"]["Addition"]
+    assert input_reference(addition["right"]) == "d"
+    assert list(addition["left"].keys()) == ["Addition"]
+    addition = addition["left"]["Addition"]
+    assert input_reference(addition["right"]) == "c"
+    assert list(addition["left"].keys()) == ["Addition"]
+    addition = addition["left"]["Addition"]
+    check_nada_function_arg_ref(addition["left"], nada_function["id"], "a", "SecretInteger")
+    check_nada_function_arg_ref(addition["right"], nada_function["id"], "b", "SecretInteger")
+
+
+@pytest.mark.parametrize(
+    ("input_type", "input_name"),
+    [(Array, "Array"), (Vector, "Vector")],
+)
+def test_nada_function_using_matrix(input_type, input_name):
+
+    @nada_fn
+    def add(a: SecretInteger, b: SecretInteger) -> SecretInteger:
+        return a + b
+
+    @nada_fn
+    def matrix_addition(a: input_type[SecretInteger], b: input_type) -> SecretInteger:
+        return a.zip(b).map(add).reduce(add)
+
+    add_fn = to_fn_dict(add)
+    matrix_addition_fn = to_fn_dict(matrix_addition)
+    assert matrix_addition_fn["function"] == "matrix_addition"
+    args = matrix_addition_fn["args"]
+    assert len(args) == 2
+    a_arg_type = {input_name: {"inner_type": "SecretInteger"}}
+    check_arg(args[0], "a", a_arg_type)
+    b_arg_type = {input_name: {"inner_type": "T"}}
+    check_arg(args[1], "b", b_arg_type)
+    assert matrix_addition_fn["return_type"] == "SecretInteger"
+
+    assert list(matrix_addition_fn["inner"].keys()) == ["Reduce"]
+    reduce_op = matrix_addition_fn["inner"]["Reduce"]
+    reduce_op["function_id"] = add_fn["id"]
+    reduce_op["type"] = "SecretInteger"
+
+    assert list(reduce_op["inner"].keys()) == ["Map"]
+    map_op = reduce_op["inner"]["Map"]
+    map_op["function_id"] = add_fn["id"]
+    map_op["type"] = {input_name: {"inner_type": "SecretInteger", "size": None}}
+
+    assert list(map_op["inner"].keys()) == ["Zip"]
+    zip_op = map_op["inner"]["Zip"]
+
+    check_nada_function_arg_ref(zip_op["left"], matrix_addition_fn["id"], "a", a_arg_type)
+    check_nada_function_arg_ref(zip_op["right"], matrix_addition_fn["id"], "b", b_arg_type)
