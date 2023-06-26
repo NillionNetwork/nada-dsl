@@ -57,6 +57,16 @@ class SecretBigUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
+    def __gt__(
+        self, other: Union["SecretBigUnsignedInteger", "PublicBigUnsignedInteger"]
+    ) -> "SecretBoolean":
+        operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, SecretBigUnsignedInteger) or isinstance(
+            other, PublicBigUnsignedInteger
+        ):
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
 @dataclass
 class PublicBigUnsignedInteger(NadaType):

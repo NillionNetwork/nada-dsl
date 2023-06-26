@@ -119,6 +119,7 @@ def test_array_type_conversion(input_type, type_name, size):
         (operator.add, "Addition", "SecretBigInteger"),
         (operator.mul, "Multiplication", "SecretBigInteger"),
         (operator.lt, "LessThan", "SecretBoolean"),
+        (operator.gt, "GreaterThan", "SecretBoolean"),
     ],
 )
 def test_binary_operator(operator, name, ty):
