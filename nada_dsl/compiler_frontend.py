@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output
-from nada_dsl.nada_types.rational import SecretFixedPointRational
+from nada_dsl.nada_types.rational import SecretRational
 from nada_dsl.nada_types.string import SecretString
 from nada_dsl.nada_types.collections import (
     Array,
@@ -138,6 +138,7 @@ def to_function_list(functions):
         function_list.append(to_fn_dict(function))
     return function_list
 
+
 def to_type_dict(op_wrapper):
     if type(op_wrapper) == Array or type(op_wrapper) == ArrayType:
         return {
@@ -161,9 +162,9 @@ def to_type_dict(op_wrapper):
                 "length": op_wrapper.length,
             }
         }
-    elif type(op_wrapper) == SecretFixedPointRational:
+    elif type(op_wrapper) == SecretRational:
         return {
-            "SecretFixedPointRational": {
+            "SecretRational": {
                 "digits": op_wrapper.digits,
             }
         }
@@ -372,4 +373,3 @@ def process_operation(operation_wrapper):
 
     else:
         raise Exception(f"Compilation of Operation {operation} not supported")
-

@@ -5,7 +5,7 @@ from nada_dsl import SourceRef
 from nada_dsl.errors import NadaNotAllowedException
 from nada_dsl.nada_types.function import NadaFunction
 from nada_dsl.nada_types.generics import U, T, R
-from nada_dsl.nada_types.integer import PublicBigInteger
+from nada_dsl.nada_types.integer import PublicInteger
 from nada_dsl.operations import Map, Zip, Reduce
 from nada_dsl.nada_types import NadaType, AllTypesType
 
@@ -89,7 +89,7 @@ class Vector(Generic[T], NadaType):
     """
 
     inner_type: T
-    size: PublicBigInteger
+    size: PublicInteger
 
     def __init__(self, inner, size, inner_type=None):
         self.inner_type = inner_type if inner_type else type(inner)

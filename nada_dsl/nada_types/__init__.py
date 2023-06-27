@@ -2,24 +2,24 @@ from dataclasses import dataclass
 from typing import Union, Type
 
 AllTypes = Union[
-    "PublicBigInteger",
-    "PublicBigUnsignedInteger",
+    "PublicInteger",
+    "PublicUnsignedInteger",
     "PublicBoolean",
-    "PublicFixedPointRational",
-    "SecretBigInteger",
-    "SecretBigUnsignedInteger",
+    "PublicRational",
+    "SecretInteger",
+    "SecretUnsignedInteger",
     "SecretBoolean",
-    "SecretFixedPointRational",
+    "SecretRational",
 ]
 AllTypesType = Union[
-    Type["PublicBigInteger"],
-    Type["PublicBigUnsignedInteger"],
+    Type["PublicInteger"],
+    Type["PublicUnsignedInteger"],
     Type["PublicBoolean"],
-    Type["PublicFixedPointRational"],
-    Type["SecretBigInteger"],
-    Type["SecretBigUnsignedInteger"],
+    Type["PublicRational"],
+    Type["SecretInteger"],
+    Type["SecretUnsignedInteger"],
     Type["SecretBoolean"],
-    Type["SecretFixedPointRational"],
+    Type["SecretRational"],
 ]
 OperationType = Union[
     "Addition",

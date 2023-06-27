@@ -36,7 +36,7 @@ def create_output(root: AllTypes, name: str, party: str) -> Output:
 
 
 def test_root_conversion():
-    input = create_input(SecretBigInteger, "input", "input_party")
+    input = create_input(SecretInteger, "input", "input_party")
     output = create_output(input, "output", "output_party")
     mir = nada_dsl_to_nada_mir([output])
     assert len(mir["parties"]) == 2
@@ -46,27 +46,27 @@ def test_root_conversion():
 
     mir_output = mir["outputs"][0]
     assert mir_output["name"] == "output"
-    assert mir_output["type"] == "SecretBigInteger"
+    assert mir_output["type"] == "SecretInteger"
     assert mir_output["party"] == "output_party"
     assert list(mir_output["inner"].keys()) == ["InputReference"]
 
 
 def test_input_conversion():
     input = Input(name="input", party=Party("party"))
-    inputs = {"party": {"input": (input, "SecretBigInteger")}}
+    inputs = {"party": {"input": (input, "SecretInteger")}}
     converted_inputs = to_input_list(inputs)
     assert len(converted_inputs) == 1
 
     converted = converted_inputs[0]
     assert converted["name"] == "input"
     assert converted["party"] == "party"
-    assert converted["type"] == "SecretBigInteger"
+    assert converted["type"] == "SecretInteger"
 
 
 def test_duplicated_inputs_checks():
     party = Party("party")
-    left = SecretBigInteger(Input(name="left", party=party))
-    right = SecretBigInteger(Input(name="left", party=party))
+    left = SecretInteger(Input(name="left", party=party))
+    right = SecretInteger(Input(name="left", party=party))
     new_int = left + right
     output = create_output(new_int, "output", "party")
 
@@ -77,9 +77,9 @@ def test_duplicated_inputs_checks():
 @pytest.mark.parametrize(
     ("input_type", "type_name", "kwargs"),
     [
-        (SecretBigInteger, "SecretBigInteger", {}),
+        (SecretInteger, "SecretInteger", {}),
         (SecretBoolean, "SecretBoolean", {}),
-        (PublicBigInteger, "PublicBigInteger", {}),
+        (PublicInteger, "PublicInteger", {}),
         (PublicBoolean, "PublicBoolean", {}),
     ],
 )
@@ -96,10 +96,10 @@ def test_string_type_conversion():
     assert converted_input == expected
 
 
-def test_fixed_point_rational_type_conversion():
-    input = create_input(SecretFixedPointRational, "name", "party", digits=3)
+def test_rational_type_conversion():
+    input = create_input(SecretRational, "name", "party", digits=3)
     converted_input = to_type_dict(input)
-    expected = {"SecretFixedPointRational": {"digits": 3}}
+    expected = {"SecretRational": {"digits": 3}}
     assert converted_input == expected
 
 
@@ -107,7 +107,7 @@ def test_fixed_point_rational_type_conversion():
     ("input_type", "type_name", "size"), [(Array, "Array", 10), (Vector, "Vector", 10)]
 )
 def test_array_type_conversion(input_type, type_name, size):
-    inner_input = create_input(SecretBigInteger, "name", "party", **{})
+    inner_input = create_input(SecretInteger, "name", "party", **{})
     input = create_collection(input_type, inner_input, size, **{})
     converted_input = to_type_dict(input)
     assert list(converted_input.keys()) == [type_name]
@@ -116,15 +116,15 @@ def test_array_type_conversion(input_type, type_name, size):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.add, "Addition", "SecretBigInteger"),
-        (operator.mul, "Multiplication", "SecretBigInteger"),
+        (operator.add, "Addition", "SecretInteger"),
+        (operator.mul, "Multiplication", "SecretInteger"),
         (operator.lt, "LessThan", "SecretBoolean"),
         (operator.gt, "GreaterThan", "SecretBoolean"),
     ],
 )
 def test_binary_operator(operator, name, ty):
-    left = create_input(SecretBigInteger, "left", "party")
-    right = create_input(SecretBigInteger, "right", "party")
+    left = create_input(SecretInteger, "left", "party")
+    right = create_input(SecretInteger, "right", "party")
     program_operation = operator(left, right)
     op = process_operation(program_operation)
     assert list(op.keys()) == [name]
@@ -139,13 +139,13 @@ def test_binary_operator(operator, name, ty):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.add, "Addition", "PublicBigInteger"),
-        (operator.sub, "Subtraction", "PublicBigInteger"),
-        (operator.mul, "Multiplication", "PublicBigInteger"),
-        (operator.truediv, "Division", "PublicBigInteger"),
-        (operator.mod, "Modulo", "PublicBigInteger"),
-        (operator.rshift, "RightShift", "PublicBigInteger"),
-        (operator.lshift, "LeftShift", "PublicBigInteger"),
+        (operator.add, "Addition", "PublicInteger"),
+        (operator.sub, "Subtraction", "PublicInteger"),
+        (operator.mul, "Multiplication", "PublicInteger"),
+        (operator.truediv, "Division", "PublicInteger"),
+        (operator.mod, "Modulo", "PublicInteger"),
+        (operator.rshift, "RightShift", "PublicInteger"),
+        (operator.lshift, "LeftShift", "PublicInteger"),
         (operator.lt, "LessThan", "PublicBoolean"),
         (operator.gt, "GreaterThan", "PublicBoolean"),
         (operator.le, "LessOrEqualThan", "PublicBoolean"),
@@ -154,8 +154,8 @@ def test_binary_operator(operator, name, ty):
     ],
 )
 def test_binary_operator_public(operator, name, ty):
-    left = create_input(PublicBigInteger, "left", "party")
-    right = create_input(PublicBigInteger, "right", "party")
+    left = create_input(PublicInteger, "left", "party")
+    right = create_input(PublicInteger, "right", "party")
     program_operation = operator(left, right)
     op = process_operation(program_operation)
     assert list(op.keys()) == [name]
@@ -170,13 +170,13 @@ def test_binary_operator_public(operator, name, ty):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.add, "Addition", "SecretBigInteger"),
-        (operator.mul, "Multiplication", "SecretBigInteger"),
+        (operator.add, "Addition", "SecretInteger"),
+        (operator.mul, "Multiplication", "SecretInteger"),
     ],
 )
 def test_binary_operator_public_secret(operator, name, ty):
-    left = create_input(PublicBigInteger, "left", "party")
-    right = create_input(SecretBigInteger, "right", "party")
+    left = create_input(PublicInteger, "left", "party")
+    right = create_input(SecretInteger, "right", "party")
     program_operation = operator(left, right)
     op = process_operation(program_operation)
     assert list(op.keys()) == [name]
@@ -191,13 +191,13 @@ def test_binary_operator_public_secret(operator, name, ty):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.add, "Addition", "SecretBigInteger"),
-        (operator.mul, "Multiplication", "SecretBigInteger"),
+        (operator.add, "Addition", "SecretInteger"),
+        (operator.mul, "Multiplication", "SecretInteger"),
     ],
 )
 def test_binary_operator_secret_public(operator, name, ty):
-    left = create_input(SecretBigInteger, "left", "party")
-    right = create_input(PublicBigInteger, "right", "party")
+    left = create_input(SecretInteger, "left", "party")
+    right = create_input(PublicInteger, "right", "party")
     program_operation = operator(left, right)
     op = process_operation(program_operation)
     assert list(op.keys()) == [name]
@@ -210,17 +210,17 @@ def test_binary_operator_secret_public(operator, name, ty):
 
 
 @pytest.mark.parametrize("operator", [operator.add, operator.lt])
-def test_fixed_point_rational_digit_checks(operator):
-    left = create_input(SecretFixedPointRational, "left", "party", digits=3)
-    right = create_input(SecretFixedPointRational, "right", "party", digits=4)
+def test_rational_digit_checks(operator):
+    left = create_input(SecretRational, "left", "party", digits=3)
+    right = create_input(SecretRational, "right", "party", digits=4)
     with pytest.raises(Exception):
         operator(left, right)
 
 
 @pytest.mark.parametrize("operator", [operator.add, operator.lt])
-def test_fixed_point_rational_digit_checks_public(operator):
-    left = create_input(PublicFixedPointRational, "left", "party", digits=3)
-    right = create_input(PublicFixedPointRational, "right", "party", digits=4)
+def test_rational_digit_checks_public(operator):
+    left = create_input(PublicRational, "left", "party", digits=3)
+    right = create_input(PublicRational, "right", "party", digits=4)
     with pytest.raises(Exception):
         operator(left, right)
 
@@ -230,9 +230,9 @@ def test_fixed_point_rational_digit_checks_public(operator):
     [(Array, "Array"), (Vector, "Vector")],
 )
 def test_zip(input_type, input_name):
-    inner_input = create_input(SecretBigInteger, "left", "party", **{})
+    inner_input = create_input(SecretInteger, "left", "party", **{})
     left = create_collection(input_type, inner_input, 10, **{})
-    inner_input = create_input(SecretBigInteger, "right", "party", **{})
+    inner_input = create_input(SecretInteger, "right", "party", **{})
     right = create_collection(input_type, inner_input, 10, **{})
     zipped = left.zip(right)
     op = process_operation(zipped)
@@ -243,7 +243,7 @@ def test_zip(input_type, input_name):
     assert input_reference(inner["left"]) == "left"
     assert input_reference(inner["right"]) == "right"
     assert inner["type"][input_name]["inner_type"] == {
-        "NadaTuple": {"left_type": "SecretBigInteger", "right_type": "SecretBigInteger"}
+        "NadaTuple": {"left_type": "SecretInteger", "right_type": "SecretInteger"}
     }
 
 
@@ -252,9 +252,9 @@ def test_zip(input_type, input_name):
     [(Array, "Array"), (Vector, "Vector")],
 )
 def test_unzip(input_type, input_name):
-    inner_input = create_input(SecretBigInteger, "left", "party", **{})
+    inner_input = create_input(SecretInteger, "left", "party", **{})
     left = create_collection(input_type, inner_input, 10, **{})
-    inner_input = create_input(SecretBigInteger, "right", "party", **{})
+    inner_input = create_input(SecretInteger, "right", "party", **{})
     right = create_collection(input_type, inner_input, 10, **{})
     unzipped = unzip(left.zip(right))
     op = process_operation(unzipped)
@@ -268,7 +268,7 @@ def test_unzip(input_type, input_name):
     ]  # We don't check Zip operation because it has its test
     assert inner["type"] == {
         "NadaTuple": {
-            "left_type": {"Array": {"inner_type": "SecretBigInteger", "size": 10}},
-            "right_type": {"Array": {"inner_type": "SecretBigInteger", "size": 10}},
+            "left_type": {"Array": {"inner_type": "SecretInteger", "size": 10}},
+            "right_type": {"Array": {"inner_type": "SecretInteger", "size": 10}},
         }
     }
