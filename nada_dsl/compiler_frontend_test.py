@@ -89,13 +89,6 @@ def test_simple_type_conversion(input_type, type_name, kwargs):
     assert converted_input == type_name
 
 
-def test_string_type_conversion():
-    input = create_input(SecretString, "name", "party", length=3)
-    converted_input = to_type_dict(input)
-    expected = {"SecretString": {"length": 3}}
-    assert converted_input == expected
-
-
 def test_rational_type_conversion():
     input = create_input(SecretRational, "name", "party", digits=3)
     converted_input = to_type_dict(input)

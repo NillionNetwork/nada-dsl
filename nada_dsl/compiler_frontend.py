@@ -7,7 +7,6 @@ from typing import List, Optional, Dict, Any
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output
 from nada_dsl.nada_types.rational import SecretRational
-from nada_dsl.nada_types.string import SecretString
 from nada_dsl.nada_types.collections import (
     Array,
     Vector,
@@ -154,12 +153,6 @@ def to_type_dict(op_wrapper):
             "NadaTuple": {
                 "left_type": to_type_dict(op_wrapper.left_type),
                 "right_type": to_type_dict(op_wrapper.right_type),
-            }
-        }
-    elif type(op_wrapper) == SecretString:
-        return {
-            "SecretString": {
-                "length": op_wrapper.length,
             }
         }
     elif type(op_wrapper) == SecretRational:
