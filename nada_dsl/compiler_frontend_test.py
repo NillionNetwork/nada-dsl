@@ -167,10 +167,6 @@ def test_binary_operator_public(operator, name, ty):
     [
         (operator.add, "Addition", "SecretInteger"),
         (operator.mul, "Multiplication", "SecretInteger"),
-        (operator.lt, "LessThan", "SecretBoolean"),
-        (operator.gt, "GreaterThan", "SecretBoolean"),
-        (operator.le, "LessOrEqualThan", "SecretBoolean"),
-        (operator.ge, "GreaterOrEqualThan", "SecretBoolean"),
     ],
 )
 def test_binary_operator_public_secret(operator, name, ty):
@@ -192,10 +188,6 @@ def test_binary_operator_public_secret(operator, name, ty):
     [
         (operator.add, "Addition", "SecretInteger"),
         (operator.mul, "Multiplication", "SecretInteger"),        
-        (operator.lt, "LessThan", "SecretBoolean"),
-        (operator.gt, "GreaterThan", "SecretBoolean"),
-        (operator.le, "LessOrEqualThan", "SecretBoolean"),
-        (operator.ge, "GreaterOrEqualThan", "SecretBoolean"),
     ],
 )
 def test_binary_operator_secret_public(operator, name, ty):

@@ -46,50 +46,34 @@ class SecretUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
-    def __lt__(
-        self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]
-    ) -> "SecretBoolean":
+    def __lt__(self, other: "SecretUnsignedInteger") -> "SecretBoolean":
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretUnsignedInteger) or isinstance(
-            other, PublicUnsignedInteger
-        ):
+        if isinstance(other, SecretUnsignedInteger):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
-    def __gt__(
-        self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]
-    ) -> "SecretBoolean":
+    def __gt__(self, other: "SecretUnsignedInteger") -> "SecretBoolean":
         operation = GreaterThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretUnsignedInteger) or isinstance(
-            other, PublicUnsignedInteger
-        ):
+        if isinstance(other, SecretUnsignedInteger):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
-    def __le__(
-        self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]
-    ) -> "SecretBoolean":
+    def __le__(self, other: "SecretUnsignedInteger") -> "SecretBoolean":
         operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretUnsignedInteger) or isinstance(
-            other, PublicUnsignedInteger
-        ):
+        if isinstance(other, SecretUnsignedInteger):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
-    def __ge__(
-        self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]
-    ) -> "SecretBoolean":
+    def __ge__(self, other: "SecretUnsignedInteger") -> "SecretBoolean":
         operation = GreaterOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretUnsignedInteger) or isinstance(
-            other, PublicUnsignedInteger
-        ):
+        if isinstance(other, SecretUnsignedInteger):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")

@@ -42,36 +42,36 @@ class SecretInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
-    def __lt__(self, other: Union["SecretInteger", "PublicInteger"]) -> "SecretBoolean":
+    def __lt__(self, other: "SecretInteger") -> "SecretBoolean":
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretInteger) or isinstance(other, PublicInteger):
+        if isinstance(other, SecretInteger):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
-    def __gt__(self, other: Union["SecretInteger", "PublicInteger"]) -> "SecretBoolean":
+    def __gt__(self, other: "SecretInteger") -> "SecretBoolean":
         operation = GreaterThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretInteger) or isinstance(other, PublicInteger):
+        if isinstance(other, SecretInteger):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
-    def __le__(self, other: Union["SecretInteger", "PublicInteger"]) -> "SecretBoolean":
+    def __le__(self, other: "SecretInteger") -> "SecretBoolean":
         operation = LessOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretInteger) or isinstance(other, PublicInteger):
+        if isinstance(other, SecretInteger):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
-    def __ge__(self, other: Union["SecretInteger", "PublicInteger"]) -> "SecretBoolean":
+    def __ge__(self, other: "SecretInteger") -> "SecretBoolean":
         operation = GreaterOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretInteger) or isinstance(other, PublicInteger):
+        if isinstance(other, SecretInteger):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
@@ -143,51 +143,39 @@ class PublicInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __lt__(
-            self, other: Union["SecretInteger", "PublicInteger"]
-    ) -> Union["SecretBoolean", "PublicBoolean"]:
+            self, other: "PublicInteger") -> "PublicBoolean":
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretInteger):
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicInteger):
+        if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-            self, other: Union["SecretInteger", "PublicInteger"]
-    ) -> Union["SecretBoolean", "PublicBoolean"]:
+            self, other: "PublicInteger") -> "PublicBoolean":
         operation = GreaterThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretInteger):
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicInteger):
+        if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-            self, other: Union["SecretInteger", "PublicInteger"]
-    ) -> Union["SecretBoolean", "PublicBoolean"]:
+            self, other: "PublicInteger") -> "PublicBoolean":
         operation = LessOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretInteger):
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicInteger):
+        if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-            self, other: Union["SecretInteger", "PublicInteger"]
-    ) -> Union["SecretBoolean", "PublicBoolean"]:
+            self, other: "PublicInteger") -> "PublicBoolean":
         operation = GreaterOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretInteger):
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicInteger):
+        if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
