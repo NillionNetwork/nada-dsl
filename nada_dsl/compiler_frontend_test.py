@@ -113,6 +113,8 @@ def test_array_type_conversion(input_type, type_name, size):
         (operator.mul, "Multiplication", "SecretInteger"),
         (operator.lt, "LessThan", "SecretBoolean"),
         (operator.gt, "GreaterThan", "SecretBoolean"),
+        (operator.le, "LessOrEqualThan", "SecretBoolean"),
+        (operator.ge, "GreaterOrEqualThan", "SecretBoolean"),
     ],
 )
 def test_binary_operator(operator, name, ty):
@@ -165,6 +167,10 @@ def test_binary_operator_public(operator, name, ty):
     [
         (operator.add, "Addition", "SecretInteger"),
         (operator.mul, "Multiplication", "SecretInteger"),
+        (operator.lt, "LessThan", "SecretBoolean"),
+        (operator.gt, "GreaterThan", "SecretBoolean"),
+        (operator.le, "LessOrEqualThan", "SecretBoolean"),
+        (operator.ge, "GreaterOrEqualThan", "SecretBoolean"),
     ],
 )
 def test_binary_operator_public_secret(operator, name, ty):
@@ -185,7 +191,11 @@ def test_binary_operator_public_secret(operator, name, ty):
     ("operator", "name", "ty"),
     [
         (operator.add, "Addition", "SecretInteger"),
-        (operator.mul, "Multiplication", "SecretInteger"),
+        (operator.mul, "Multiplication", "SecretInteger"),        
+        (operator.lt, "LessThan", "SecretBoolean"),
+        (operator.gt, "GreaterThan", "SecretBoolean"),
+        (operator.le, "LessOrEqualThan", "SecretBoolean"),
+        (operator.ge, "GreaterOrEqualThan", "SecretBoolean"),
     ],
 )
 def test_binary_operator_secret_public(operator, name, ty):
@@ -202,7 +212,14 @@ def test_binary_operator_secret_public(operator, name, ty):
     assert inner["type"] == ty
 
 
-@pytest.mark.parametrize("operator", [operator.add, operator.lt])
+@pytest.mark.parametrize("operator", 
+                        [
+                            operator.add, 
+                            operator.lt,
+                            operator.gt,
+                            operator.le,
+                            operator.ge,
+                        ])
 def test_rational_digit_checks(operator):
     left = create_input(SecretRational, "left", "party", digits=3)
     right = create_input(SecretRational, "right", "party", digits=4)

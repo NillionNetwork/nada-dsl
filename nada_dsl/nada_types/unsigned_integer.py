@@ -70,6 +70,30 @@ class SecretUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
+    def __le__(
+        self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]
+    ) -> "SecretBoolean":
+        operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, SecretUnsignedInteger) or isinstance(
+            other, PublicUnsignedInteger
+        ):
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} <= {other}")
+
+    def __ge__(
+        self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]
+    ) -> "SecretBoolean":
+        operation = GreaterOrEqualThan(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, SecretUnsignedInteger) or isinstance(
+            other, PublicUnsignedInteger
+        ):
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} >= {other}")
+
 
 @dataclass
 class PublicUnsignedInteger(NadaType):

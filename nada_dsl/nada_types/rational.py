@@ -1,7 +1,14 @@
 from dataclasses import dataclass
 
 from . import NadaType
-from nada_dsl.operations import Addition, Multiplication, LessThan, GreaterThan
+from nada_dsl.operations import (
+    Addition, 
+    Multiplication, 
+    LessThan, 
+    GreaterThan,
+    LessOrEqualThan,
+    GreaterOrEqualThan
+)
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
 
@@ -47,6 +54,26 @@ class SecretRational(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
+    def __le__(self, other: "SecretRational") -> "SecretBoolean":
+        if isinstance(other, SecretRational) and other.digits == self.digits:
+            return SecretBoolean(
+                inner=LessOrEqualThan(
+                    left=self, right=other, source_ref=SourceRef.back_frame()
+                )
+            )
+        else:
+            raise TypeError(f"Invalid operation: {self} <= {other}")        
+
+    def __ge__(self, other: "SecretRational") -> "SecretBoolean":
+        if isinstance(other, SecretRational) and other.digits == self.digits:
+            return SecretBoolean(
+                inner=GreaterOrEqualThan(
+                    left=self, right=other, source_ref=SourceRef.back_frame()
+                )
+            )
+        else:
+            raise TypeError(f"Invalid operation: {self} >= {other}")
+
 
 @dataclass
 class PublicRational(NadaType):
@@ -84,3 +111,19 @@ class PublicRational(NadaType):
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
+        
+    def __le__(self, other: "PublicRational") -> "PublicBoolean":
+        operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicRational) and other.digits == self.digits:
+            return PublicBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} <= {other}")
+
+    def __ge__(self, other: "PublicRational") -> "PublicBoolean":
+        operation = GreaterOrEqualThan(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, PublicRational) and other.digits == self.digits:
+            return PublicBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} >= {other}")
