@@ -110,6 +110,7 @@ def test_array_type_conversion(input_type, type_name, size):
     ("operator", "name", "ty"),
     [
         (operator.add, "Addition", "SecretInteger"),
+        (operator.sub, "Subtraction", "SecretInteger"),
         (operator.mul, "Multiplication", "SecretInteger"),
         (operator.lt, "LessThan", "SecretBoolean"),
         (operator.gt, "GreaterThan", "SecretBoolean"),
@@ -166,6 +167,7 @@ def test_binary_operator_public(operator, name, ty):
     ("operator", "name", "ty"),
     [
         (operator.add, "Addition", "SecretInteger"),
+        (operator.sub, "Subtraction", "SecretInteger"),
         (operator.mul, "Multiplication", "SecretInteger"),
     ],
 )
@@ -187,6 +189,7 @@ def test_binary_operator_public_secret(operator, name, ty):
     ("operator", "name", "ty"),
     [
         (operator.add, "Addition", "SecretInteger"),
+        (operator.sub, "Subtraction", "SecretInteger"),
         (operator.mul, "Multiplication", "SecretInteger"),        
     ],
 )
@@ -206,7 +209,8 @@ def test_binary_operator_secret_public(operator, name, ty):
 
 @pytest.mark.parametrize("operator", 
                         [
-                            operator.add, 
+                            operator.add,
+                            operator.sub, 
                             operator.lt,
                             operator.gt,
                             operator.le,
@@ -219,7 +223,7 @@ def test_rational_digit_checks(operator):
         operator(left, right)
 
 
-@pytest.mark.parametrize("operator", [operator.add, operator.lt])
+@pytest.mark.parametrize("operator", [operator.add, operator.sub, operator.lt])
 def test_rational_digit_checks_public(operator):
     left = create_input(PublicRational, "left", "party", digits=3)
     right = create_input(PublicRational, "right", "party", digits=4)

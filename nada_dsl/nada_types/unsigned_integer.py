@@ -93,18 +93,26 @@ class SecretUnsignedInteger(NadaType):
 
 @dataclass
 class PublicUnsignedInteger(NadaType):
-    def __add__(self, other: "PublicUnsignedInteger") -> "PublicUnsignedInteger":
+    def __add__(
+        self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]
+    ) -> Union["SecretUnsignedInteger", "PublicUnsignedInteger"]:
         operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, PublicUnsignedInteger):
+        if isinstance(other, SecretUnsignedInteger):
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(other, PublicUnsignedInteger):
             return PublicUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
-    def __sub__(self, other: "PublicUnsignedInteger") -> "PublicUnsignedInteger":
+    def __sub__(
+        self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]
+    ) -> Union["SecretUnsignedInteger", "PublicUnsignedInteger"]:
         operation = Subtraction(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, PublicUnsignedInteger):
+        if isinstance(other, SecretUnsignedInteger):
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(other, PublicUnsignedInteger):
             return PublicUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
