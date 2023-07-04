@@ -1,23 +1,24 @@
 from dataclasses import dataclass
+from typing import Union
 
-from . import NadaType
+from nada_dsl.nada_types.boolean import PublicBoolean, SecretBoolean
 from nada_dsl.operations import (
     Addition,
-    GreaterOrEqualThan,
-    GreaterThan,
-    LessOrEqualThan,
-    LessThan,
     Division,
     Equals,
+    GreaterOrEqualThan,
+    GreaterThan,
     LeftShift,
+    LessOrEqualThan,
+    LessThan,
     Modulo,
     Multiplication,
     RightShift,
     Subtraction,
 )
 from nada_dsl.source_ref import SourceRef
-from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
-from typing import Union
+
+from . import NadaType
 
 
 @dataclass
@@ -30,6 +31,17 @@ class SecretInteger(NadaType):
             return SecretInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
+
+    def __sub__(
+        self, other: Union["SecretInteger", "PublicInteger"]
+    ) -> "SecretInteger":
+        operation = Subtraction(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, SecretInteger) or isinstance(other, PublicInteger):
+            return SecretInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["SecretInteger", "PublicInteger"]
@@ -90,11 +102,15 @@ class PublicInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
-    def __sub__(self, other: "PublicInteger") -> "PublicInteger":
+    def __sub__(
+        self, other: Union["SecretInteger", "PublicInteger"]
+    ) -> Union["SecretInteger", "PublicInteger"]:
         operation = Subtraction(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, PublicInteger):
+        if isinstance(other, SecretInteger):
+            return SecretInteger(inner=operation)
+        elif isinstance(other, PublicInteger):
             return PublicInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")

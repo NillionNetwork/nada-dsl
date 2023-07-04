@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from nada_dsl.nada_types import NadaType
+from . import NadaType
 from nada_dsl.operations import (
     Equals,
 )

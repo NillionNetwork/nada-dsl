@@ -32,6 +32,17 @@ class SecretUnsignedInteger(NadaType):
             return SecretUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
+    
+    def __sub__(
+        self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
+        operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, SecretUnsignedInteger) or isinstance(
+            other, PublicUnsignedInteger
+        ):
+            return SecretUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["SecretUnsignedInteger", "PublicUnsignedInteger"]

@@ -7,7 +7,8 @@ from nada_dsl.operations import (
     LessThan, 
     GreaterThan,
     LessOrEqualThan,
-    GreaterOrEqualThan
+    GreaterOrEqualThan,
+    Subtraction,
 )
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
@@ -23,6 +24,15 @@ class SecretRational(NadaType):
             return SecretRational(inner=addition, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
+
+    def __sub__(self, other: "SecretRational") -> "SecretRational":
+        addition = Subtraction(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
+        if isinstance(other, SecretRational) and other.digits == self.digits:
+            return SecretRational(inner=addition, digits=self.digits)
+        else:
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(self, other: "SecretRational") -> "SecretRational":
         multiplication = Multiplication(
@@ -81,6 +91,15 @@ class PublicRational(NadaType):
 
     def __add__(self, other: "PublicRational") -> "PublicRational":
         operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicRational) and other.digits == self.digits:
+            return PublicRational(inner=operation, digits=self.digits)
+        else:
+            raise TypeError(f"Invalid operation: {self} + {other}")
+
+    def __sub__(self, other: "PublicRational") -> "PublicRational":
+        operation = Subtraction(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
         if isinstance(other, PublicRational) and other.digits == self.digits:
             return PublicRational(inner=operation, digits=self.digits)
         else:
