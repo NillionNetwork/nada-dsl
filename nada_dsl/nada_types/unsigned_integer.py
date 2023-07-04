@@ -47,6 +47,7 @@ class SecretUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(self, other: "SecretUnsignedInteger") -> "SecretBoolean":
+        # LT actually works differently for unsigned types, these are not correct.
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, SecretUnsignedInteger):
             return SecretBoolean(inner=operation)
