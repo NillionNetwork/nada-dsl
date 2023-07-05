@@ -2,7 +2,7 @@ import json
 import os
 from json import JSONEncoder
 import inspect
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output
@@ -16,7 +16,6 @@ from nada_dsl.nada_types.collections import (
     NadaTupleType,
 )
 from nada_dsl.nada_types.function import NadaFunction
-from nada_dsl.operations import Map, Reduce, Zip, Unzip
 from nada_dsl.future.operations import Cast
 from nada_dsl.operations import (
     Addition,
@@ -31,6 +30,10 @@ from nada_dsl.operations import (
     LessOrEqualThan,
     GreaterOrEqualThan,
     Equals,
+    Map,
+    Reduce,
+    Zip,
+    Unzip,
 )
 
 INPUTS = {}
@@ -183,115 +186,34 @@ def process_operation(operation_wrapper):
     ty = to_type_dict(operation_wrapper)
     operation = operation_wrapper.inner
 
-    if type(operation) == Addition:
+    if isinstance(
+        operation,
+        (
+            Addition,
+            Subtraction,
+            Multiplication,
+            Division,
+            Modulo,
+            RightShift,
+            LeftShift,
+            LessThan,
+            GreaterThan,
+            GreaterOrEqualThan,
+            LessOrEqualThan,
+            Equals,
+            Zip,
+        ),
+    ):
         return {
-            "Addition": {
+            type(operation).__name__: {
                 "left": process_operation(operation.left),
                 "right": process_operation(operation.right),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-    elif type(operation) == Subtraction:
-        return {
-            "Subtraction": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == Multiplication:
-        return {
-            "Multiplication": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == Division:
-        return {
-            "Division": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == Modulo:
-        return {
-            "Modulo": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == RightShift:
-        return {
-            "RightShift": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == LeftShift:
-        return {
-            "LeftShift": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == LessThan:
-        return {
-            "LessThan": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == GreaterThan:
-        return {
-            "GreaterThan": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == LessOrEqualThan:
-        return {
-            "LessOrEqualThan": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == GreaterOrEqualThan:
-        return {
-            "GreaterOrEqualThan": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == Equals:
-        return {
-            "Equals": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == Cast:
+
+    elif isinstance(operation, Cast):
         return {
             "Cast": {
                 "target": process_operation(operation.target),
@@ -300,7 +222,7 @@ def process_operation(operation_wrapper):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-    elif type(operation) == Input:
+    elif isinstance(operation, Input):
         party_name = operation.party.name
         PARTIES[party_name] = operation.party
         if party_name not in INPUTS:
@@ -316,7 +238,7 @@ def process_operation(operation_wrapper):
                 "refers_to": operation.name,
             }
         }
-    elif type(operation) == Map:
+    elif isinstance(operation, Map):
         if operation.fn.id not in FUNCTIONS:
             FUNCTIONS[operation.fn.id] = operation.fn
         return {
@@ -327,7 +249,7 @@ def process_operation(operation_wrapper):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-    elif type(operation) == Reduce:
+    elif isinstance(operation, Reduce):
         if operation.fn.id not in FUNCTIONS:
             FUNCTIONS[operation.fn.id] = operation.fn
         return {
@@ -338,16 +260,7 @@ def process_operation(operation_wrapper):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-    elif type(operation) == Zip:
-        return {
-            "Zip": {
-                "left": process_operation(operation.left),
-                "right": process_operation(operation.right),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-    elif type(operation) == Unzip:
+    elif isinstance(operation, Unzip):
         return {
             "Unzip": {
                 "inner": process_operation(operation.inner),
@@ -355,7 +268,7 @@ def process_operation(operation_wrapper):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-    elif type(operation) == NadaFunctionArg:
+    elif isinstance(operation, NadaFunctionArg):
         return {
             "NadaFunctionArgRef": {
                 "function_id": operation.function_id,
