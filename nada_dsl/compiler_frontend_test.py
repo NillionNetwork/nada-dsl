@@ -10,7 +10,7 @@ from nada_dsl.compiler_frontend import (
     process_operation,
     INPUTS,
     PARTIES,
-    FUNCTIONS
+    FUNCTIONS,
 )
 
 
@@ -49,21 +49,21 @@ def test_root_conversion():
 
     mir_output = mir["outputs"][0]
     assert mir_output["name"] == "output"
-    assert mir_output["type"] == "SecretInteger"
+    assert mir_output["type"] == {"Secret": {"Integer": None}}
     assert mir_output["party"] == "output_party"
     assert list(mir_output["inner"].keys()) == ["InputReference"]
 
 
 def test_input_conversion():
     input = Input(name="input", party=Party("party"))
-    inputs = {"party": {"input": (input, "SecretInteger")}}
+    inputs = {"party": {"input": (input, {"Secret": {"Integer": None}})}}
     converted_inputs = to_input_list(inputs)
     assert len(converted_inputs) == 1
 
     converted = converted_inputs[0]
     assert converted["name"] == "input"
     assert converted["party"] == "party"
-    assert converted["type"] == "SecretInteger"
+    assert converted["type"] == {"Secret": {"Integer": None}}
 
 
 def test_duplicated_inputs_checks():
@@ -80,10 +80,10 @@ def test_duplicated_inputs_checks():
 @pytest.mark.parametrize(
     ("input_type", "type_name", "kwargs"),
     [
-        (SecretInteger, "SecretInteger", {}),
-        (SecretBoolean, "SecretBoolean", {}),
-        (PublicInteger, "PublicInteger", {}),
-        (PublicBoolean, "PublicBoolean", {}),
+        (SecretInteger, {"Secret": {"Integer": None}}, {}),
+        (SecretBoolean, {"Secret": {"Boolean": None}}, {}),
+        (PublicInteger, {"Public": {"Integer": None}}, {}),
+        (PublicBoolean, {"Public": {"Boolean": None}}, {}),
     ],
 )
 def test_simple_type_conversion(input_type, type_name, kwargs):
@@ -95,7 +95,7 @@ def test_simple_type_conversion(input_type, type_name, kwargs):
 def test_rational_type_conversion():
     input = create_input(SecretRational, "name", "party", digits=3)
     converted_input = to_type_dict(input)
-    expected = {"SecretRational": {"digits": 3}}
+    expected = {"Secret": {"Rational": {"digits": 3}}}
     assert converted_input == expected
 
 
@@ -112,13 +112,13 @@ def test_array_type_conversion(input_type, type_name, size):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.add, "Addition", "SecretInteger"),
-        (operator.sub, "Subtraction", "SecretInteger"),
-        (operator.mul, "Multiplication", "SecretInteger"),
-        (operator.lt, "LessThan", "SecretBoolean"),
-        (operator.gt, "GreaterThan", "SecretBoolean"),
-        (operator.le, "LessOrEqualThan", "SecretBoolean"),
-        (operator.ge, "GreaterOrEqualThan", "SecretBoolean"),
+        (operator.add, "Addition", {"Secret": {"Integer": None}}),
+        (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
+        (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
+        (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
+        (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
+        (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
     ],
 )
 def test_binary_operator(operator, name, ty):
@@ -138,18 +138,18 @@ def test_binary_operator(operator, name, ty):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.add, "Addition", "PublicInteger"),
-        (operator.sub, "Subtraction", "PublicInteger"),
-        (operator.mul, "Multiplication", "PublicInteger"),
-        (operator.truediv, "Division", "PublicInteger"),
-        (operator.mod, "Modulo", "PublicInteger"),
-        (operator.rshift, "RightShift", "PublicInteger"),
-        (operator.lshift, "LeftShift", "PublicInteger"),
-        (operator.lt, "LessThan", "PublicBoolean"),
-        (operator.gt, "GreaterThan", "PublicBoolean"),
-        (operator.le, "LessOrEqualThan", "PublicBoolean"),
-        (operator.ge, "GreaterOrEqualThan", "PublicBoolean"),
-        (operator.eq, "Equals", "PublicBoolean"),
+        (operator.add, "Addition", {"Public": {"Integer": None}}),
+        (operator.sub, "Subtraction", {"Public": {"Integer": None}}),
+        (operator.mul, "Multiplication", {"Public": {"Integer": None}}),
+        (operator.truediv, "Division", {"Public": {"Integer": None}}),
+        (operator.mod, "Modulo", {"Public": {"Integer": None}}),
+        (operator.rshift, "RightShift", {"Public": {"Integer": None}}),
+        (operator.lshift, "LeftShift", {"Public": {"Integer": None}}),
+        (operator.lt, "LessThan", {"Public": {"Boolean": None}}),
+        (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
+        (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
+        (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Public": {"Boolean": None}}),
     ],
 )
 def test_binary_operator_public(operator, name, ty):
@@ -169,9 +169,9 @@ def test_binary_operator_public(operator, name, ty):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.add, "Addition", "SecretInteger"),
-        (operator.sub, "Subtraction", "SecretInteger"),
-        (operator.mul, "Multiplication", "SecretInteger"),
+        (operator.add, "Addition", {"Secret": {"Integer": None}}),
+        (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
+        (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
     ],
 )
 def test_binary_operator_public_secret(operator, name, ty):
@@ -191,9 +191,9 @@ def test_binary_operator_public_secret(operator, name, ty):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.add, "Addition", "SecretInteger"),
-        (operator.sub, "Subtraction", "SecretInteger"),
-        (operator.mul, "Multiplication", "SecretInteger"),
+        (operator.add, "Addition", {"Secret": {"Integer": None}}),
+        (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
+        (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
     ],
 )
 def test_binary_operator_secret_public(operator, name, ty):
@@ -210,15 +210,17 @@ def test_binary_operator_secret_public(operator, name, ty):
     assert inner["type"] == ty
 
 
-@pytest.mark.parametrize("operator", 
-                        [
-                            operator.add,
-                            operator.sub,
-                            operator.lt,
-                            operator.gt,
-                            operator.le,
-                            operator.ge,
-                        ])
+@pytest.mark.parametrize(
+    "operator",
+    [
+        operator.add,
+        operator.sub,
+        operator.lt,
+        operator.gt,
+        operator.le,
+        operator.ge,
+    ],
+)
 def test_rational_digit_checks(operator):
     left = create_input(SecretRational, "left", "party", digits=3)
     right = create_input(SecretRational, "right", "party", digits=4)
@@ -252,7 +254,10 @@ def test_zip(input_type, input_name):
     assert input_reference(inner["left"]) == "left"
     assert input_reference(inner["right"]) == "right"
     assert inner["type"][input_name]["inner_type"] == {
-        "NadaTuple": {"left_type": "SecretInteger", "right_type": "SecretInteger"}
+        "NadaTuple": {
+            "left_type": {"Secret": {"Integer": None}},
+            "right_type": {"Secret": {"Integer": None}},
+        }
     }
 
 
@@ -277,8 +282,12 @@ def test_unzip(input_type, input_name):
     ]  # We don't check Zip operation because it has its test
     assert inner["type"] == {
         "NadaTuple": {
-            "left_type": {"Array": {"inner_type": "SecretInteger", "size": 10}},
-            "right_type": {"Array": {"inner_type": "SecretInteger", "size": 10}},
+            "left_type": {
+                "Array": {"inner_type": {"Secret": {"Integer": None}}, "size": 10}
+            },
+            "right_type": {
+                "Array": {"inner_type": {"Secret": {"Integer": None}}, "size": 10}
+            },
         }
     }
 
@@ -301,7 +310,7 @@ def test_map(input_type, input_name):
     assert inner["fn"] in FUNCTIONS
     assert list(inner["type"].keys()) == [input_name]
     assert input_reference(inner["inner"]) == "inner"
-    assert inner["type"][input_name]["inner_type"] == "SecretInteger"
+    assert inner["type"][input_name]["inner_type"] == {"Secret": {"Integer": None}}
 
 
 @pytest.mark.parametrize(
@@ -320,7 +329,7 @@ def test_reduce(input_type, input_name):
     assert list(op.keys()) == ["Reduce"]
     inner = op["Reduce"]
     assert inner["fn"] in FUNCTIONS
-    assert inner["type"] == "SecretInteger"
+    assert inner["type"] == {"Secret": {"Integer": None}}
     assert input_reference(inner["inner"]) == "inner"
 
 
@@ -345,13 +354,17 @@ def test_nada_function_simple():
     assert nada_function["function"] == "nada_function"
     args = nada_function["args"]
     assert len(args) == 2
-    check_arg(args[0], "a", "SecretInteger")
-    check_arg(args[1], "b", "SecretInteger")
-    assert nada_function["return_type"] == "SecretInteger"
+    check_arg(args[0], "a", {"Secret": {"Integer": None}})
+    check_arg(args[1], "b", {"Secret": {"Integer": None}})
+    assert nada_function["return_type"] == {"Secret": {"Integer": None}}
     assert list(nada_function["inner"].keys()) == ["Addition"]
     addition = nada_function["inner"]["Addition"]
-    check_nada_function_arg_ref(addition["left"], nada_function["id"], "a", "SecretInteger")
-    check_nada_function_arg_ref(addition["right"], nada_function["id"], "b", "SecretInteger")
+    check_nada_function_arg_ref(
+        addition["left"], nada_function["id"], "a", {"Secret": {"Integer": None}}
+    )
+    check_nada_function_arg_ref(
+        addition["right"], nada_function["id"], "b", {"Secret": {"Integer": None}}
+    )
 
 
 def test_nada_function_using_inputs():
@@ -365,16 +378,20 @@ def test_nada_function_using_inputs():
     assert nada_function["function"] == "nada_function"
     args = nada_function["args"]
     assert len(args) == 2
-    check_arg(args[0], "a", "SecretInteger")
-    check_arg(args[1], "b", "SecretInteger")
-    assert nada_function["return_type"] == "SecretInteger"
+    check_arg(args[0], "a", {"Secret": {"Integer": None}})
+    check_arg(args[1], "b", {"Secret": {"Integer": None}})
+    assert nada_function["return_type"] == {"Secret": {"Integer": None}}
     assert list(nada_function["inner"].keys()) == ["Addition"]
     addition = nada_function["inner"]["Addition"]
     assert input_reference(addition["right"]) == "c"
     assert list(addition["left"].keys()) == ["Addition"]
     addition = addition["left"]["Addition"]
-    check_nada_function_arg_ref(addition["left"], nada_function["id"], "a", "SecretInteger")
-    check_nada_function_arg_ref(addition["right"], nada_function["id"], "b", "SecretInteger")
+    check_nada_function_arg_ref(
+        addition["left"], nada_function["id"], "a", {"Secret": {"Integer": None}}
+    )
+    check_nada_function_arg_ref(
+        addition["right"], nada_function["id"], "b", {"Secret": {"Integer": None}}
+    )
 
 
 def test_nada_function_using_operations():
@@ -389,9 +406,9 @@ def test_nada_function_using_operations():
     assert nada_function["function"] == "nada_function"
     args = nada_function["args"]
     assert len(args) == 2
-    check_arg(args[0], "a", "SecretInteger")
-    check_arg(args[1], "b", "SecretInteger")
-    assert nada_function["return_type"] == "SecretInteger"
+    check_arg(args[0], "a", {"Secret": {"Integer": None}})
+    check_arg(args[1], "b", {"Secret": {"Integer": None}})
+    assert nada_function["return_type"] == {"Secret": {"Integer": None}}
     assert list(nada_function["inner"].keys()) == ["Addition"]
     addition = nada_function["inner"]["Addition"]
     assert input_reference(addition["right"]) == "d"
@@ -400,8 +417,12 @@ def test_nada_function_using_operations():
     assert input_reference(addition["right"]) == "c"
     assert list(addition["left"].keys()) == ["Addition"]
     addition = addition["left"]["Addition"]
-    check_nada_function_arg_ref(addition["left"], nada_function["id"], "a", "SecretInteger")
-    check_nada_function_arg_ref(addition["right"], nada_function["id"], "b", "SecretInteger")
+    check_nada_function_arg_ref(
+        addition["left"], nada_function["id"], "a", {"Secret": {"Integer": None}}
+    )
+    check_nada_function_arg_ref(
+        addition["right"], nada_function["id"], "b", {"Secret": {"Integer": None}}
+    )
 
 
 @pytest.mark.parametrize(
@@ -409,7 +430,6 @@ def test_nada_function_using_operations():
     [(Array, "Array"), (Vector, "Vector")],
 )
 def test_nada_function_using_matrix(input_type, input_name):
-
     @nada_fn
     def add(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b
@@ -423,24 +443,30 @@ def test_nada_function_using_matrix(input_type, input_name):
     assert matrix_addition_fn["function"] == "matrix_addition"
     args = matrix_addition_fn["args"]
     assert len(args) == 2
-    a_arg_type = {input_name: {"inner_type": "SecretInteger"}}
+    a_arg_type = {input_name: {"inner_type": {"Secret": {"Integer": None}}}}
     check_arg(args[0], "a", a_arg_type)
     b_arg_type = {input_name: {"inner_type": "T"}}
     check_arg(args[1], "b", b_arg_type)
-    assert matrix_addition_fn["return_type"] == "SecretInteger"
+    assert matrix_addition_fn["return_type"] == {"Secret": {"Integer": None}}
 
     assert list(matrix_addition_fn["inner"].keys()) == ["Reduce"]
     reduce_op = matrix_addition_fn["inner"]["Reduce"]
     reduce_op["function_id"] = add_fn["id"]
-    reduce_op["type"] = "SecretInteger"
+    reduce_op["type"] = {"Secret": {"Integer": None}}
 
     assert list(reduce_op["inner"].keys()) == ["Map"]
     map_op = reduce_op["inner"]["Map"]
     map_op["function_id"] = add_fn["id"]
-    map_op["type"] = {input_name: {"inner_type": "SecretInteger", "size": None}}
+    map_op["type"] = {
+        input_name: {"inner_type": {"Secret": {"Integer": None}}, "size": None}
+    }
 
     assert list(map_op["inner"].keys()) == ["Zip"]
     zip_op = map_op["inner"]["Zip"]
 
-    check_nada_function_arg_ref(zip_op["left"], matrix_addition_fn["id"], "a", a_arg_type)
-    check_nada_function_arg_ref(zip_op["right"], matrix_addition_fn["id"], "b", b_arg_type)
+    check_nada_function_arg_ref(
+        zip_op["left"], matrix_addition_fn["id"], "a", a_arg_type
+    )
+    check_nada_function_arg_ref(
+        zip_op["right"], matrix_addition_fn["id"], "b", b_arg_type
+    )
