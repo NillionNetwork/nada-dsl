@@ -77,7 +77,7 @@ def compile_to_nada_pydsl_hir(output_file, outputs, target_dir):
 def compile_to_nada_mir(target_dir, outputs, output_file):
     circuit = nada_dsl_to_nada_mir(outputs)
     nada_mir = json.dumps(circuit, indent=2)
-    with open(f"{target_dir}/{output_file}.nada.json", "w") as file:
+    with open(f"{target_dir}/{output_file}.nada-mir.json", "w") as file:
         file.write(nada_mir)
 
 
