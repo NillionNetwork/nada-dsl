@@ -146,16 +146,21 @@ def to_type_dict(op_wrapper):
     if type(op_wrapper) == Array or type(op_wrapper) == ArrayType:
         size = {"size": op_wrapper.size} if op_wrapper.size else {}
         from typing import TypeVar
-        inner_type = "T" if type(op_wrapper.inner_type) == TypeVar else to_type_dict(op_wrapper.inner_type)
-        return {
-            "Array": {
-                "inner_type": inner_type,
-                **size
-            }
-        }
+
+        inner_type = (
+            "T"
+            if type(op_wrapper.inner_type) == TypeVar
+            else to_type_dict(op_wrapper.inner_type)
+        )
+        return {"Array": {"inner_type": inner_type, **size}}
     elif type(op_wrapper) == Vector or type(op_wrapper) == VectorType:
         from typing import TypeVar
-        inner_type = "T" if type(op_wrapper.inner_type) == TypeVar else to_type_dict(op_wrapper.inner_type)
+
+        inner_type = (
+            "T"
+            if type(op_wrapper.inner_type) == TypeVar
+            else to_type_dict(op_wrapper.inner_type)
+        )
         return {"Vector": {"inner_type": inner_type}}
     elif type(op_wrapper) == NadaTuple or type(op_wrapper) == NadaTupleType:
         return {
@@ -165,16 +170,23 @@ def to_type_dict(op_wrapper):
             }
         }
     elif type(op_wrapper) == SecretRational:
-        return {
-            "SecretRational": {
-                "digits": op_wrapper.digits,
-            }
-        }
+        return {"Secret": {"Rational": {"digits": op_wrapper.digits}}}
 
     elif inspect.isclass(op_wrapper):
-        return op_wrapper.__name__
+        return to_type(op_wrapper.__name__)
     else:
-        return op_wrapper.__class__.__name__
+        return to_type(op_wrapper.__class__.__name__)
+
+
+def to_type(name: str):
+    if name.startswith("Public"):
+        name = name[len("Public") :].lstrip()
+        return {"Public": {name: None}}
+    elif name.startswith("Secret"):
+        name = name[len("Secret") :].lstrip()
+        return {"Secret": {name: None}}
+    else:
+        return name
 
 
 def to_fn_dict(fn: NadaFunction):
@@ -184,7 +196,7 @@ def to_fn_dict(fn: NadaFunction):
         "function": fn.function.__name__,
         "inner": process_operation(fn.inner),
         "return_type": to_type_dict(fn.return_type),
-        "source_ref": fn.source_ref.to_dict()
+        "source_ref": fn.source_ref.to_dict(),
     }
 
 
