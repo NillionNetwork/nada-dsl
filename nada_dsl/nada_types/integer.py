@@ -87,6 +87,23 @@ class SecretInteger(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
+    
+    def __mod__(self, other: "PublicInteger") -> "SecretInteger":
+        """Modulo operation for SecretInteger.
+
+        Only public divisor is supported.
+
+        :param other: The modulo divisor, must be a public integer.
+        :type other: PublicInteger
+        :raises TypeError: Raised when the divisor type is not PublicInteger
+        :return: The modulo result as a Secret Integer
+        :rtype: SecretInteger
+        """
+        operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicInteger):
+            return SecretInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} % {other}")
 
 
 @dataclass

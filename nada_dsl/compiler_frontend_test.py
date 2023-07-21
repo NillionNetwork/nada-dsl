@@ -194,6 +194,7 @@ def test_binary_operator_public_secret(operator, name, ty):
         (operator.add, "Addition", {"Secret": {"Integer": None}}),
         (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
         (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
+        (operator.mod, "Modulo", {"Secret": {"Integer": None}}),
     ],
 )
 def test_binary_operator_secret_public(operator, name, ty):
