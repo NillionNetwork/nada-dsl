@@ -49,7 +49,9 @@ class Array(Generic[T], NadaType):
     size: int
 
     def __init__(self, inner, size, inner_type=None):
-        self.inner_type = inner_type if not inner or inner_type else get_inner_type(inner)
+        self.inner_type = (
+            inner_type if not inner or inner_type else get_inner_type(inner)
+        )
         self.size = size
         self.inner = inner if inner_type else getattr(inner, "inner", None)
 
@@ -103,7 +105,9 @@ class Vector(Generic[T], NadaType):
     size: PublicInteger
 
     def __init__(self, inner, size, inner_type=None):
-        self.inner_type = inner_type if not inner or inner_type else get_inner_type(inner)
+        self.inner_type = (
+            inner_type if not inner or inner_type else get_inner_type(inner)
+        )
         self.size = size
         self.inner = inner if inner_type else getattr(inner, "inner", None)
 

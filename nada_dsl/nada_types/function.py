@@ -12,6 +12,7 @@ class NadaFunctionArg(Generic[T]):
     function_id: int
     name: str
     type: T
+    source_ref: SourceRef
 
 
 @dataclass
@@ -28,6 +29,7 @@ class NadaFunction(NadaType, Generic[T, R]):
 
 def inner_type(ty):
     from nada_dsl import Vector, Array
+
     origin_ty = getattr(ty, "__origin__", ty)
     if origin_ty == Array or origin_ty == Vector:
         inner_ty = getattr(ty, "__args__", None)
@@ -50,11 +52,18 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
     for idx, arg in enumerate(args.args):
         arg_type = args_ty[arg] if args_ty else args.annotations[arg]
         arg_type = inner_type(arg_type)
-        nada_arg = NadaFunctionArg(function_id=id(fn), name=arg, type=arg_type)
+        # We'll get the function source ref for now
+        nada_arg = NadaFunctionArg(
+            function_id=id(fn),
+            name=arg,
+            type=arg_type,
+            source_ref=SourceRef.back_frame(),
+        )
         nada_args.append(nada_arg)
 
     nada_args_type_wrapped = []
     from copy import copy
+
     for arg in nada_args:
         arg_type = copy(arg.type)
         arg_type.inner = arg

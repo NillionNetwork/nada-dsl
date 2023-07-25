@@ -192,7 +192,14 @@ def to_type(name: str):
 def to_fn_dict(fn: NadaFunction):
     return {
         "id": fn.id,
-        "args": [{"name": arg.name, "type": to_type_dict(arg.type)} for arg in fn.args],
+        "args": [
+            {
+                "name": arg.name,
+                "type": to_type_dict(arg.type),
+                "source_ref": arg.source_ref.to_dict(),
+            }
+            for arg in fn.args
+        ],
         "function": fn.function.__name__,
         "inner": process_operation(fn.inner),
         "return_type": to_type_dict(fn.return_type),
@@ -257,6 +264,7 @@ def process_operation(operation_wrapper):
             "InputReference": {
                 "refers_to": operation.name,
                 "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     elif isinstance(operation, Map):
@@ -295,6 +303,7 @@ def process_operation(operation_wrapper):
                 "function_id": operation.function_id,
                 "refers_to": operation.name,
                 "type": to_type_dict(operation.type),
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     else:

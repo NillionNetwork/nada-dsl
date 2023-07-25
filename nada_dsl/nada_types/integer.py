@@ -158,16 +158,14 @@ class PublicInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} << {other}")
 
-    def __lt__(
-            self, other: "PublicInteger") -> "PublicBoolean":
+    def __lt__(self, other: "PublicInteger") -> "PublicBoolean":
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
-    def __gt__(
-            self, other: "PublicInteger") -> "PublicBoolean":
+    def __gt__(self, other: "PublicInteger") -> "PublicBoolean":
         operation = GreaterThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
@@ -176,8 +174,7 @@ class PublicInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
-    def __le__(
-            self, other: "PublicInteger") -> "PublicBoolean":
+    def __le__(self, other: "PublicInteger") -> "PublicBoolean":
         operation = LessOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
@@ -186,8 +183,7 @@ class PublicInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
-    def __ge__(
-            self, other: "PublicInteger") -> "PublicBoolean":
+    def __ge__(self, other: "PublicInteger") -> "PublicBoolean":
         operation = GreaterOrEqualThan(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )

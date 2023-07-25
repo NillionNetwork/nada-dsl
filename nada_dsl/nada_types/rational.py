@@ -2,9 +2,9 @@ from dataclasses import dataclass
 
 from . import NadaType
 from nada_dsl.operations import (
-    Addition, 
-    Multiplication, 
-    LessThan, 
+    Addition,
+    Multiplication,
+    LessThan,
     GreaterThan,
     LessOrEqualThan,
     GreaterOrEqualThan,
@@ -72,7 +72,7 @@ class SecretRational(NadaType):
                 )
             )
         else:
-            raise TypeError(f"Invalid operation: {self} <= {other}")        
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(self, other: "SecretRational") -> "SecretBoolean":
         if isinstance(other, SecretRational) and other.digits == self.digits:
@@ -130,9 +130,11 @@ class PublicRational(NadaType):
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
-        
+
     def __le__(self, other: "PublicRational") -> "PublicBoolean":
-        operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+        operation = LessOrEqualThan(
+            left=self, right=other, source_ref=SourceRef.back_frame()
+        )
         if isinstance(other, PublicRational) and other.digits == self.digits:
             return PublicBoolean(inner=operation)
         else:
