@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 from nada_dsl.nada_types import AllTypes
 
@@ -15,8 +16,8 @@ class Party:
 
 
 class Input:
-    party: Party
     name: str
+    party: Party
     doc: str
     source_ref: SourceRef
 
@@ -26,6 +27,14 @@ class Input:
         self.doc = doc
         self.source_ref = SourceRef.back_frame()
 
+
+class Literal:
+    value: Any
+    source_ref: SourceRef
+
+    def __init__(self, value, source_ref):
+        self.value = value
+        self.source_ref = source_ref
 
 @dataclass
 class Output:

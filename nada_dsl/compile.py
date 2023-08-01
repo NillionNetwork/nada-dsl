@@ -2,6 +2,7 @@ import sys
 import os.path
 import json
 from dataclasses import dataclass
+import traceback
 
 
 @dataclass
@@ -44,5 +45,6 @@ if __name__ == "__main__":
         }
         print(json.dumps(output))
     except Exception as ex:
-        output = {"result": "Failure", "reason": str(ex)}
+        tb = traceback.format_exc()
+        output = {"result": "Failure", "reason": str(ex), "traceback": str(tb)}
         print(json.dumps(output))

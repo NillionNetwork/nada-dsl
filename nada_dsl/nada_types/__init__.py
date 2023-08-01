@@ -46,6 +46,7 @@ OperationType = Union[
     "Zip",
     "Reduce",
     "Unzip",
+    "Literal",
 ]
 
 

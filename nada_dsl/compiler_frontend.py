@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 from json import JSONEncoder
@@ -5,7 +6,8 @@ import inspect
 from typing import List, Dict, Any
 
 from nada_dsl.source_ref import SourceRef
-from nada_dsl.circuit_io import Input, Output
+from nada_dsl.circuit_io import Input, Output, Party, Literal
+from nada_dsl.nada_types.integer import Integer
 from nada_dsl.nada_types.rational import SecretRational
 from nada_dsl.nada_types.collections import (
     Array,
@@ -39,7 +41,7 @@ from nada_dsl.operations import (
 INPUTS = {}
 PARTIES = {}
 FUNCTIONS = {}
-
+LITERALS = {}
 
 class ClassEncoder(JSONEncoder):
     def default(self, o):
@@ -85,6 +87,7 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
     new_outputs = []
     PARTIES.clear()
     INPUTS.clear()
+    LITERALS.clear()
     for output in outputs:
         new_out = process_operation(output.inner)
         party = output.party
@@ -103,6 +106,7 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
         "functions": to_function_list(FUNCTIONS),
         "parties": to_party_list(PARTIES),
         "inputs": to_input_list(INPUTS),
+        "literals": to_literal_list(LITERALS),
         "outputs": new_outputs,
         "source_files": SourceRef.get_sources(),
     }
@@ -133,6 +137,18 @@ def to_input_list(inputs):
             )
     return input_list
 
+
+def to_literal_list(literals):
+    literal_list = []
+    for name, (value, ty) in literals.items():
+        literal_list.append(
+            {
+                "name": name,
+                "value": value,
+                "type": ty,
+            }
+        )
+    return literal_list
 
 def to_function_list(functions):
     function_list = []
@@ -169,6 +185,8 @@ def to_type_dict(op_wrapper):
                 "right_type": to_type_dict(op_wrapper.right_type),
             }
         }
+    elif type(op_wrapper) == Integer:
+        return {"Literal": {"Integer": None}}
     elif type(op_wrapper) == SecretRational:
         return {"Secret": {"Rational": {"digits": op_wrapper.digits}}}
 
@@ -263,6 +281,19 @@ def process_operation(operation_wrapper):
         return {
             "InputReference": {
                 "refers_to": operation.name,
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif isinstance(operation, Literal):
+        # Generate a unique name depending on the value and type to prevent duplicating literals in the bytecode.
+        literal_name = hashlib.md5(
+            (str(operation.value) + str(ty)).encode("UTF-8")
+        ).hexdigest()
+        LITERALS[literal_name] = (str(operation.value), ty)
+        return {
+            "LiteralReference": {
+                "refers_to": literal_name,
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
