@@ -8,6 +8,7 @@ from typing import List, Dict, Any
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output, Party, Literal
 from nada_dsl.nada_types.integer import Integer
+from nada_dsl.nada_types.unsigned_integer import UnsignedInteger
 from nada_dsl.nada_types.rational import SecretRational
 from nada_dsl.nada_types.collections import (
     Array,
@@ -144,7 +145,7 @@ def to_literal_list(literals):
         literal_list.append(
             {
                 "name": name,
-                "value": value,
+                "value": str(value),
                 "type": ty,
             }
         )
@@ -187,6 +188,8 @@ def to_type_dict(op_wrapper):
         }
     elif type(op_wrapper) == Integer:
         return {"Literal": {"Integer": None}}
+    elif type(op_wrapper) == UnsignedInteger:
+        return {"Literal": {"UnsignedInteger": None}}
     elif type(op_wrapper) == SecretRational:
         return {"Secret": {"Rational": {"digits": op_wrapper.digits}}}
 

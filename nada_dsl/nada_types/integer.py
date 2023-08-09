@@ -76,53 +76,45 @@ class Integer(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
-    def __truediv__(self, other: "PublicInteger") -> Union["SecretInteger", "PublicInteger", "Integer"]:
+    def __truediv__(self, other: Union["PublicInteger", "Integer"]) -> Union["PublicInteger", "Integer"]:
         operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretInteger):
-            return SecretInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
+        if isinstance(other, PublicInteger):
             return PublicInteger(inner=operation)
         elif isinstance(other, Integer):
             return Integer(value=self.value / other.value)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
-    def __mod__(self, other: "PublicInteger") -> Union["SecretInteger", "PublicInteger", "Integer"]:
+    def __mod__(self, other: Union["PublicInteger", "Integer"]) -> Union["PublicInteger", "Integer"]:
         operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretInteger):
-            return SecretInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
+        if isinstance(other, PublicInteger):
             return PublicInteger(inner=operation)
         elif isinstance(other, Integer):
             return Integer(value=self.value % other.value)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
-    def __rshift__(self, other: "PublicInteger") -> Union["SecretInteger", "PublicInteger", "Integer"]:
+    def __rshift__(self, other: Union["PublicInteger", "Integer"]) -> Union["PublicInteger", "Integer"]:
         operation = RightShift(
             left=self, right=other, source_ref=SourceRef.back_frame()
         )
-        if isinstance(other, SecretInteger):
-            return SecretInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
+        if isinstance(other, PublicInteger):
             return PublicInteger(inner=operation)
         elif isinstance(other, Integer):
             return Integer(value=self.value >> other.value)
         else:
             raise TypeError(f"Invalid operation: {self} >> {other}")
 
-    def __lshift__(self, other: "PublicInteger") -> Union["SecretInteger", "PublicInteger", "Integer"]:
+    def __lshift__(self, other: Union["PublicInteger", "Integer"]) -> Union["PublicInteger", "Integer"]:
         operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, SecretInteger):
-            return SecretInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
+        if isinstance(other, PublicInteger):
             return PublicInteger(inner=operation)
         elif isinstance(other, Integer):
             return Integer(value=self.value << other.value)
         else:
             raise TypeError(f"Invalid operation: {self} << {other}")
 
-    def __lt__(self, other: "PublicInteger") -> "PublicBoolean":
+    def __lt__(self, other: Union["PublicInteger", "Integer"]) -> "PublicBoolean":
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
