@@ -26,12 +26,16 @@ def input_reference(ref) -> str:
     return ref["InputReference"]["refers_to"]
 
 
-def create_input(clazz, name: str, party: str, **kwargs):
-    return clazz(Input(name=name, party=Party(party)), **kwargs)
+def literal_reference(ref) -> str:
+    return ref["LiteralReference"]["refers_to"]
 
 
-def create_collection(clazz, inner_input, size, **kwargs):
-    return clazz(inner_input, size, **kwargs)
+def create_input(cls, name: str, party: str, **kwargs):
+    return cls(Input(name=name, party=Party(party)), **kwargs)
+
+
+def create_collection(cls, inner_input, size, **kwargs):
+    return cls(inner_input, size, **kwargs)
 
 
 def create_output(root: AllTypes, name: str, party: str) -> Output:
@@ -44,6 +48,7 @@ def test_root_conversion():
     mir = nada_dsl_to_nada_mir([output])
     assert len(mir["parties"]) == 2
     assert len(mir["inputs"]) == 1
+    assert len(mir["literals"]) == 0
     assert len(mir["outputs"]) == 1
     assert "source_files" in mir
 
@@ -184,6 +189,33 @@ def test_binary_operator_public_secret(operator, name, ty):
     inner = op[name]
 
     assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
+    assert inner["type"] == ty
+
+
+from pprint import pprint
+
+
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.add, "Addition", {"Secret": {"Integer": None}}),
+        (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
+        (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
+    ],
+)
+def test_binary_operator_public_literal(operator, name, ty):
+    left = Integer(10)
+    right = create_input(SecretInteger, "right", "party")
+    program_operation = operator(left, right)
+    op = process_operation(program_operation)
+    assert list(op.keys()) == [name]
+
+    inner = op[name]
+
+    pprint(inner)
+
+    assert literal_reference(inner["left"]) == "7ac83dfb2f31794059f6e8f40008bd97"
     assert input_reference(inner["right"]) == "right"
     assert inner["type"] == ty
 
