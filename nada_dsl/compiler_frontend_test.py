@@ -192,10 +192,6 @@ def test_binary_operator_public_secret(operator, name, ty):
     assert input_reference(inner["right"]) == "right"
     assert inner["type"] == ty
 
-
-from pprint import pprint
-
-
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
@@ -212,8 +208,6 @@ def test_binary_operator_public_literal(operator, name, ty):
     assert list(op.keys()) == [name]
 
     inner = op[name]
-
-    pprint(inner)
 
     assert literal_reference(inner["left"]) == "7ac83dfb2f31794059f6e8f40008bd97"
     assert input_reference(inner["right"]) == "right"
