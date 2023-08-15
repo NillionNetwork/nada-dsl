@@ -16,7 +16,7 @@ from nada_dsl.operations import (
     Subtraction,
 )
 from nada_dsl.source_ref import SourceRef
-from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean
+from nada_dsl.nada_types.boolean import SecretBoolean, PublicBoolean, Boolean
 from typing import Literal, Union
 
 @dataclass
@@ -116,7 +116,7 @@ class UnsignedInteger(NadaType):
         if isinstance(other, PublicUnsignedInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, UnsignedInteger):
-            return PublicBoolean(value=self.value < other.value)
+            return Boolean(value=self.value < other.value)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
@@ -127,7 +127,7 @@ class UnsignedInteger(NadaType):
         if isinstance(other, PublicUnsignedInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, UnsignedInteger):
-            return PublicBoolean(value=self.value > other.value)
+            return Boolean(value=self.value > other.value)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
@@ -138,7 +138,7 @@ class UnsignedInteger(NadaType):
         if isinstance(other, PublicUnsignedInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, UnsignedInteger):
-            return PublicBoolean(value=self.value <= other.value)
+            return Boolean(value=self.value <= other.value)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
@@ -149,7 +149,7 @@ class UnsignedInteger(NadaType):
         if isinstance(other, PublicUnsignedInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, UnsignedInteger):
-            return PublicBoolean(value=self.value >= other.value)
+            return Boolean(value=self.value >= other.value)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
@@ -158,7 +158,7 @@ class UnsignedInteger(NadaType):
         if isinstance(other, PublicUnsignedInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, UnsignedInteger):
-            return PublicBoolean(value=self.value == other.value)
+            return Boolean(value=self.value == other.value)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 

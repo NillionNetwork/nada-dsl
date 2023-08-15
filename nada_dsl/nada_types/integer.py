@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Union
 
-from nada_dsl.nada_types.boolean import PublicBoolean, SecretBoolean
+from nada_dsl.nada_types.boolean import PublicBoolean, SecretBoolean, Boolean
 from nada_dsl.operations import (
     Addition,
     Division,
@@ -119,7 +119,7 @@ class Integer(NadaType):
         if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, Integer):
-            return PublicBoolean(value=self.value < other.value)
+            return Boolean(value=self.value < other.value)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
@@ -130,7 +130,7 @@ class Integer(NadaType):
         if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, Integer):
-            return PublicBoolean(value=self.value > other.value)
+            return Boolean(value=self.value > other.value)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
@@ -141,7 +141,7 @@ class Integer(NadaType):
         if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, Integer):
-            return PublicBoolean(value=self.value <= other.value)
+            return Boolean(value=self.value <= other.value)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
@@ -152,7 +152,7 @@ class Integer(NadaType):
         if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, Integer):
-            return PublicBoolean(value=self.value >= other.value)
+            return Boolean(value=self.value >= other.value)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
@@ -161,7 +161,7 @@ class Integer(NadaType):
         if isinstance(other, PublicInteger):
             return PublicBoolean(inner=operation)
         elif isinstance(other, Integer):
-            return PublicBoolean(value=self.value == other.value)
+            return Boolean(value=self.value == other.value)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
