@@ -218,6 +218,30 @@ class SecretUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
+    def __mod__(self, other: "PublicUnsignedInteger") -> "SecretUnsignedInteger":
+        """Modulo operation for SecretUnsignedInteger.
+
+        Only public divisor is supported.
+
+        :param other: The modulo divisor, must be a public integer.
+        :type other: PublicUnsignedInteger
+        :raises TypeError: Raised when the divisor type is not PublicUnsignedInteger
+        :return: The modulo result as a SecretUnsignedInteger
+        :rtype: SecretUnsignedInteger
+        """
+        operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicUnsignedInteger):
+            return SecretUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} % {other}")
+        
+    def __pow__(self, other: "PublicUnsignedInteger") -> "SecretUnsignedInteger":
+        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicUnsignedInteger):
+            return SecretUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
+
     def __lt__(self, other: "SecretUnsignedInteger") -> "SecretBoolean":
         # LT actually works differently for unsigned types, these are not correct.
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -252,30 +276,6 @@ class SecretUnsignedInteger(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
-    
-    def __mod__(self, other: "PublicUnsignedInteger") -> "SecretUnsignedInteger":
-        """Modulo operation for SecretUnsignedInteger.
-
-        Only public divisor is supported.
-
-        :param other: The modulo divisor, must be a public integer.
-        :type other: PublicUnsignedInteger
-        :raises TypeError: Raised when the divisor type is not PublicUnsignedInteger
-        :return: The modulo result as a SecretUnsignedInteger
-        :rtype: SecretUnsignedInteger
-        """
-        operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, PublicUnsignedInteger):
-            return SecretUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} % {other}")
-        
-    def __pow__(self, other: "PublicUnsignedInteger") -> "SecretUnsignedInteger":
-        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, PublicUnsignedInteger):
-            return SecretUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} ** {other}")
 
 
 @dataclass

@@ -220,6 +220,30 @@ class SecretInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
+    def __mod__(self, other: "PublicInteger") -> "SecretInteger":
+        """Modulo operation for SecretInteger.
+
+        Only public variable or literal divisor is supported.
+
+        :param other: The modulo divisor, must be a public integer.
+        :type other: PublicInteger
+        :raises TypeError: Raised when the divisor type is not PublicInteger
+        :return: The modulo result as a Secret Integer
+        :rtype: SecretInteger
+        """
+        operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicInteger) or isinstance(other, Integer):
+            return SecretInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} % {other}")
+        
+    def __pow__(self, other: "PublicInteger") -> "SecretInteger":
+        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicInteger) or isinstance(other, Integer):
+            return SecretInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
+
     def __lt__(self, other: "SecretInteger") -> "SecretBoolean":
         operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
         if isinstance(other, SecretInteger):
@@ -253,30 +277,6 @@ class SecretInteger(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
-    
-    def __mod__(self, other: "PublicInteger") -> "SecretInteger":
-        """Modulo operation for SecretInteger.
-
-        Only public variable or literal divisor is supported.
-
-        :param other: The modulo divisor, must be a public integer.
-        :type other: PublicInteger
-        :raises TypeError: Raised when the divisor type is not PublicInteger
-        :return: The modulo result as a Secret Integer
-        :rtype: SecretInteger
-        """
-        operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, PublicInteger) or isinstance(other, Integer):
-            return SecretInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} % {other}")
-        
-    def __pow__(self, other: "PublicInteger") -> "SecretInteger":
-        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-        if isinstance(other, PublicInteger) or isinstance(other, Integer):
-            return SecretInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} ** {other}")
 
 
 @dataclass
@@ -331,6 +331,13 @@ class PublicInteger(NadaType):
             return PublicInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
+
+    def __pow__(self, other: "PublicInteger") -> "PublicInteger":
+        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicInteger) or isinstance(other, Integer):
+            return PublicInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __rshift__(self, other: "PublicInteger") -> "PublicInteger":
         operation = RightShift(
