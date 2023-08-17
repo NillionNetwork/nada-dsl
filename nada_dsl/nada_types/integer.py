@@ -12,6 +12,7 @@ from nada_dsl.operations import (
     LessOrEqualThan,
     LessThan,
     Modulo,
+    Power,
     Multiplication,
     RightShift,
     Subtraction,
@@ -93,6 +94,15 @@ class Integer(NadaType):
             return Integer(value=self.value % other.value)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
+
+    def __pow__(self, other: Union["PublicInteger", "Integer"]) -> Union["PublicInteger", "Integer"]:
+        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicInteger):
+            return PublicInteger(inner=operation)
+        elif isinstance(other, Integer):
+            return Integer(value=self.value ** other.value)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __rshift__(self, other: Union["PublicInteger", "Integer"]) -> Union["PublicInteger", "Integer"]:
         operation = RightShift(
@@ -260,6 +270,13 @@ class SecretInteger(NadaType):
             return SecretInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
+        
+    def __pow__(self, other: "PublicInteger") -> "SecretInteger":
+        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicInteger) or isinstance(other, Integer):
+            return SecretInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
 
 @dataclass

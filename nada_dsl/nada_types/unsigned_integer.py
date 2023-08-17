@@ -11,6 +11,7 @@ from nada_dsl.operations import (
     Equals,
     LeftShift,
     Modulo,
+    Power,
     Multiplication,
     RightShift,
     Subtraction,
@@ -90,6 +91,15 @@ class UnsignedInteger(NadaType):
             return UnsignedInteger(value=self.value % other.value)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
+        
+    def __pow__(self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]) -> Union["PublicUnsignedInteger", "UnsignedInteger"]:
+        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicUnsignedInteger):
+            return PublicUnsignedInteger(inner=operation)
+        elif isinstance(other, UnsignedInteger):
+            return UnsignedInteger(value=self.value ** other.value)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __rshift__(self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]) -> Union["PublicUnsignedInteger", "UnsignedInteger"]:
         operation = RightShift(
@@ -259,6 +269,13 @@ class SecretUnsignedInteger(NadaType):
             return SecretUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
+        
+    def __pow__(self, other: "PublicUnsignedInteger") -> "SecretUnsignedInteger":
+        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicUnsignedInteger):
+            return SecretUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
 
 @dataclass
@@ -313,6 +330,13 @@ class PublicUnsignedInteger(NadaType):
             return PublicUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
+        
+    def __pow__(self, other: "PublicUnsignedInteger") -> "PublicUnsignedInteger":
+        operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+        if isinstance(other, PublicUnsignedInteger) or isinstance(other, UnsignedInteger):
+            return PublicUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __rshift__(self, other: "PublicUnsignedInteger") -> "PublicUnsignedInteger":
         operation = RightShift(

@@ -40,6 +40,12 @@ class Modulo:
     right: AllTypes
     source_ref: SourceRef
 
+@dataclass
+class Power:
+    left: AllTypes
+    right: AllTypes
+    source_ref: SourceRef
+
 
 @dataclass
 class RightShift:

@@ -148,6 +148,7 @@ def test_binary_operator(operator, name, ty):
         (operator.mul, "Multiplication", {"Public": {"Integer": None}}),
         (operator.truediv, "Division", {"Public": {"Integer": None}}),
         (operator.mod, "Modulo", {"Public": {"Integer": None}}),
+        (operator.mod, "Power", {"Public": {"Integer": None}}),
         (operator.rshift, "RightShift", {"Public": {"Integer": None}}),
         (operator.lshift, "LeftShift", {"Public": {"Integer": None}}),
         (operator.lt, "LessThan", {"Public": {"Boolean": None}}),
@@ -221,6 +222,7 @@ def test_binary_operator_public_literal(operator, name, ty):
         (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
         (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
         (operator.mod, "Modulo", {"Secret": {"Integer": None}}),
+        (operator.mod, "Power", {"Secret": {"Integer": None}}),
     ],
 )
 def test_binary_operator_secret_public(operator, name, ty):

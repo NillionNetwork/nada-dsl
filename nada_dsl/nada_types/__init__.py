@@ -33,6 +33,7 @@ OperationType = Union[
     "Multiplication",
     "Division",
     "Modulo",
+    "Power",
     "RightShift",
     "LeftShift",
     "LessThan",
