@@ -18,7 +18,7 @@ from nada_dsl.nada_types.collections import (
     VectorType,
     NadaTupleType,
 )
-from nada_dsl.nada_types.function import NadaFunction
+from nada_dsl.nada_types.function import NadaFunction, NadaFunctionCall
 from nada_dsl.future.operations import Cast
 from nada_dsl.operations import (
     Addition,
@@ -44,6 +44,7 @@ INPUTS = {}
 PARTIES = {}
 FUNCTIONS = {}
 LITERALS = {}
+
 
 class ClassEncoder(JSONEncoder):
     def default(self, o):
@@ -152,12 +153,9 @@ def to_literal_list(literals):
         )
     return literal_list
 
-def to_function_list(functions):
-    function_list = []
-    while len(functions) > 0:
-        function = functions.pop(list(functions.keys())[0])
-        function_list.append(to_fn_dict(function))
-    return function_list
+
+def to_function_list(functions: Dict[int, NadaFunction]) -> List[Dict]:
+    return [to_fn_dict(function) for function in functions.values()]
 
 
 def to_type_dict(op_wrapper):
@@ -223,7 +221,7 @@ def to_fn_dict(fn: NadaFunction):
             for arg in fn.args
         ],
         "function": fn.function.__name__,
-        "inner": process_operation(fn.inner),
+        "body": process_operation(fn.inner),
         "return_type": to_type_dict(fn.return_type),
         "source_ref": fn.source_ref.to_dict(),
     }
@@ -340,6 +338,18 @@ def process_operation(operation_wrapper):
                 "refers_to": operation.name,
                 "type": to_type_dict(operation.type),
                 "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif isinstance(operation, NadaFunctionCall):
+        if operation.fn.id not in FUNCTIONS:
+            FUNCTIONS[operation.fn.id] = operation.fn
+        return {
+            "NadaFunctionCall": {
+                "function_id": operation.fn.id,
+                "args": [process_operation(arg) for arg in operation.args],
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+                "return_type": to_type_dict(operation.fn.return_type),
             }
         }
     else:

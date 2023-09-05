@@ -386,8 +386,8 @@ def test_nada_function_simple():
     check_arg(args[0], "a", {"Secret": {"Integer": None}})
     check_arg(args[1], "b", {"Secret": {"Integer": None}})
     assert nada_function["return_type"] == {"Secret": {"Integer": None}}
-    assert list(nada_function["inner"].keys()) == ["Addition"]
-    addition = nada_function["inner"]["Addition"]
+    assert list(nada_function["body"].keys()) == ["Addition"]
+    addition = nada_function["body"]["Addition"]
     check_nada_function_arg_ref(
         addition["left"], nada_function["id"], "a", {"Secret": {"Integer": None}}
     )
@@ -410,8 +410,8 @@ def test_nada_function_using_inputs():
     check_arg(args[0], "a", {"Secret": {"Integer": None}})
     check_arg(args[1], "b", {"Secret": {"Integer": None}})
     assert nada_function["return_type"] == {"Secret": {"Integer": None}}
-    assert list(nada_function["inner"].keys()) == ["Addition"]
-    addition = nada_function["inner"]["Addition"]
+    assert list(nada_function["body"].keys()) == ["Addition"]
+    addition = nada_function["body"]["Addition"]
     assert input_reference(addition["right"]) == "c"
     assert list(addition["left"].keys()) == ["Addition"]
     addition = addition["left"]["Addition"]
@@ -421,6 +421,20 @@ def test_nada_function_using_inputs():
     check_nada_function_arg_ref(
         addition["right"], nada_function["id"], "b", {"Secret": {"Integer": None}}
     )
+
+def test_nada_function_call():
+    c = create_input(SecretInteger, "c", "party", **{})
+    d = create_input(SecretInteger, "c", "party", **{})
+
+    @nada_fn
+    def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
+        return a + b
+    nada_fn_call_return = nada_function(c,d)
+    nada_fn_type = to_fn_dict(nada_function)
+    
+    nada_function_call = nada_fn_call_return.inner
+    assert isinstance(nada_function_call,NadaFunctionCall)
+    assert nada_function_call.fn.id == nada_fn_type["id"]
 
 
 def test_nada_function_using_operations():
@@ -438,8 +452,8 @@ def test_nada_function_using_operations():
     check_arg(args[0], "a", {"Secret": {"Integer": None}})
     check_arg(args[1], "b", {"Secret": {"Integer": None}})
     assert nada_function["return_type"] == {"Secret": {"Integer": None}}
-    assert list(nada_function["inner"].keys()) == ["Addition"]
-    addition = nada_function["inner"]["Addition"]
+    assert list(nada_function["body"].keys()) == ["Addition"]
+    addition = nada_function["body"]["Addition"]
     assert input_reference(addition["right"]) == "d"
     assert list(addition["left"].keys()) == ["Addition"]
     addition = addition["left"]["Addition"]
@@ -478,8 +492,8 @@ def test_nada_function_using_matrix(input_type, input_name):
     check_arg(args[1], "b", b_arg_type)
     assert matrix_addition_fn["return_type"] == {"Secret": {"Integer": None}}
 
-    assert list(matrix_addition_fn["inner"].keys()) == ["Reduce"]
-    reduce_op = matrix_addition_fn["inner"]["Reduce"]
+    assert list(matrix_addition_fn["body"].keys()) == ["Reduce"]
+    reduce_op = matrix_addition_fn["body"]["Reduce"]
     reduce_op["function_id"] = add_fn["id"]
     reduce_op["type"] = {"Secret": {"Integer": None}}
 
@@ -499,3 +513,4 @@ def test_nada_function_using_matrix(input_type, input_name):
     check_nada_function_arg_ref(
         zip_op["right"], matrix_addition_fn["id"], "b", b_arg_type
     )
+

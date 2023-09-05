@@ -24,8 +24,18 @@ class NadaFunction(NadaType, Generic[T, R]):
     source_ref: SourceRef
 
     def __call__(self, *args, **kwargs) -> R:
-        return self.function(*args, **kwargs)
+        return self.return_type(inner=NadaFunctionCall(self, args, source_ref=SourceRef.back_frame())) # type: ignore
 
+class NadaFunctionCall(NadaType, Generic[R]):
+    """Represents a call to a Nada Function."""
+    fn: NadaFunction
+    args: List[NadaType]
+    source_ref: SourceRef
+
+    def __init__(self, nada_function, args, source_ref):
+        self.args = args
+        self.fn = nada_function
+        self.source_ref = source_ref
 
 def inner_type(ty):
     from nada_dsl import Vector, Array

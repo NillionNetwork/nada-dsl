@@ -134,7 +134,7 @@ class Vector(Generic[T], NadaType):
     def reduce(self: "Vector[T]", function: NadaFunction[T, R]) -> R:
         return function.return_type(
             Reduce(inner=self, fn=function, source_ref=SourceRef.back_frame())
-        )
+        ) # type: ignore
 
     @classmethod
     def generic_type(cls, inner_type: T) -> VectorType:
