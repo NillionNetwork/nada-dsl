@@ -45,7 +45,7 @@ class UnsignedInteger(NadaType):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
@@ -59,7 +59,7 @@ class UnsignedInteger(NadaType):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -70,7 +70,7 @@ class UnsignedInteger(NadaType):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -81,7 +81,7 @@ class UnsignedInteger(NadaType):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -92,7 +92,7 @@ class UnsignedInteger(NadaType):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -103,7 +103,7 @@ class UnsignedInteger(NadaType):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -114,7 +114,7 @@ class UnsignedInteger(NadaType):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
@@ -128,7 +128,7 @@ class UnsignedInteger(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
@@ -142,7 +142,7 @@ class UnsignedInteger(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
@@ -156,7 +156,7 @@ class UnsignedInteger(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
@@ -170,7 +170,7 @@ class UnsignedInteger(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
@@ -184,7 +184,7 @@ class UnsignedInteger(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 
 @dataclass
 class PublicUnsignedInteger(NadaType):
@@ -216,7 +216,7 @@ class PublicUnsignedInteger(NadaType):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
@@ -231,7 +231,7 @@ class PublicUnsignedInteger(NadaType):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -243,7 +243,7 @@ class PublicUnsignedInteger(NadaType):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -255,7 +255,7 @@ class PublicUnsignedInteger(NadaType):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -267,7 +267,7 @@ class PublicUnsignedInteger(NadaType):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -279,7 +279,7 @@ class PublicUnsignedInteger(NadaType):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -291,7 +291,7 @@ class PublicUnsignedInteger(NadaType):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -303,7 +303,7 @@ class PublicUnsignedInteger(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -315,7 +315,7 @@ class PublicUnsignedInteger(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -327,7 +327,7 @@ class PublicUnsignedInteger(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -339,7 +339,7 @@ class PublicUnsignedInteger(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -351,7 +351,7 @@ class PublicUnsignedInteger(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 
 @dataclass
 class SecretUnsignedInteger(NadaType):
@@ -383,7 +383,7 @@ class SecretUnsignedInteger(NadaType):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
@@ -398,7 +398,7 @@ class SecretUnsignedInteger(NadaType):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -410,7 +410,7 @@ class SecretUnsignedInteger(NadaType):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -422,7 +422,7 @@ class SecretUnsignedInteger(NadaType):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -434,7 +434,7 @@ class SecretUnsignedInteger(NadaType):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -446,7 +446,7 @@ class SecretUnsignedInteger(NadaType):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
@@ -458,7 +458,7 @@ class SecretUnsignedInteger(NadaType):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
         self, other: Union["SecretUnsignedInteger", "UnsignedInteger"]
@@ -470,7 +470,7 @@ class SecretUnsignedInteger(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
         self, other: Union["SecretUnsignedInteger", "UnsignedInteger"]
@@ -482,7 +482,7 @@ class SecretUnsignedInteger(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
         self, other: Union["SecretUnsignedInteger", "UnsignedInteger"]
@@ -494,7 +494,7 @@ class SecretUnsignedInteger(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
         self, other: Union["SecretUnsignedInteger", "UnsignedInteger"]
@@ -506,7 +506,7 @@ class SecretUnsignedInteger(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
         self, other: Union["SecretUnsignedInteger", "UnsignedInteger"]
@@ -518,5 +518,5 @@ class SecretUnsignedInteger(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 

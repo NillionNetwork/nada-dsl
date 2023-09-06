@@ -30,7 +30,7 @@ class Boolean(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 
 @dataclass
 class PublicBoolean(NadaType):
@@ -44,7 +44,7 @@ class PublicBoolean(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 
 @dataclass
 class SecretBoolean(NadaType):
@@ -58,5 +58,5 @@ class SecretBoolean(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 

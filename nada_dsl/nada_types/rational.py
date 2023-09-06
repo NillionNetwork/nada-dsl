@@ -46,7 +46,7 @@ class Rational(NadaType):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["PublicRational", "Rational", "SecretRational"]
@@ -63,7 +63,7 @@ class Rational(NadaType):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=digits)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(
         self, other: Union["PublicRational", "Rational", "SecretRational"]
@@ -77,7 +77,7 @@ class Rational(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
         self, other: Union["PublicRational", "Rational", "SecretRational"]
@@ -91,7 +91,7 @@ class Rational(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
         self, other: Union["PublicRational", "Rational", "SecretRational"]
@@ -105,7 +105,7 @@ class Rational(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
         self, other: Union["PublicRational", "Rational", "SecretRational"]
@@ -119,7 +119,7 @@ class Rational(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 
 @dataclass
 class PublicRational(NadaType):
@@ -152,7 +152,7 @@ class PublicRational(NadaType):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["PublicRational", "Rational", "SecretRational"]
@@ -170,7 +170,7 @@ class PublicRational(NadaType):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=digits)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(
         self, other: Union["PublicRational", "Rational"]
@@ -182,7 +182,7 @@ class PublicRational(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
         self, other: Union["PublicRational", "Rational"]
@@ -194,7 +194,7 @@ class PublicRational(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
         self, other: Union["PublicRational", "Rational"]
@@ -206,7 +206,7 @@ class PublicRational(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
         self, other: Union["PublicRational", "Rational"]
@@ -218,7 +218,7 @@ class PublicRational(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 
 @dataclass
 class SecretRational(NadaType):
@@ -251,7 +251,7 @@ class SecretRational(NadaType):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["PublicRational", "Rational", "SecretRational"]
@@ -269,7 +269,7 @@ class SecretRational(NadaType):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=digits)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __lt__(
         self, other: Union["Rational", "SecretRational"]
@@ -281,7 +281,7 @@ class SecretRational(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
         self, other: Union["Rational", "SecretRational"]
@@ -293,7 +293,7 @@ class SecretRational(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
         self, other: Union["Rational", "SecretRational"]
@@ -305,7 +305,7 @@ class SecretRational(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
         self, other: Union["Rational", "SecretRational"]
@@ -317,5 +317,5 @@ class SecretRational(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 

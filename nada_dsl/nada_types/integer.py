@@ -45,7 +45,7 @@ class Integer(NadaType):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
@@ -59,7 +59,7 @@ class Integer(NadaType):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
         self, other: Union["Integer", "PublicInteger"]
@@ -70,7 +70,7 @@ class Integer(NadaType):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
         self, other: Union["Integer", "PublicInteger"]
@@ -81,7 +81,7 @@ class Integer(NadaType):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
         self, other: Union["Integer", "PublicInteger"]
@@ -92,7 +92,7 @@ class Integer(NadaType):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
         self, other: Union["Integer", "PublicInteger"]
@@ -103,7 +103,7 @@ class Integer(NadaType):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
         self, other: Union["Integer", "PublicInteger"]
@@ -114,7 +114,7 @@ class Integer(NadaType):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
@@ -128,7 +128,7 @@ class Integer(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
@@ -142,7 +142,7 @@ class Integer(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
@@ -156,7 +156,7 @@ class Integer(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
@@ -170,7 +170,7 @@ class Integer(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
@@ -184,7 +184,7 @@ class Integer(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 
 @dataclass
 class PublicInteger(NadaType):
@@ -216,7 +216,7 @@ class PublicInteger(NadaType):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
@@ -231,7 +231,7 @@ class PublicInteger(NadaType):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
         self, other: Union["Integer", "PublicInteger"]
@@ -243,7 +243,7 @@ class PublicInteger(NadaType):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
         self, other: Union["Integer", "PublicInteger"]
@@ -255,7 +255,7 @@ class PublicInteger(NadaType):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
         self, other: Union["Integer", "PublicInteger"]
@@ -267,7 +267,7 @@ class PublicInteger(NadaType):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
         self, other: Union["Integer", "PublicInteger"]
@@ -279,7 +279,7 @@ class PublicInteger(NadaType):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
         self, other: Union["Integer", "PublicInteger"]
@@ -291,7 +291,7 @@ class PublicInteger(NadaType):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
         self, other: Union["Integer", "PublicInteger"]
@@ -303,7 +303,7 @@ class PublicInteger(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
         self, other: Union["Integer", "PublicInteger"]
@@ -315,7 +315,7 @@ class PublicInteger(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
         self, other: Union["Integer", "PublicInteger"]
@@ -327,7 +327,7 @@ class PublicInteger(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
         self, other: Union["Integer", "PublicInteger"]
@@ -339,7 +339,7 @@ class PublicInteger(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
         self, other: Union["Integer", "PublicInteger"]
@@ -351,7 +351,7 @@ class PublicInteger(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 
 @dataclass
 class SecretInteger(NadaType):
@@ -383,7 +383,7 @@ class SecretInteger(NadaType):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
@@ -398,7 +398,7 @@ class SecretInteger(NadaType):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
         self, other: Union["Integer", "PublicInteger"]
@@ -410,7 +410,7 @@ class SecretInteger(NadaType):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
         self, other: Union["Integer", "PublicInteger"]
@@ -422,7 +422,7 @@ class SecretInteger(NadaType):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
         self, other: Union["Integer", "PublicInteger"]
@@ -434,7 +434,7 @@ class SecretInteger(NadaType):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
         self, other: Union["Integer", "PublicInteger"]
@@ -446,7 +446,7 @@ class SecretInteger(NadaType):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
         self, other: Union["Integer", "PublicInteger"]
@@ -458,7 +458,7 @@ class SecretInteger(NadaType):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
         self, other: Union["Integer", "SecretInteger"]
@@ -470,7 +470,7 @@ class SecretInteger(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
         self, other: Union["Integer", "SecretInteger"]
@@ -482,7 +482,7 @@ class SecretInteger(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
         self, other: Union["Integer", "SecretInteger"]
@@ -494,7 +494,7 @@ class SecretInteger(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
         self, other: Union["Integer", "SecretInteger"]
@@ -506,7 +506,7 @@ class SecretInteger(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
         self, other: Union["Integer", "SecretInteger"]
@@ -518,5 +518,5 @@ class SecretInteger(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
+            raise TypeError(f"Invalid operation: {self} == {other}")
 
