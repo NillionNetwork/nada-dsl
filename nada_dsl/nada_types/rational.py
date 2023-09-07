@@ -4,7 +4,7 @@ from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
 from nada_dsl.nada_types.boolean import Boolean, PublicBoolean, SecretBoolean
-from nada_dsl.operations import Addition, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Multiplication, Subtraction
+from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Multiplication, Subtraction
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -64,6 +64,17 @@ class Rational(NadaType):
             return SecretRational(inner=operation, digits=digits)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
+
+    def __truediv__(
+        self, other: Union["PublicRational", "Rational"]
+    ) -> Union["PublicRational", "Rational"]:
+        if isinstance(other, Rational) and other.digits == self.digits:
+            return Rational(value=self.value / other.value)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=self.digits)
+        else:
+            raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __lt__(
         self, other: Union["PublicRational", "Rational", "SecretRational"]
@@ -172,6 +183,18 @@ class PublicRational(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
+    def __truediv__(
+        self, other: Union["PublicRational", "Rational"]
+    ) -> "PublicRational":
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=self.digits)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=self.digits)
+        else:
+            raise TypeError(f"Invalid operation: {self} / {other}")
+
     def __lt__(
         self, other: Union["PublicRational", "Rational"]
     ) -> "PublicBoolean":
@@ -270,6 +293,18 @@ class SecretRational(NadaType):
             return SecretRational(inner=operation, digits=digits)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
+
+    def __truediv__(
+        self, other: Union["PublicRational", "Rational"]
+    ) -> "SecretRational":
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretRational(inner=operation, digits=self.digits)
+        else:
+            raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __lt__(
         self, other: Union["Rational", "SecretRational"]
