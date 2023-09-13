@@ -34,6 +34,10 @@ def create_input(cls, name: str, party: str, **kwargs):
     return cls(Input(name=name, party=Party(party)), **kwargs)
 
 
+def create_literal(cls, value: Any, **kwargs):
+    return cls(value=value, **kwargs)
+
+
 def create_collection(cls, inner_input, size, **kwargs):
     return cls(inner_input, size, **kwargs)
 
@@ -41,6 +45,7 @@ def create_collection(cls, inner_input, size, **kwargs):
 def create_output(root: AllTypes, name: str, party: str) -> Output:
     return Output(root, name, Party(party))
 
+# Generated tests are added below this line. Please leave it as it is.
 
 def test_root_conversion():
     input = create_input(SecretInteger, "input", "input_party")
@@ -83,28 +88,6 @@ def test_duplicated_inputs_checks():
 
 
 @pytest.mark.parametrize(
-    ("input_type", "type_name", "kwargs"),
-    [
-        (SecretInteger, {"Secret": {"Integer": None}}, {}),
-        (SecretBoolean, {"Secret": {"Boolean": None}}, {}),
-        (PublicInteger, {"Public": {"Integer": None}}, {}),
-        (PublicBoolean, {"Public": {"Boolean": None}}, {}),
-    ],
-)
-def test_simple_type_conversion(input_type, type_name, kwargs):
-    input = create_input(input_type, "name", "party", **kwargs)
-    converted_input = to_type_dict(input)
-    assert converted_input == type_name
-
-
-def test_rational_type_conversion():
-    input = create_input(SecretRational, "name", "party", digits=3)
-    converted_input = to_type_dict(input)
-    expected = {"Secret": {"Rational": {"digits": 3}}}
-    assert converted_input == expected
-
-
-@pytest.mark.parametrize(
     ("input_type", "type_name", "size"), [(Array, "Array", 10), (Vector, "Vector", 10)]
 )
 def test_array_type_conversion(input_type, type_name, size):
@@ -112,157 +95,6 @@ def test_array_type_conversion(input_type, type_name, size):
     input = create_collection(input_type, inner_input, size, **{})
     converted_input = to_type_dict(input)
     assert list(converted_input.keys()) == [type_name]
-
-
-@pytest.mark.parametrize(
-    ("operator", "name", "ty"),
-    [
-        (operator.add, "Addition", {"Secret": {"Integer": None}}),
-        (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
-        (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
-        (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
-        (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
-        (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
-    ],
-)
-def test_binary_operator(operator, name, ty):
-    left = create_input(SecretInteger, "left", "party")
-    right = create_input(SecretInteger, "right", "party")
-    program_operation = operator(left, right)
-    op = process_operation(program_operation)
-    assert list(op.keys()) == [name]
-
-    inner = op[name]
-
-    assert input_reference(inner["left"]) == "left"
-    assert input_reference(inner["right"]) == "right"
-    assert inner["type"] == ty
-
-
-@pytest.mark.parametrize(
-    ("operator", "name", "ty"),
-    [
-        (operator.add, "Addition", {"Public": {"Integer": None}}),
-        (operator.sub, "Subtraction", {"Public": {"Integer": None}}),
-        (operator.mul, "Multiplication", {"Public": {"Integer": None}}),
-        (operator.truediv, "Division", {"Public": {"Integer": None}}),
-        (operator.mod, "Modulo", {"Public": {"Integer": None}}),
-        (operator.pow, "Power", {"Public": {"Integer": None}}),
-        (operator.rshift, "RightShift", {"Public": {"Integer": None}}),
-        (operator.lshift, "LeftShift", {"Public": {"Integer": None}}),
-        (operator.lt, "LessThan", {"Public": {"Boolean": None}}),
-        (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
-        (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}}),
-        (operator.eq, "Equals", {"Public": {"Boolean": None}}),
-    ],
-)
-def test_binary_operator_public(operator, name, ty):
-    left = create_input(PublicInteger, "left", "party")
-    right = create_input(PublicInteger, "right", "party")
-    program_operation = operator(left, right)
-    op = process_operation(program_operation)
-    assert list(op.keys()) == [name]
-
-    inner = op[name]
-
-    assert input_reference(inner["left"]) == "left"
-    assert input_reference(inner["right"]) == "right"
-    assert inner["type"] == ty
-
-
-@pytest.mark.parametrize(
-    ("operator", "name", "ty"),
-    [
-        (operator.add, "Addition", {"Secret": {"Integer": None}}),
-        (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
-        (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
-    ],
-)
-def test_binary_operator_public_secret(operator, name, ty):
-    left = create_input(PublicInteger, "left", "party")
-    right = create_input(SecretInteger, "right", "party")
-    program_operation = operator(left, right)
-    op = process_operation(program_operation)
-    assert list(op.keys()) == [name]
-
-    inner = op[name]
-
-    assert input_reference(inner["left"]) == "left"
-    assert input_reference(inner["right"]) == "right"
-    assert inner["type"] == ty
-
-@pytest.mark.parametrize(
-    ("operator", "name", "ty"),
-    [
-        (operator.add, "Addition", {"Secret": {"Integer": None}}),
-        (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
-        (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
-    ],
-)
-def test_binary_operator_public_literal(operator, name, ty):
-    left = Integer(10)
-    right = create_input(SecretInteger, "right", "party")
-    program_operation = operator(left, right)
-    op = process_operation(program_operation)
-    assert list(op.keys()) == [name]
-
-    inner = op[name]
-
-    assert literal_reference(inner["left"]) == "7ac83dfb2f31794059f6e8f40008bd97"
-    assert input_reference(inner["right"]) == "right"
-    assert inner["type"] == ty
-
-
-@pytest.mark.parametrize(
-    ("operator", "name", "ty"),
-    [
-        (operator.add, "Addition", {"Secret": {"Integer": None}}),
-        (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
-        (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
-        (operator.mod, "Modulo", {"Secret": {"Integer": None}}),
-        (operator.pow, "Power", {"Secret": {"Integer": None}}),
-    ],
-)
-def test_binary_operator_secret_public(operator, name, ty):
-    left = create_input(SecretInteger, "left", "party")
-    right = create_input(PublicInteger, "right", "party")
-    program_operation = operator(left, right)
-    op = process_operation(program_operation)
-    assert list(op.keys()) == [name]
-
-    inner = op[name]
-
-    assert input_reference(inner["left"]) == "left"
-    assert input_reference(inner["right"]) == "right"
-    assert inner["type"] == ty
-
-
-@pytest.mark.parametrize(
-    "operator",
-    [
-        operator.add,
-        operator.sub,
-        operator.lt,
-        operator.gt,
-        operator.le,
-        operator.ge,
-    ],
-)
-def test_rational_digit_checks(operator):
-    left = create_input(SecretRational, "left", "party", digits=3)
-    right = create_input(SecretRational, "right", "party", digits=4)
-    with pytest.raises(Exception):
-        operator(left, right)
-
-
-@pytest.mark.parametrize("operator", [operator.add, operator.sub, operator.lt])
-def test_rational_digit_checks_public(operator):
-    left = create_input(PublicRational, "left", "party", digits=3)
-    right = create_input(PublicRational, "right", "party", digits=4)
-    with pytest.raises(Exception):
-        operator(left, right)
 
 
 @pytest.mark.parametrize(
