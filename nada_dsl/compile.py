@@ -26,7 +26,7 @@ def transform_program(script_path: str) -> CompileOutput:
     try:
         main = getattr(script, "nada_main")
     except:
-        raise Exception("'nada_dsl' entrypoint function is missing")
+        raise Exception("'nada_dsl' entrypoint function is missing in program " + script_name)
     outputs = main()
     compile_output = nada_compile(outputs)
     nada_dsl_path = nada_dsl.__path__[0]
