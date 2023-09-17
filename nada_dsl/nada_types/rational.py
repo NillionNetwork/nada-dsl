@@ -3,7 +3,7 @@
 from . import NadaType, OperationType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.nada_types.boolean import Boolean, PublicBoolean, SecretBoolean
+from nada_dsl.nada_types.boolean import ValueBoolean
 from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Multiplication, Subtraction
 from nada_dsl.source_ref import SourceRef
 from typing import Union
@@ -22,39 +22,45 @@ class Rational(NadaType):
         self.digits=digits
 
     def __add__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
-    ) -> Union["PublicRational", "Rational", "SecretRational"]:
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> Union["PublicRational", "Rational", "SecretRational", "ValueRational"]:
         if isinstance(other, Rational) and other.digits == self.digits:
-            return Rational(value=self.value + other.value)
+            return Rational(value=float(self.value + other.value), digits=self.digits)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicRational(inner=operation, digits=self.digits)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
-    ) -> Union["PublicRational", "Rational", "SecretRational"]:
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> Union["PublicRational", "Rational", "SecretRational", "ValueRational"]:
         if isinstance(other, Rational) and other.digits == self.digits:
-            return Rational(value=self.value - other.value)
+            return Rational(value=float(self.value - other.value), digits=self.digits)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicRational(inner=operation, digits=self.digits)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
-    ) -> Union["PublicRational", "Rational", "SecretRational"]:
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> Union["PublicRational", "Rational", "SecretRational", "ValueRational"]:
         if isinstance(other, Rational):
             digits = self.digits + other.digits
-            return Rational(value=self.value, digits=digits * other.value)
+            return Rational(value=float(self.value * other.value), digits=digits)
         elif isinstance(other, PublicRational):
             digits = self.digits + other.digits
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -63,73 +69,96 @@ class Rational(NadaType):
             digits = self.digits + other.digits
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=digits)
+        elif isinstance(other, ValueRational):
+            digits = self.digits + other.digits
+            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=digits)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["PublicRational", "Rational"]
-    ) -> Union["PublicRational", "Rational"]:
+        self, other: Union["PublicRational", "Rational", "ValueRational"]
+    ) -> Union["PublicRational", "Rational", "ValueRational"]:
         if isinstance(other, Rational) and other.digits == self.digits:
-            return Rational(value=self.value / other.value)
+            return Rational(value=float(self.value / other.value), digits=self.digits)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __lt__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
-    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
-            return Boolean(value=self.value < other.value)
+            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
-    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
-            return Boolean(value=self.value > other.value)
+            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
-    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
-            return Boolean(value=self.value <= other.value)
+            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
-    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
-            return Boolean(value=self.value >= other.value)
+            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
@@ -142,7 +171,7 @@ class PublicRational(NadaType):
         self.digits=digits
 
     def __add__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
     ) -> Union["PublicRational", "SecretRational"]:
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -153,11 +182,14 @@ class PublicRational(NadaType):
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
     ) -> Union["PublicRational", "SecretRational"]:
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -168,11 +200,14 @@ class PublicRational(NadaType):
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
     ) -> Union["PublicRational", "SecretRational"]:
         if isinstance(other, Rational):
             digits = self.digits + other.digits
@@ -186,11 +221,15 @@ class PublicRational(NadaType):
             digits = self.digits + other.digits
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=digits)
+        elif isinstance(other, ValueRational):
+            digits = self.digits + other.digits
+            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=digits)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["PublicRational", "Rational"]
+        self, other: Union["PublicRational", "Rational", "ValueRational"]
     ) -> "PublicRational":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -198,54 +237,69 @@ class PublicRational(NadaType):
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __lt__(
-        self, other: Union["PublicRational", "Rational"]
-    ) -> "PublicBoolean":
+        self, other: Union["PublicRational", "Rational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-        self, other: Union["PublicRational", "Rational"]
-    ) -> "PublicBoolean":
+        self, other: Union["PublicRational", "Rational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-        self, other: Union["PublicRational", "Rational"]
-    ) -> "PublicBoolean":
+        self, other: Union["PublicRational", "Rational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-        self, other: Union["PublicRational", "Rational"]
-    ) -> "PublicBoolean":
+        self, other: Union["PublicRational", "Rational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
@@ -258,7 +312,7 @@ class SecretRational(NadaType):
         self.digits=digits
 
     def __add__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
     ) -> "SecretRational":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -267,13 +321,16 @@ class SecretRational(NadaType):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
     ) -> "SecretRational":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -284,11 +341,14 @@ class SecretRational(NadaType):
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretRational(inner=operation, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["PublicRational", "Rational", "SecretRational"]
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
     ) -> "SecretRational":
         if isinstance(other, Rational):
             digits = self.digits + other.digits
@@ -302,11 +362,15 @@ class SecretRational(NadaType):
             digits = self.digits + other.digits
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=digits)
+        elif isinstance(other, ValueRational):
+            digits = self.digits + other.digits
+            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretRational(inner=operation, digits=digits)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["PublicRational", "Rational"]
+        self, other: Union["PublicRational", "Rational", "ValueRational"]
     ) -> "SecretRational":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -314,54 +378,222 @@ class SecretRational(NadaType):
         elif isinstance(other, PublicRational) and other.digits == self.digits:
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretRational(inner=operation, digits=self.digits)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __lt__(
-        self, other: Union["Rational", "SecretRational"]
-    ) -> "SecretBoolean":
+        self, other: Union["Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-        self, other: Union["Rational", "SecretRational"]
-    ) -> "SecretBoolean":
+        self, other: Union["Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-        self, other: Union["Rational", "SecretRational"]
-    ) -> "SecretBoolean":
+        self, other: Union["Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-        self, other: Union["Rational", "SecretRational"]
-    ) -> "SecretBoolean":
+        self, other: Union["Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
         if isinstance(other, Rational) and other.digits == self.digits:
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} >= {other}")
+
+@dataclass
+class ValueRational(NadaType):
+    digits: int
+
+    def __init__(self, inner: OperationType, digits: int):
+        super().__init__(inner)
+        self.digits=digits
+
+    def __add__(
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> Union["PublicRational", "SecretRational", "ValueRational"]:
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=self.digits)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=self.digits)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=self.digits)
+        else:
+            raise TypeError(f"Invalid operation: {self} + {other}")
+
+    def __sub__(
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> Union["PublicRational", "SecretRational", "ValueRational"]:
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=self.digits)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=self.digits)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=self.digits)
+        else:
+            raise TypeError(f"Invalid operation: {self} - {other}")
+
+    def __mul__(
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> Union["PublicRational", "SecretRational", "ValueRational"]:
+        if isinstance(other, Rational):
+            digits = self.digits + other.digits
+            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=digits)
+        elif isinstance(other, PublicRational):
+            digits = self.digits + other.digits
+            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=digits)
+        elif isinstance(other, SecretRational):
+            digits = self.digits + other.digits
+            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretRational(inner=operation, digits=digits)
+        elif isinstance(other, ValueRational):
+            digits = self.digits + other.digits
+            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=digits)
+        else:
+            raise TypeError(f"Invalid operation: {self} * {other}")
+
+    def __truediv__(
+        self, other: Union["PublicRational", "Rational", "ValueRational"]
+    ) -> Union["PublicRational", "ValueRational"]:
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=self.digits)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicRational(inner=operation, digits=self.digits)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueRational(inner=operation, digits=self.digits)
+        else:
+            raise TypeError(f"Invalid operation: {self} / {other}")
+
+    def __lt__(
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} < {other}")
+
+    def __gt__(
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} > {other}")
+
+    def __le__(
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} <= {other}")
+
+    def __ge__(
+        self, other: Union["PublicRational", "Rational", "SecretRational", "ValueRational"]
+    ) -> "ValueBoolean":
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
+        elif isinstance(other, ValueRational) and other.digits == self.digits:
+            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
+            return ValueBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
