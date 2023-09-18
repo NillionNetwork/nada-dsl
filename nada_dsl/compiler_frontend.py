@@ -9,7 +9,8 @@ from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output, Party, Literal
 from nada_dsl.nada_types.integer import Integer
 from nada_dsl.nada_types.unsigned_integer import UnsignedInteger
-from nada_dsl.nada_types.rational import SecretRational, PublicRational, Rational, ValueRational
+from nada_dsl.nada_types.rational import SecretRational, PublicRational, Rational
+from nada_dsl.nada_types.boolean import Boolean
 from nada_dsl.nada_types.collections import (
     Array,
     Vector,
@@ -191,12 +192,12 @@ def to_type_dict(op_wrapper):
         return {"Literal": {"UnsignedInteger": None}}
     elif type(op_wrapper) == Rational:
         return {"Literal": {"Rational": {"digits": op_wrapper.digits}}}
+    elif type(op_wrapper) == Boolean:
+        return {"Literal": {"Boolean": None}}
     elif type(op_wrapper) == PublicRational:
         return {"Public": {"Rational": {"digits": op_wrapper.digits}}}
     elif type(op_wrapper) == SecretRational:
         return {"Secret": {"Rational": {"digits": op_wrapper.digits}}}
-    elif type(op_wrapper) == ValueRational:
-        return {"Value": {"Rational": {"digits": op_wrapper.digits}}}
 
     elif inspect.isclass(op_wrapper):
         return to_type(op_wrapper.__name__)

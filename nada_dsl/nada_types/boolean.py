@@ -19,74 +19,44 @@ class Boolean(NadaType):
             raise ValueError(f"Expected bool, got {type(value).__name__}")
 
     def __eq__(
-        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean", "ValueBoolean"]
-    ) -> "ValueBoolean":
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Boolean):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
+            return Boolean(value=bool(self.value == other.value))
         elif isinstance(other, PublicBoolean):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
+            return PublicBoolean(inner=operation)
         elif isinstance(other, SecretBoolean):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
-        elif isinstance(other, ValueBoolean):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
+            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
 @dataclass
 class PublicBoolean(NadaType):
     def __eq__(
-        self, other: Union["Boolean", "PublicBoolean", "ValueBoolean"]
-    ) -> "ValueBoolean":
+        self, other: Union["Boolean", "PublicBoolean"]
+    ) -> "PublicBoolean":
         if isinstance(other, Boolean):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
+            return PublicBoolean(inner=operation)
         elif isinstance(other, PublicBoolean):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
-        elif isinstance(other, ValueBoolean):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
+            return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
 @dataclass
 class SecretBoolean(NadaType):
     def __eq__(
-        self, other: Union["Boolean", "SecretBoolean", "ValueBoolean"]
-    ) -> "ValueBoolean":
+        self, other: Union["Boolean", "SecretBoolean"]
+    ) -> "SecretBoolean":
         if isinstance(other, Boolean):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
+            return SecretBoolean(inner=operation)
         elif isinstance(other, SecretBoolean):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
-        elif isinstance(other, ValueBoolean):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} == {other}")
-
-@dataclass
-class ValueBoolean(NadaType):
-    def __eq__(
-        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean", "ValueBoolean"]
-    ) -> "ValueBoolean":
-        if isinstance(other, Boolean):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
-        elif isinstance(other, PublicBoolean):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
-        elif isinstance(other, SecretBoolean):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
-        elif isinstance(other, ValueBoolean):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ValueBoolean(inner=operation)
+            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
