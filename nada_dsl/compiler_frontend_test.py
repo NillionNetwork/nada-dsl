@@ -45,7 +45,9 @@ def create_collection(cls, inner_input, size, **kwargs):
 def create_output(root: AllTypes, name: str, party: str) -> Output:
     return Output(root, name, Party(party))
 
+
 # Generated tests are added below this line. Please leave it as it is.
+
 
 def test_root_conversion():
     input = create_input(SecretInteger, "input", "input_party")
@@ -179,13 +181,15 @@ def test_map(input_type, input_name):
     [(Array, "Array"), (Vector, "Vector")],
 )
 def test_reduce(input_type, input_name):
+    c = create_input(SecretInteger, "c", "party", **{})
+
     @nada_fn
     def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b
 
     inner_input = create_input(SecretInteger, "inner", "party", **{})
     left = create_collection(input_type, inner_input, 10, **{})
-    reduce_operation = left.reduce(nada_function)
+    reduce_operation = left.reduce(nada_function, c)
     op = process_operation(reduce_operation)
     assert list(op.keys()) == ["Reduce"]
     inner = op["Reduce"]
@@ -254,6 +258,7 @@ def test_nada_function_using_inputs():
         addition["right"], nada_function["id"], "b", {"Secret": {"Integer": None}}
     )
 
+
 def test_nada_function_call():
     c = create_input(SecretInteger, "c", "party", **{})
     d = create_input(SecretInteger, "c", "party", **{})
@@ -261,11 +266,12 @@ def test_nada_function_call():
     @nada_fn
     def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b
-    nada_fn_call_return = nada_function(c,d)
+
+    nada_fn_call_return = nada_function(c, d)
     nada_fn_type = to_fn_dict(nada_function)
-    
+
     nada_function_call = nada_fn_call_return.inner
-    assert isinstance(nada_function_call,NadaFunctionCall)
+    assert isinstance(nada_function_call, NadaFunctionCall)
     assert nada_function_call.fn.id == nada_fn_type["id"]
 
 
@@ -305,13 +311,15 @@ def test_nada_function_using_operations():
     [(Array, "Array"), (Vector, "Vector")],
 )
 def test_nada_function_using_matrix(input_type, input_name):
+    c = create_input(SecretInteger, "c", "party", **{})
+
     @nada_fn
     def add(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b
 
     @nada_fn
     def matrix_addition(a: input_type[SecretInteger], b: input_type) -> SecretInteger:
-        return a.zip(b).map(add).reduce(add)
+        return a.zip(b).map(add).reduce(add, c)
 
     add_fn = to_fn_dict(add)
     matrix_addition_fn = to_fn_dict(matrix_addition)
@@ -345,4 +353,3 @@ def test_nada_function_using_matrix(input_type, input_name):
     check_nada_function_arg_ref(
         zip_op["right"], matrix_addition_fn["id"], "b", b_arg_type
     )
-

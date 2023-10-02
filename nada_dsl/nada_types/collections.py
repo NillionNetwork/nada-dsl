@@ -1,14 +1,34 @@
 import copy
 from dataclasses import dataclass
-from typing import Generic, Tuple
+from typing import Generic, Optional, Tuple
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.errors import NadaNotAllowedException
 from nada_dsl.nada_types.function import NadaFunction
 from nada_dsl.nada_types.generics import U, T, R
-from nada_dsl.nada_types.integer import PublicInteger
-from nada_dsl.operations import Map, Zip, Reduce
-from . import NadaType, AllTypesType
+from . import NadaType, AllTypesType, OperationType
+
+
+@dataclass
+class Map(Generic[T, R]):
+    inner: OperationType
+    fn: NadaFunction[T, R]
+    source_ref: SourceRef
+
+
+@dataclass
+class Zip:
+    left: OperationType
+    right: OperationType
+    source_ref: SourceRef
+
+
+@dataclass
+class Reduce(Generic[T, R]):
+    inner: OperationType
+    fn: NadaFunction[T, R]
+    initial: R
+    source_ref: SourceRef
 
 
 @dataclass
@@ -76,9 +96,16 @@ class Array(Generic[T], NadaType):
             inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
 
-    def reduce(self: "Array[T]", function: NadaFunction[T, R]) -> R:
+    def reduce(
+        self: "Array[T]", function: NadaFunction[T, R], initial: R
+    ) -> R:
         return function.return_type(
-            Reduce(inner=self, fn=function, source_ref=SourceRef.back_frame())
+            Reduce(
+                inner=self,
+                fn=function,
+                initial=initial,
+                source_ref=SourceRef.back_frame(),
+            )
         )
 
     @classmethod
@@ -102,7 +129,7 @@ class Vector(Generic[T], NadaType):
     """
 
     inner_type: T
-    size: PublicInteger
+    size: int
 
     def __init__(self, inner, size, inner_type=None):
         self.inner_type = (
@@ -131,10 +158,17 @@ class Vector(Generic[T], NadaType):
             inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
 
-    def reduce(self: "Vector[T]", function: NadaFunction[T, R]) -> R:
+    def reduce(
+        self: "Vector[T]", function: NadaFunction[T, R], initial: Optional[R] = None
+    ) -> R:
         return function.return_type(
-            Reduce(inner=self, fn=function, source_ref=SourceRef.back_frame())
-        ) # type: ignore
+            Reduce(
+                inner=self,
+                fn=function,
+                initial=initial,
+                source_ref=SourceRef.back_frame(),
+            )
+        )  # type: ignore
 
     @classmethod
     def generic_type(cls, inner_type: T) -> VectorType:

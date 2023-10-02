@@ -35,10 +35,13 @@ from nada_dsl.operations import (
     LessOrEqualThan,
     GreaterOrEqualThan,
     Equals,
+    Unzip,
+)
+
+from nada_dsl.nada_types.collections import (
     Map,
     Reduce,
     Zip,
-    Unzip,
 )
 
 INPUTS = {}
@@ -329,6 +332,7 @@ def process_operation(operation_wrapper):
             "Reduce": {
                 "fn": operation.fn.id,
                 "inner": process_operation(operation.inner),
+                "initial": process_operation(operation.initial),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }

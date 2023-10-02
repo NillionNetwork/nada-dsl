@@ -1,9 +1,12 @@
+"""Operation definitions."""
 from dataclasses import dataclass
+from typing import Generic, Optional
 
 from nada_dsl import SourceRef
+from nada_dsl.nada_types.collections import Array, NadaTuple
 from nada_dsl.nada_types.function import NadaFunction
 from nada_dsl.nada_types.generics import T, R
-from nada_dsl.nada_types import AllTypes, AllTypesType, OperationType
+from nada_dsl.nada_types import AllTypes, OperationType
 
 
 @dataclass
@@ -39,6 +42,7 @@ class Modulo:
     left: AllTypes
     right: AllTypes
     source_ref: SourceRef
+
 
 @dataclass
 class Power:
@@ -97,35 +101,12 @@ class Equals:
 
 
 @dataclass
-class Map:
-    inner: OperationType
-    fn: NadaFunction[T, R]
-    source_ref: SourceRef
-
-
-@dataclass
-class Zip:
-    left: OperationType
-    right: OperationType
-    source_ref: SourceRef
-
-
-@dataclass
-class Reduce:
-    inner: OperationType
-    fn: NadaFunction[T, R]
-    source_ref: SourceRef
-
-
-@dataclass
 class Unzip:
     inner: OperationType
     source_ref: SourceRef
 
 
-def unzip(array="Array[NadaTuple[T, R]]") -> "NadaTuple[Array[T], Array[R]]":
-    from nada_dsl.nada_types.collections import NadaTuple, Array
-
+def unzip(array: Array[NadaTuple[T, R]]) -> NadaTuple[Array[T], Array[R]]:
     right_type = Array.generic_type(array.inner_type.right_type, size=array.size)
     left_type = Array.generic_type(array.inner_type.left_type, size=array.size)
 
