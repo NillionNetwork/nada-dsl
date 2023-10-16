@@ -221,6 +221,25 @@ def test_binary_operator_publicboolean_publicboolean(operator, name, ty):
         (operator.eq, "Equals", {"Secret": {"Boolean": None}})
     ],
 )
+def test_binary_operator_publicboolean_secretboolean(operator, name, ty):
+    left = create_input(PublicBoolean, "left", "party")
+    right = create_input(SecretBoolean, "right", "party")
+    program_operation = operator(left, right)
+    op = process_operation(program_operation)
+    assert list(op.keys()) == [name]
+
+    inner = op[name]
+
+    assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
+    assert inner["type"] == ty
+
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
+    ],
+)
 def test_binary_operator_secretboolean_boolean(operator, name, ty):
     left = create_input(SecretBoolean, "left", "party")
     right = create_literal(Boolean, True)
@@ -232,6 +251,25 @@ def test_binary_operator_secretboolean_boolean(operator, name, ty):
 
     assert input_reference(inner["left"]) == "left"
     assert len(literal_reference(inner["right"])) == 32
+    assert inner["type"] == ty
+
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
+    ],
+)
+def test_binary_operator_secretboolean_publicboolean(operator, name, ty):
+    left = create_input(SecretBoolean, "left", "party")
+    right = create_input(PublicBoolean, "right", "party")
+    program_operation = operator(left, right)
+    op = process_operation(program_operation)
+    assert list(op.keys()) == [name]
+
+    inner = op[name]
+
+    assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
     assert inner["type"] == ty
 
 @pytest.mark.parametrize(
@@ -412,7 +450,8 @@ def test_binary_operator_publicinteger_publicinteger(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicinteger_secretinteger(operator, name, ty):
@@ -473,7 +512,8 @@ def test_binary_operator_secretinteger_integer(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretinteger_publicinteger(operator, name, ty):
@@ -674,7 +714,8 @@ def test_binary_operator_publicunsignedinteger_publicunsignedinteger(operator, n
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicunsignedinteger_secretunsignedinteger(operator, name, ty):
@@ -735,7 +776,8 @@ def test_binary_operator_secretunsignedinteger_unsignedinteger(operator, name, t
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretunsignedinteger_publicunsignedinteger(operator, name, ty):
