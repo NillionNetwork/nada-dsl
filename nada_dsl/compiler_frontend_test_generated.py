@@ -48,6 +48,7 @@ def create_output(root: AllTypes, name: str, party: str) -> Output:
     return Output(root, name, Party(party))
 
 
+
 @pytest.mark.parametrize(
     "operator",
     [
@@ -271,8 +272,8 @@ def test_binary_operator_secretboolean_secretboolean(operator, name, ty):
     ],
 )
 def test_binary_operator_integer_integer(operator, name, ty):
-    left = create_literal(Integer, 42)
-    right = create_literal(Integer, 42)
+    left = create_literal(Integer, -42)
+    right = create_literal(Integer, -42)
     program_operation = operator(left, right)
     op = process_operation(program_operation)
     assert list(op.keys()) == [name]
@@ -302,7 +303,7 @@ def test_binary_operator_integer_integer(operator, name, ty):
     ],
 )
 def test_binary_operator_integer_publicinteger(operator, name, ty):
-    left = create_literal(Integer, 42)
+    left = create_literal(Integer, -42)
     right = create_input(PublicInteger, "right", "party")
     program_operation = operator(left, right)
     op = process_operation(program_operation)
@@ -328,7 +329,7 @@ def test_binary_operator_integer_publicinteger(operator, name, ty):
     ],
 )
 def test_binary_operator_integer_secretinteger(operator, name, ty):
-    left = create_literal(Integer, 42)
+    left = create_literal(Integer, -42)
     right = create_input(SecretInteger, "right", "party")
     program_operation = operator(left, right)
     op = process_operation(program_operation)
@@ -360,7 +361,7 @@ def test_binary_operator_integer_secretinteger(operator, name, ty):
 )
 def test_binary_operator_publicinteger_integer(operator, name, ty):
     left = create_input(PublicInteger, "left", "party")
-    right = create_literal(Integer, 42)
+    right = create_literal(Integer, -42)
     program_operation = operator(left, right)
     op = process_operation(program_operation)
     assert list(op.keys()) == [name]
@@ -407,7 +408,11 @@ def test_binary_operator_publicinteger_publicinteger(operator, name, ty):
     [
         (operator.add, "Addition", {"Secret": {"Integer": None}}),
         (operator.sub, "Subtraction", {"Secret": {"Integer": None}}),
-        (operator.mul, "Multiplication", {"Secret": {"Integer": None}})
+        (operator.mul, "Multiplication", {"Secret": {"Integer": None}}),
+        (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
+        (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
+        (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicinteger_secretinteger(operator, name, ty):
@@ -443,7 +448,7 @@ def test_binary_operator_publicinteger_secretinteger(operator, name, ty):
 )
 def test_binary_operator_secretinteger_integer(operator, name, ty):
     left = create_input(SecretInteger, "left", "party")
-    right = create_literal(Integer, 42)
+    right = create_literal(Integer, -42)
     program_operation = operator(left, right)
     op = process_operation(program_operation)
     assert list(op.keys()) == [name]
@@ -464,7 +469,11 @@ def test_binary_operator_secretinteger_integer(operator, name, ty):
         (operator.mod, "Modulo", {"Secret": {"Integer": None}}),
         (operator.pow, "Power", {"Secret": {"Integer": None}}),
         (operator.lshift, "LeftShift", {"Secret": {"Integer": None}}),
-        (operator.rshift, "RightShift", {"Secret": {"Integer": None}})
+        (operator.rshift, "RightShift", {"Secret": {"Integer": None}}),
+        (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
+        (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
+        (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretinteger_publicinteger(operator, name, ty):
@@ -661,7 +670,11 @@ def test_binary_operator_publicunsignedinteger_publicunsignedinteger(operator, n
     [
         (operator.add, "Addition", {"Secret": {"UnsignedInteger": None}}),
         (operator.sub, "Subtraction", {"Secret": {"UnsignedInteger": None}}),
-        (operator.mul, "Multiplication", {"Secret": {"UnsignedInteger": None}})
+        (operator.mul, "Multiplication", {"Secret": {"UnsignedInteger": None}}),
+        (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
+        (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
+        (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicunsignedinteger_secretunsignedinteger(operator, name, ty):
@@ -718,7 +731,11 @@ def test_binary_operator_secretunsignedinteger_unsignedinteger(operator, name, t
         (operator.mod, "Modulo", {"Secret": {"UnsignedInteger": None}}),
         (operator.pow, "Power", {"Secret": {"UnsignedInteger": None}}),
         (operator.lshift, "LeftShift", {"Secret": {"UnsignedInteger": None}}),
-        (operator.rshift, "RightShift", {"Secret": {"UnsignedInteger": None}})
+        (operator.rshift, "RightShift", {"Secret": {"UnsignedInteger": None}}),
+        (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
+        (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
+        (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretunsignedinteger_publicunsignedinteger(operator, name, ty):
@@ -894,7 +911,11 @@ def test_binary_operator_publicrational_publicrational(operator, name, ty):
     [
         (operator.add, "Addition", {"Secret": {"Rational": {"digits": 3}}}),
         (operator.sub, "Subtraction", {"Secret": {"Rational": {"digits": 3}}}),
-        (operator.mul, "Multiplication", {"Secret": {"Rational": {"digits": 6}}})
+        (operator.mul, "Multiplication", {"Secret": {"Rational": {"digits": 6}}}),
+        (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
+        (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
+        (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicrational_secretrational(operator, name, ty):
@@ -942,7 +963,11 @@ def test_binary_operator_secretrational_rational(operator, name, ty):
         (operator.add, "Addition", {"Secret": {"Rational": {"digits": 3}}}),
         (operator.sub, "Subtraction", {"Secret": {"Rational": {"digits": 3}}}),
         (operator.mul, "Multiplication", {"Secret": {"Rational": {"digits": 6}}}),
-        (operator.truediv, "Division", {"Secret": {"Rational": {"digits": 3}}})
+        (operator.truediv, "Division", {"Secret": {"Rational": {"digits": 3}}}),
+        (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
+        (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
+        (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretrational_publicrational(operator, name, ty):
