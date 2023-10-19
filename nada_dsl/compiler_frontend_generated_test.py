@@ -221,25 +221,6 @@ def test_binary_operator_publicboolean_publicboolean(operator, name, ty):
         (operator.eq, "Equals", {"Secret": {"Boolean": None}})
     ],
 )
-def test_binary_operator_publicboolean_secretboolean(operator, name, ty):
-    left = create_input(PublicBoolean, "left", "party")
-    right = create_input(SecretBoolean, "right", "party")
-    program_operation = operator(left, right)
-    op = process_operation(program_operation)
-    assert list(op.keys()) == [name]
-
-    inner = op[name]
-
-    assert input_reference(inner["left"]) == "left"
-    assert input_reference(inner["right"]) == "right"
-    assert inner["type"] == ty
-
-@pytest.mark.parametrize(
-    ("operator", "name", "ty"),
-    [
-        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
-    ],
-)
 def test_binary_operator_secretboolean_boolean(operator, name, ty):
     left = create_input(SecretBoolean, "left", "party")
     right = create_literal(Boolean, True)
@@ -251,25 +232,6 @@ def test_binary_operator_secretboolean_boolean(operator, name, ty):
 
     assert input_reference(inner["left"]) == "left"
     assert len(literal_reference(inner["right"])) == 32
-    assert inner["type"] == ty
-
-@pytest.mark.parametrize(
-    ("operator", "name", "ty"),
-    [
-        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
-    ],
-)
-def test_binary_operator_secretboolean_publicboolean(operator, name, ty):
-    left = create_input(SecretBoolean, "left", "party")
-    right = create_input(PublicBoolean, "right", "party")
-    program_operation = operator(left, right)
-    op = process_operation(program_operation)
-    assert list(op.keys()) == [name]
-
-    inner = op[name]
-
-    assert input_reference(inner["left"]) == "left"
-    assert input_reference(inner["right"]) == "right"
     assert inner["type"] == ty
 
 @pytest.mark.parametrize(
@@ -300,8 +262,6 @@ def test_binary_operator_secretboolean_secretboolean(operator, name, ty):
         (operator.truediv, "LiteralReference", {"Literal": {"Integer": None}}),
         (operator.mod, "LiteralReference", {"Literal": {"Integer": None}}),
         (operator.pow, "LiteralReference", {"Literal": {"Integer": None}}),
-        (operator.lshift, "LiteralReference", {"Literal": {"Integer": None}}),
-        (operator.rshift, "LiteralReference", {"Literal": {"Integer": None}}),
         (operator.lt, "LiteralReference", {"Literal": {"Boolean": None}}),
         (operator.gt, "LiteralReference", {"Literal": {"Boolean": None}}),
         (operator.le, "LiteralReference", {"Literal": {"Boolean": None}}),
@@ -331,8 +291,6 @@ def test_binary_operator_integer_integer(operator, name, ty):
         (operator.truediv, "Division", {"Public": {"Integer": None}}),
         (operator.mod, "Modulo", {"Public": {"Integer": None}}),
         (operator.pow, "Power", {"Public": {"Integer": None}}),
-        (operator.lshift, "LeftShift", {"Public": {"Integer": None}}),
-        (operator.rshift, "RightShift", {"Public": {"Integer": None}}),
         (operator.lt, "LessThan", {"Public": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
@@ -388,8 +346,6 @@ def test_binary_operator_integer_secretinteger(operator, name, ty):
         (operator.truediv, "Division", {"Public": {"Integer": None}}),
         (operator.mod, "Modulo", {"Public": {"Integer": None}}),
         (operator.pow, "Power", {"Public": {"Integer": None}}),
-        (operator.lshift, "LeftShift", {"Public": {"Integer": None}}),
-        (operator.rshift, "RightShift", {"Public": {"Integer": None}}),
         (operator.lt, "LessThan", {"Public": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
@@ -419,8 +375,6 @@ def test_binary_operator_publicinteger_integer(operator, name, ty):
         (operator.truediv, "Division", {"Public": {"Integer": None}}),
         (operator.mod, "Modulo", {"Public": {"Integer": None}}),
         (operator.pow, "Power", {"Public": {"Integer": None}}),
-        (operator.lshift, "LeftShift", {"Public": {"Integer": None}}),
-        (operator.rshift, "RightShift", {"Public": {"Integer": None}}),
         (operator.lt, "LessThan", {"Public": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
@@ -450,8 +404,7 @@ def test_binary_operator_publicinteger_publicinteger(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicinteger_secretinteger(operator, name, ty):
@@ -476,8 +429,6 @@ def test_binary_operator_publicinteger_secretinteger(operator, name, ty):
         (operator.truediv, "Division", {"Secret": {"Integer": None}}),
         (operator.mod, "Modulo", {"Secret": {"Integer": None}}),
         (operator.pow, "Power", {"Secret": {"Integer": None}}),
-        (operator.lshift, "LeftShift", {"Secret": {"Integer": None}}),
-        (operator.rshift, "RightShift", {"Secret": {"Integer": None}}),
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
@@ -507,13 +458,10 @@ def test_binary_operator_secretinteger_integer(operator, name, ty):
         (operator.truediv, "Division", {"Secret": {"Integer": None}}),
         (operator.mod, "Modulo", {"Secret": {"Integer": None}}),
         (operator.pow, "Power", {"Secret": {"Integer": None}}),
-        (operator.lshift, "LeftShift", {"Secret": {"Integer": None}}),
-        (operator.rshift, "RightShift", {"Secret": {"Integer": None}}),
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretinteger_publicinteger(operator, name, ty):
@@ -714,8 +662,7 @@ def test_binary_operator_publicunsignedinteger_publicunsignedinteger(operator, n
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicunsignedinteger_secretunsignedinteger(operator, name, ty):
@@ -776,8 +723,7 @@ def test_binary_operator_secretunsignedinteger_unsignedinteger(operator, name, t
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretunsignedinteger_publicunsignedinteger(operator, name, ty):
