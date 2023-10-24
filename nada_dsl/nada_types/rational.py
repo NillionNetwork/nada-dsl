@@ -4,7 +4,7 @@ from . import NadaType, OperationType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
 from nada_dsl.nada_types.boolean import Boolean, PublicBoolean, SecretBoolean
-from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Multiplication, Subtraction
+from nada_dsl.operations import Addition, Division, Equals, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Multiplication, PublicEquals, Subtraction
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -132,6 +132,20 @@ class Rational(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
+
+    def __eq__(
+        self, other: Union["PublicRational", "Rational", "SecretRational"]
+    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Rational) and other.digits == self.digits:
+            return Boolean(value=bool(self.value == other.value))
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} == {other}")
 
 @dataclass
 class PublicRational(NadaType):
@@ -261,6 +275,33 @@ class PublicRational(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
+    def __eq__(
+        self, other: Union["PublicRational", "Rational", "SecretRational"]
+    ) -> Union["PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def public_equals(
+        self, other: Union["PublicRational", "SecretRational"]
+    ) -> Union["PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self}.public_equals({other})")
+
 @dataclass
 class SecretRational(NadaType):
     digits: int
@@ -388,4 +429,31 @@ class SecretRational(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
+
+    def __eq__(
+        self, other: Union["PublicRational", "Rational", "SecretRational"]
+    ) -> "SecretBoolean":
+        if isinstance(other, Rational) and other.digits == self.digits:
+            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def public_equals(
+        self, other: Union["PublicRational", "SecretRational"]
+    ) -> "SecretBoolean":
+        if isinstance(other, PublicRational) and other.digits == self.digits:
+            operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, SecretRational) and other.digits == self.digits:
+            operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self}.public_equals({other})")
 

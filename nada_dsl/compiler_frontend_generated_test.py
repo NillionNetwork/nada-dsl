@@ -58,7 +58,8 @@ def create_output(root: AllTypes, name: str, party: str) -> Output:
         operator.lt,
         operator.gt,
         operator.le,
-        operator.ge
+        operator.ge,
+        operator.eq
     ],
 )
 def test_rational_digit_checks_literal(operator):
@@ -76,7 +77,9 @@ def test_rational_digit_checks_literal(operator):
         operator.lt,
         operator.gt,
         operator.le,
-        operator.ge
+        operator.ge,
+        operator.eq,
+        PublicRational.public_equals
     ],
 )
 def test_rational_digit_checks_public(operator):
@@ -93,7 +96,9 @@ def test_rational_digit_checks_public(operator):
         operator.lt,
         operator.gt,
         operator.le,
-        operator.ge
+        operator.ge,
+        operator.eq,
+        SecretRational.public_equals
     ],
 )
 def test_rational_digit_checks_secret(operator):
@@ -199,12 +204,33 @@ def test_binary_operator_publicboolean_boolean(operator, name, ty):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.eq, "Equals", {"Public": {"Boolean": None}})
+        (operator.eq, "Equals", {"Public": {"Boolean": None}}),
+        (PublicBoolean.public_equals, "PublicEquals", {"Public": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicboolean_publicboolean(operator, name, ty):
     left = create_input(PublicBoolean, "left", "party")
     right = create_input(PublicBoolean, "right", "party")
+    program_operation = operator(left, right)
+    op = process_operation(program_operation)
+    assert list(op.keys()) == [name]
+
+    inner = op[name]
+
+    assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
+    assert inner["type"] == ty
+
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (PublicBoolean.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
+    ],
+)
+def test_binary_operator_publicboolean_secretboolean(operator, name, ty):
+    left = create_input(PublicBoolean, "left", "party")
+    right = create_input(SecretBoolean, "right", "party")
     program_operation = operator(left, right)
     op = process_operation(program_operation)
     assert list(op.keys()) == [name]
@@ -237,7 +263,28 @@ def test_binary_operator_secretboolean_boolean(operator, name, ty):
 @pytest.mark.parametrize(
     ("operator", "name", "ty"),
     [
-        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (SecretBoolean.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
+    ],
+)
+def test_binary_operator_secretboolean_publicboolean(operator, name, ty):
+    left = create_input(SecretBoolean, "left", "party")
+    right = create_input(PublicBoolean, "right", "party")
+    program_operation = operator(left, right)
+    op = process_operation(program_operation)
+    assert list(op.keys()) == [name]
+
+    inner = op[name]
+
+    assert input_reference(inner["left"]) == "left"
+    assert input_reference(inner["right"]) == "right"
+    assert inner["type"] == ty
+
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (SecretBoolean.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretboolean_secretboolean(operator, name, ty):
@@ -379,7 +426,8 @@ def test_binary_operator_publicinteger_integer(operator, name, ty):
         (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
         (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}}),
-        (operator.eq, "Equals", {"Public": {"Boolean": None}})
+        (operator.eq, "Equals", {"Public": {"Boolean": None}}),
+        (PublicInteger.public_equals, "PublicEquals", {"Public": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicinteger_publicinteger(operator, name, ty):
@@ -404,7 +452,9 @@ def test_binary_operator_publicinteger_publicinteger(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (PublicInteger.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicinteger_secretinteger(operator, name, ty):
@@ -461,7 +511,9 @@ def test_binary_operator_secretinteger_integer(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (SecretInteger.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretinteger_publicinteger(operator, name, ty):
@@ -487,7 +539,8 @@ def test_binary_operator_secretinteger_publicinteger(operator, name, ty):
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
         (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (SecretInteger.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretinteger_secretinteger(operator, name, ty):
@@ -637,7 +690,8 @@ def test_binary_operator_publicunsignedinteger_unsignedinteger(operator, name, t
         (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
         (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}}),
-        (operator.eq, "Equals", {"Public": {"Boolean": None}})
+        (operator.eq, "Equals", {"Public": {"Boolean": None}}),
+        (PublicUnsignedInteger.public_equals, "PublicEquals", {"Public": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicunsignedinteger_publicunsignedinteger(operator, name, ty):
@@ -662,7 +716,9 @@ def test_binary_operator_publicunsignedinteger_publicunsignedinteger(operator, n
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (PublicUnsignedInteger.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicunsignedinteger_secretunsignedinteger(operator, name, ty):
@@ -723,7 +779,9 @@ def test_binary_operator_secretunsignedinteger_unsignedinteger(operator, name, t
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (SecretUnsignedInteger.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretunsignedinteger_publicunsignedinteger(operator, name, ty):
@@ -749,7 +807,8 @@ def test_binary_operator_secretunsignedinteger_publicunsignedinteger(operator, n
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
         (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (SecretUnsignedInteger.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretunsignedinteger_secretunsignedinteger(operator, name, ty):
@@ -775,7 +834,8 @@ def test_binary_operator_secretunsignedinteger_secretunsignedinteger(operator, n
         (operator.lt, "LiteralReference", {"Literal": {"Boolean": None}}),
         (operator.gt, "LiteralReference", {"Literal": {"Boolean": None}}),
         (operator.le, "LiteralReference", {"Literal": {"Boolean": None}}),
-        (operator.ge, "LiteralReference", {"Literal": {"Boolean": None}})
+        (operator.ge, "LiteralReference", {"Literal": {"Boolean": None}}),
+        (operator.eq, "LiteralReference", {"Literal": {"Boolean": None}})
     ],
 )
 def test_binary_operator_rational_rational(operator, name, ty):
@@ -801,7 +861,8 @@ def test_binary_operator_rational_rational(operator, name, ty):
         (operator.lt, "LessThan", {"Public": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Public": {"Boolean": None}})
     ],
 )
 def test_binary_operator_rational_publicrational(operator, name, ty):
@@ -826,7 +887,8 @@ def test_binary_operator_rational_publicrational(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_rational_secretrational(operator, name, ty):
@@ -852,7 +914,8 @@ def test_binary_operator_rational_secretrational(operator, name, ty):
         (operator.lt, "LessThan", {"Public": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Public": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicrational_rational(operator, name, ty):
@@ -878,7 +941,9 @@ def test_binary_operator_publicrational_rational(operator, name, ty):
         (operator.lt, "LessThan", {"Public": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Public": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Public": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Public": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Public": {"Boolean": None}}),
+        (PublicRational.public_equals, "PublicEquals", {"Public": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicrational_publicrational(operator, name, ty):
@@ -903,7 +968,9 @@ def test_binary_operator_publicrational_publicrational(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (PublicRational.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_publicrational_secretrational(operator, name, ty):
@@ -929,7 +996,8 @@ def test_binary_operator_publicrational_secretrational(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretrational_rational(operator, name, ty):
@@ -955,7 +1023,9 @@ def test_binary_operator_secretrational_rational(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (SecretRational.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretrational_publicrational(operator, name, ty):
@@ -980,7 +1050,9 @@ def test_binary_operator_secretrational_publicrational(operator, name, ty):
         (operator.lt, "LessThan", {"Secret": {"Boolean": None}}),
         (operator.gt, "GreaterThan", {"Secret": {"Boolean": None}}),
         (operator.le, "LessOrEqualThan", {"Secret": {"Boolean": None}}),
-        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}})
+        (operator.ge, "GreaterOrEqualThan", {"Secret": {"Boolean": None}}),
+        (operator.eq, "Equals", {"Secret": {"Boolean": None}}),
+        (SecretRational.public_equals, "PublicEquals", {"Secret": {"Boolean": None}})
     ],
 )
 def test_binary_operator_secretrational_secretrational(operator, name, ty):

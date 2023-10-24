@@ -101,6 +101,12 @@ class Equals:
 
 
 @dataclass
+class PublicEquals:
+    left: AllTypes
+    right: AllTypes
+    source_ref: SourceRef
+
+@dataclass
 class Unzip:
     inner: OperationType
     source_ref: SourceRef
