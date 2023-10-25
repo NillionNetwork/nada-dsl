@@ -51,13 +51,13 @@ class PublicBoolean(NadaType):
 
     def public_equals(
         self, other: Union["PublicBoolean", "SecretBoolean"]
-    ) -> Union["PublicBoolean", "SecretBoolean"]:
+    ) -> "PublicBoolean":
         if isinstance(other, PublicBoolean):
             operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretBoolean):
             operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
 
@@ -80,13 +80,13 @@ class SecretBoolean(NadaType):
 
     def public_equals(
         self, other: Union["PublicBoolean", "SecretBoolean"]
-    ) -> "SecretBoolean":
+    ) -> "PublicBoolean":
         if isinstance(other, PublicBoolean):
             operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return PublicBoolean(inner=operation)
         elif isinstance(other, SecretBoolean):
             operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
 

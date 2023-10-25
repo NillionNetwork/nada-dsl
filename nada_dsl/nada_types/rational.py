@@ -292,13 +292,13 @@ class PublicRational(NadaType):
 
     def public_equals(
         self, other: Union["PublicRational", "SecretRational"]
-    ) -> Union["PublicBoolean", "SecretBoolean"]:
+    ) -> "PublicBoolean":
         if isinstance(other, PublicRational) and other.digits == self.digits:
             operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
 
@@ -447,13 +447,13 @@ class SecretRational(NadaType):
 
     def public_equals(
         self, other: Union["PublicRational", "SecretRational"]
-    ) -> "SecretBoolean":
+    ) -> "PublicBoolean":
         if isinstance(other, PublicRational) and other.digits == self.digits:
             operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return PublicBoolean(inner=operation)
         elif isinstance(other, SecretRational) and other.digits == self.digits:
             operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
+            return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
 
