@@ -3,7 +3,7 @@
 from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.operations import Equals, PublicEquals
+from nada_dsl.operations import Equals, EqualsPublicOutput
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -53,10 +53,10 @@ class PublicBoolean(NadaType):
         self, other: Union["PublicBoolean", "SecretBoolean"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicBoolean):
-            operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretBoolean):
-            operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
@@ -82,10 +82,10 @@ class SecretBoolean(NadaType):
         self, other: Union["PublicBoolean", "SecretBoolean"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicBoolean):
-            operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretBoolean):
-            operation = PublicEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
