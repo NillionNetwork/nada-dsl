@@ -4,7 +4,7 @@ from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
 from nada_dsl.nada_types.boolean import Boolean, PublicBoolean, SecretBoolean
-from nada_dsl.operations import Addition, Division, Equals, EqualsPublicOutput, GreaterOrEqualThan, GreaterThan, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, RightShift, Subtraction
+from nada_dsl.operations import Addition, Division, Equals, GreaterOrEqualThan, GreaterThan, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, RightShift, Subtraction
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -372,10 +372,10 @@ class PublicUnsignedInteger(NadaType):
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicUnsignedInteger):
-            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
@@ -566,10 +566,10 @@ class SecretUnsignedInteger(NadaType):
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicUnsignedInteger):
-            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")

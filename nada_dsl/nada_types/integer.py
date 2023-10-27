@@ -4,7 +4,7 @@ from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
 from nada_dsl.nada_types.boolean import Boolean, PublicBoolean, SecretBoolean
-from nada_dsl.operations import Addition, Division, Equals, EqualsPublicOutput, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, Subtraction
+from nada_dsl.operations import Addition, Division, Equals, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Subtraction
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -326,10 +326,10 @@ class PublicInteger(NadaType):
         self, other: Union["PublicInteger", "SecretInteger"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicInteger):
-            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
@@ -496,10 +496,10 @@ class SecretInteger(NadaType):
         self, other: Union["PublicInteger", "SecretInteger"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicInteger):
-            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = EqualsPublicOutput(left=self, right=other, source_ref=SourceRef.back_frame())
+            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")

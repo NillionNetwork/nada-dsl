@@ -101,7 +101,7 @@ class Equals:
 
 
 @dataclass
-class EqualsPublicOutput:
+class PublicOutputEquality:
     left: AllTypes
     right: AllTypes
     source_ref: SourceRef

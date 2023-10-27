@@ -35,7 +35,7 @@ from nada_dsl.operations import (
     LessOrEqualThan,
     GreaterOrEqualThan,
     Equals,
-    EqualsPublicOutput,
+    PublicOutputEquality,
     Unzip,
 )
 
@@ -263,7 +263,7 @@ def process_operation(operation_wrapper):
             GreaterOrEqualThan,
             LessOrEqualThan,
             Equals,
-            EqualsPublicOutput,
+            PublicOutputEquality,
             Zip,
         ),
     ):
