@@ -2,6 +2,9 @@ from dataclasses import dataclass
 from typing import Union, Type
 
 AllTypes = Union[
+    "Integer",
+    "UnsignedInteger",
+    "Boolean",
     "PublicInteger",
     "PublicUnsignedInteger",
     "PublicBoolean",
@@ -15,6 +18,9 @@ AllTypes = Union[
     "NadaTuple",
 ]
 AllTypesType = Union[
+    Type["Integer"],
+    Type["UnsignedInteger"],
+    Type["Boolean"],
     Type["PublicInteger"],
     Type["PublicUnsignedInteger"],
     Type["PublicBoolean"],
