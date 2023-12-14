@@ -188,10 +188,17 @@ def to_type_dict(op_wrapper):
             }
         }
     elif inspect.isclass(op_wrapper):
-        return op_wrapper.__name__
+        return to_type(op_wrapper.__name__)
     else:
-        return op_wrapper.__class__.__name__
+        return to_type(op_wrapper.__class__.__name__)
 
+def to_type(name: str):
+    # Rename public variables so they are considered as the same as literals.
+    if name.startswith("Public"):
+        name = name[len("Public") :].lstrip()
+        return name
+    else:
+        return name
 
 def to_fn_dict(fn: NadaFunction):
     return {
