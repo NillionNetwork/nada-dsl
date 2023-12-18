@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Generic, Optional
 
 from nada_dsl import SourceRef
-from nada_dsl.nada_types.collections import Array, NadaTuple
+from nada_dsl.nada_types.collections import Array, Tuple
 from nada_dsl.nada_types.function import NadaFunction
 from nada_dsl.nada_types.generics import T, R
 from nada_dsl.nada_types import AllTypes, OperationType
@@ -112,11 +112,11 @@ class Unzip:
     source_ref: SourceRef
 
 
-def unzip(array: Array[NadaTuple[T, R]]) -> NadaTuple[Array[T], Array[R]]:
+def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
     right_type = Array.generic_type(array.inner_type.right_type, size=array.size)
     left_type = Array.generic_type(array.inner_type.left_type, size=array.size)
 
-    return NadaTuple(
+    return Tuple(
         right_type=right_type,
         left_type=left_type,
         inner=Unzip(inner=array, source_ref=SourceRef.back_frame()),

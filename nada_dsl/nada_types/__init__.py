@@ -12,10 +12,9 @@ AllTypes = Union[
     "SecretInteger",
     "SecretUnsignedInteger",
     "SecretBoolean",
-    "SecretRational",
     "Array",
     "Vector",
-    "NadaTuple",
+    "Tuple",
 ]
 AllTypesType = Union[
     Type["Integer"],
@@ -28,10 +27,9 @@ AllTypesType = Union[
     Type["SecretInteger"],
     Type["SecretUnsignedInteger"],
     Type["SecretBoolean"],
-    Type["SecretRational"],
     Type["Array"],
     Type["Vector"],
-    Type["NadaTuple"],
+    Type["Tuple"],
 ]
 OperationType = Union[
     "Addition",

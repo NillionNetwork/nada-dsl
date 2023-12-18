@@ -117,7 +117,7 @@ def test_zip(input_type, input_name):
     assert input_reference(inner["left"]) == "left"
     assert input_reference(inner["right"]) == "right"
     assert inner["type"][input_name]["inner_type"] == {
-        "NadaTuple": {
+        "Tuple": {
             "left_type": "SecretInteger",
             "right_type": "SecretInteger",
         }
@@ -144,7 +144,7 @@ def test_unzip(input_type, input_name):
         "Zip"
     ]  # We don't check Zip operation because it has its test
     assert inner["type"] == {
-        "NadaTuple": {
+        "Tuple": {
             "left_type": {
                 "Array": {"inner_type": "SecretInteger", "size": 10}
             },

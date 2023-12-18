@@ -11,10 +11,10 @@ from nada_dsl.nada_types.types import Integer, UnsignedInteger, Boolean
 from nada_dsl.nada_types.collections import (
     Array,
     Vector,
-    NadaTuple,
+    Tuple,
     ArrayType,
     VectorType,
-    NadaTupleType,
+    TupleType,
 )
 from nada_dsl.nada_types.function import NadaFunction, NadaFunctionCall
 from nada_dsl.future.operations import Cast
@@ -180,9 +180,9 @@ def to_type_dict(op_wrapper):
             else to_type_dict(op_wrapper.inner_type)
         )
         return {"Vector": {"inner_type": inner_type}}
-    elif type(op_wrapper) == NadaTuple or type(op_wrapper) == NadaTupleType:
+    elif type(op_wrapper) == Tuple or type(op_wrapper) == TupleType:
         return {
-            "NadaTuple": {
+            "Tuple": {
                 "left_type": to_type_dict(op_wrapper.left_type),
                 "right_type": to_type_dict(op_wrapper.right_type),
             }
