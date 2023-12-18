@@ -45,6 +45,13 @@ def create_collection(cls, inner_input, size, **kwargs):
 def create_output(root: AllTypes, name: str, party: str) -> Output:
     return Output(root, name, Party(party))
 
+def to_type(name: str):
+    # Rename public variables so they are considered as the same as literals.
+    if name.startswith("Public"):
+        name = name[len("Public") :].lstrip()
+        return name
+    else:
+        return name
 
 # Generated tests are added below this line. Please leave it as it is.
 
