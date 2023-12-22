@@ -43,8 +43,8 @@ class Tuple(Generic[T, U], NadaType):
     left_type: T
 
     @classmethod
-    def generic_type(cls, right_type: U, left_type: T) -> TupleType:
-        return TupleType(right_type=right_type, left_type=left_type)
+    def generic_type(cls, left_type: U, right_type: T) -> TupleType:
+        return TupleType(left_type=left_type, right_type=right_type)
 
 
 def get_inner_type(inner_type):
