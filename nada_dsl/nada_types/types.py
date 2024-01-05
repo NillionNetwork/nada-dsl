@@ -819,18 +819,6 @@ class SecretUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
-    def __pow__(
-        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} ** {other}")
-
     def __lt__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> "SecretBoolean":
