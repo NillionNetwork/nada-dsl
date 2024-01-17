@@ -3,7 +3,7 @@
 from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Subtraction
+from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Subtraction
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -748,6 +748,10 @@ class SecretInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
 
+    @classmethod
+    def random(cls) -> "SecretInteger":
+        return SecretInteger(inner=Random(source_ref=SourceRef.back_frame()))
+    
 @dataclass
 class SecretUnsignedInteger(NadaType):
     def __add__(
@@ -891,6 +895,10 @@ class SecretUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
 
+    @classmethod
+    def random(cls) -> "SecretUnsignedInteger":
+        return SecretUnsignedInteger(inner=Random(source_ref=SourceRef.back_frame()))
+    
 @dataclass
 class SecretBoolean(NadaType):
     pass

@@ -111,6 +111,9 @@ class Unzip:
     inner: OperationType
     source_ref: SourceRef
 
+@dataclass
+class Random:
+    source_ref: SourceRef
 
 def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
     right_type = Array.generic_type(array.inner_type.right_type, size=array.size)

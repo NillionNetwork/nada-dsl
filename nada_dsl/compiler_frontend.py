@@ -34,6 +34,7 @@ from nada_dsl.operations import (
     Equals,
     PublicOutputEquality,
     Unzip,
+    Random
 )
 
 from nada_dsl.nada_types.collections import (
@@ -343,6 +344,13 @@ def process_operation(operation_wrapper):
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
                 "return_type": to_type_dict(operation.fn.return_type),
+            }
+        }
+    elif isinstance(operation, Random):
+        return {
+            "Random": {
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
             }
         }
     else:
