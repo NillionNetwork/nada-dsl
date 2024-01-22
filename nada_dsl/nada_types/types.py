@@ -903,22 +903,22 @@ class SecretUnsignedInteger(NadaType):
 class SecretBoolean(NadaType):
     def if_else(
         self: "SecretBoolean",
-        left, right: Union["PublicInteger", "SecretInteger", "SecretUnsignedInteger"]
+        arg_0, arg_1: Union["PublicInteger", "SecretInteger", "SecretUnsignedInteger"]
     ) -> Union["SecretInteger", "SecretUnsignedInteger"]:
-        if isinstance(left, SecretInteger) and isinstance(right, SecretInteger):
-            operation = IfElse(cond=self, left=left, right=right, source_ref=SourceRef.back_frame())
+        if isinstance(arg_0, SecretInteger) and isinstance(arg_1, SecretInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(left, SecretUnsignedInteger) and isinstance(right, SecretUnsignedInteger):
-            operation = IfElse(cond=self, left=left, right=right, source_ref=SourceRef.back_frame())
+        elif isinstance(arg_0, SecretUnsignedInteger) and isinstance(arg_1, SecretUnsignedInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(left, PublicInteger) and isinstance(right, SecretInteger):
-            operation = IfElse(cond=self, left=left, right=right, source_ref=SourceRef.back_frame())
+        elif isinstance(arg_0, PublicInteger) and isinstance(arg_1, SecretInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(left, SecretInteger) and isinstance(right, PublicInteger):
-            operation = IfElse(cond=self, left=left, right=right, source_ref=SourceRef.back_frame())
+        elif isinstance(arg_0, SecretInteger) and isinstance(arg_1, PublicInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
-            raise TypeError(f"Invalid operation: {self}.IfElse({left}, {right})")
+            raise TypeError(f"Invalid operation: {self}.IfElse({arg_0}, {arg_1})")
     
     pass
 @dataclass

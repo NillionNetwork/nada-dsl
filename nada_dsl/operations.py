@@ -117,9 +117,12 @@ class Random:
 
 @dataclass
 class IfElse:
-    cond: AllTypes
-    left: AllTypes
-    right: AllTypes
+    '''
+    cond.if_else(left, right)
+    '''
+    this: AllTypes  # cond
+    arg_0: AllTypes # left
+    arg_1: AllTypes # right
     source_ref: SourceRef
 
 def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
