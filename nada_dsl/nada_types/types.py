@@ -3,7 +3,7 @@
 from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Subtraction
+from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, IfElse, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Subtraction
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -901,6 +901,25 @@ class SecretUnsignedInteger(NadaType):
     
 @dataclass
 class SecretBoolean(NadaType):
+    def if_else(
+        self: "SecretBoolean",
+        left, right: Union["PublicInteger", "SecretInteger", "SecretUnsignedInteger"]
+    ) -> Union["SecretInteger", "SecretUnsignedInteger"]:
+        if isinstance(left, SecretInteger) and isinstance(right, SecretInteger):
+            operation = IfElse(cond=self, left=left, right=right, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(left, SecretUnsignedInteger) and isinstance(right, SecretUnsignedInteger):
+            operation = IfElse(cond=self, left=left, right=right, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(left, PublicInteger) and isinstance(right, SecretInteger):
+            operation = IfElse(cond=self, left=left, right=right, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(left, SecretInteger) and isinstance(right, PublicInteger):
+            operation = IfElse(cond=self, left=left, right=right, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self}.IfElse({left}, {right})")
+    
     pass
 @dataclass
 class ShamirShareInteger(NadaType):
