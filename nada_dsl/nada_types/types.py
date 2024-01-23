@@ -751,7 +751,7 @@ class SecretInteger(NadaType):
     @classmethod
     def random(cls) -> "SecretInteger":
         return SecretInteger(inner=Random(source_ref=SourceRef.back_frame()))
-    
+
 @dataclass
 class SecretUnsignedInteger(NadaType):
     def __add__(
@@ -898,7 +898,7 @@ class SecretUnsignedInteger(NadaType):
     @classmethod
     def random(cls) -> "SecretUnsignedInteger":
         return SecretUnsignedInteger(inner=Random(source_ref=SourceRef.back_frame()))
-    
+
 @dataclass
 class SecretBoolean(NadaType):
     def if_else(
@@ -931,7 +931,7 @@ class SecretBoolean(NadaType):
             return SecretUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.IfElse({arg_0}, {arg_1})")
-    
+
     pass
 @dataclass
 class ShamirShareInteger(NadaType):
