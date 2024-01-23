@@ -34,7 +34,8 @@ from nada_dsl.operations import (
     Equals,
     PublicOutputEquality,
     Unzip,
-    Random
+    Random,
+    IfElse
 )
 
 from nada_dsl.nada_types.collections import (
@@ -353,5 +354,19 @@ def process_operation(operation_wrapper):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
+    elif isinstance(operation, IfElse):
+        return {
+            "IfElse": {
+                "function_id": operation,
+                "this": process_operation(operation.this),
+                "arg_0": process_operation(operation.arg_0),
+                "arg_1": process_operation(operation.arg_1),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+                # TODO(@jimouris): do we need a return type?
+                # "return_type": to_type_dict(operation.fn.return_type),
+            }
+        }
     else:
+
         raise Exception(f"Compilation of Operation {operation} not supported")
