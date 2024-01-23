@@ -911,12 +911,18 @@ class SecretBoolean(NadaType):
         elif isinstance(arg_0, SecretUnsignedInteger) and isinstance(arg_1, SecretUnsignedInteger):
             operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(arg_0, PublicInteger) and isinstance(arg_1, SecretInteger):
-            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
-            return SecretInteger(inner=operation)
         elif isinstance(arg_0, SecretInteger) and isinstance(arg_1, PublicInteger):
             operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
+        elif isinstance(arg_0, PublicInteger) and isinstance(arg_1, SecretInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(arg_0, SecretUnsignedInteger) and isinstance(arg_1, PublicUnsignedInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(arg_0, PublicUnsignedInteger) and isinstance(arg_1, SecretUnsignedInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
         elif isinstance(arg_0, PublicInteger) and isinstance(arg_1, PublicInteger):
             operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
