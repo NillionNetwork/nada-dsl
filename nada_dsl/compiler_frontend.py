@@ -362,8 +362,6 @@ def process_operation(operation_wrapper):
                 "arg_1": process_operation(operation.arg_1),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
-                # TODO(@jimouris): do we need a return type?
-                # "return_type": to_type_dict(operation.fn.return_type),
             }
         }
     else:
