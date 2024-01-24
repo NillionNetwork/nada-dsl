@@ -51,7 +51,7 @@ def inner_type(ty):
 
 def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
     """
-    Can be use also for lambdas
+    Can be used also for lambdas
     ```python
     array.map(nada_fn(lambda x: x.cast(SecretInteger), args_ty={'x': SecretInteger}, return_ty=SecretInteger))
     ```
