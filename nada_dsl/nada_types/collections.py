@@ -67,7 +67,7 @@ class Array(Generic[T], NadaType):
 
     inner_type: T
     size: int
-
+    
     def __init__(self, inner, size, inner_type=None):
         self.inner_type = (
             inner_type if not inner or inner_type else get_inner_type(inner)
