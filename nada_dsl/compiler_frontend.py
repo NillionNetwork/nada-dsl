@@ -357,7 +357,6 @@ def process_operation(operation_wrapper):
     elif isinstance(operation, IfElse):
         return {
             "IfElse": {
-                "function_id": operation,
                 "this": process_operation(operation.this),
                 "arg_0": process_operation(operation.arg_0),
                 "arg_1": process_operation(operation.arg_1),
