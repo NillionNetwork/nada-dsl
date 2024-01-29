@@ -61,13 +61,16 @@ class Integer(NadaType):
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["Integer", "PublicInteger"]
-    ) -> Union["Integer", "PublicInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["Integer", "PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             return Integer(value=int(self.value / other.value))
         elif isinstance(other, PublicInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
+        elif isinstance(other, SecretInteger):
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
@@ -192,13 +195,16 @@ class UnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value / other.value))
         elif isinstance(other, PublicUnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
+        elif isinstance(other, SecretUnsignedInteger):
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
@@ -346,14 +352,17 @@ class PublicInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["Integer", "PublicInteger"]
-    ) -> "PublicInteger":
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         elif isinstance(other, PublicInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
+        elif isinstance(other, SecretInteger):
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
@@ -495,14 +504,17 @@ class PublicUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
-    ) -> "PublicUnsignedInteger":
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
+        elif isinstance(other, SecretUnsignedInteger):
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
@@ -653,12 +665,15 @@ class SecretInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["Integer", "PublicInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> "SecretInteger":
         if isinstance(other, Integer):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         elif isinstance(other, PublicInteger):
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(other, SecretInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
@@ -800,12 +815,15 @@ class SecretUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> "SecretUnsignedInteger":
         if isinstance(other, UnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
+            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(other, SecretUnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
@@ -932,6 +950,9 @@ class SecretBoolean(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self}.IfElse({arg_0}, {arg_1})")
 
+    pass
+@dataclass
+class SecretBlob(NadaType):
     pass
 @dataclass
 class ShamirShareInteger(NadaType):
