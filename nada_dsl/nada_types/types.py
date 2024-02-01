@@ -751,7 +751,7 @@ class SecretInteger(NadaType):
     @classmethod
     def random(cls) -> "SecretInteger":
         return SecretInteger(inner=Random(source_ref=SourceRef.back_frame()))
-
+    
 @dataclass
 class SecretUnsignedInteger(NadaType):
     def __add__(
@@ -898,12 +898,12 @@ class SecretUnsignedInteger(NadaType):
     @classmethod
     def random(cls) -> "SecretUnsignedInteger":
         return SecretUnsignedInteger(inner=Random(source_ref=SourceRef.back_frame()))
-
+    
 @dataclass
 class SecretBoolean(NadaType):
     def if_else(
         self: "SecretBoolean",
-        arg_0, arg_1: Union["PublicInteger", "PublicUnsignedInteger", "SecretInteger", "SecretUnsignedInteger"]
+        arg_0, arg_1: Union["Integer", "PublicInteger", "PublicUnsignedInteger", "SecretInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["SecretInteger", "SecretUnsignedInteger"]:
         if isinstance(arg_0, SecretInteger) and isinstance(arg_1, SecretInteger):
             operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
@@ -917,21 +917,54 @@ class SecretBoolean(NadaType):
         elif isinstance(arg_0, PublicInteger) and isinstance(arg_1, SecretInteger):
             operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
+        elif isinstance(arg_0, SecretInteger) and isinstance(arg_1, Integer):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(arg_0, Integer) and isinstance(arg_1, SecretInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
         elif isinstance(arg_0, SecretUnsignedInteger) and isinstance(arg_1, PublicUnsignedInteger):
             operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         elif isinstance(arg_0, PublicUnsignedInteger) and isinstance(arg_1, SecretUnsignedInteger):
             operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
+        elif isinstance(arg_0, SecretUnsignedInteger) and isinstance(arg_1, UnsignedInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(arg_0, UnsignedInteger) and isinstance(arg_1, SecretUnsignedInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
         elif isinstance(arg_0, PublicInteger) and isinstance(arg_1, PublicInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(arg_0, Integer) and isinstance(arg_1, Integer):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(arg_0, PublicInteger) and isinstance(arg_1, Integer):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(arg_0, Integer) and isinstance(arg_1, PublicInteger):
             operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         elif isinstance(arg_0, PublicUnsignedInteger) and isinstance(arg_1, PublicUnsignedInteger):
             operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
+        elif isinstance(arg_0, UnsignedInteger) and isinstance(arg_1, UnsignedInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(arg_0, PublicUnsignedInteger) and isinstance(arg_1, UnsignedInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(arg_0, UnsignedInteger) and isinstance(arg_1, PublicUnsignedInteger):
+            operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.IfElse({arg_0}, {arg_1})")
-
+    
+    pass
+@dataclass
+class SecretBlob(NadaType):
     pass
 @dataclass
 class ShamirShareInteger(NadaType):
