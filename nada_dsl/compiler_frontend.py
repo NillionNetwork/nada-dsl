@@ -35,7 +35,8 @@ from nada_dsl.operations import (
     PublicOutputEquality,
     Unzip,
     Random,
-    IfElse
+    IfElse,
+    Reveal
 )
 
 from nada_dsl.nada_types.collections import (
@@ -360,6 +361,14 @@ def process_operation(operation_wrapper):
                 "this": process_operation(operation.this),
                 "arg_0": process_operation(operation.arg_0),
                 "arg_1": process_operation(operation.arg_1),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif isinstance(operation, Reveal):
+        return {
+            "Reveal": {
+                "this": process_operation(operation.this),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }

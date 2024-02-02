@@ -3,7 +3,7 @@
 from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, IfElse, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Subtraction
+from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, IfElse, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Reveal, Subtraction
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -767,6 +767,12 @@ class SecretInteger(NadaType):
     def random(cls) -> "SecretInteger":
         return SecretInteger(inner=Random(source_ref=SourceRef.back_frame()))
     
+    def reveal(
+        self: "SecretInteger",
+    ) -> "PublicInteger":
+        operation = Reveal(this=self, source_ref=SourceRef.back_frame())
+        return PublicInteger(inner=operation)
+    
 @dataclass
 class SecretUnsignedInteger(NadaType):
     def __add__(
@@ -917,8 +923,20 @@ class SecretUnsignedInteger(NadaType):
     def random(cls) -> "SecretUnsignedInteger":
         return SecretUnsignedInteger(inner=Random(source_ref=SourceRef.back_frame()))
     
+    def reveal(
+        self: "SecretUnsignedInteger",
+    ) -> "PublicUnsignedInteger":
+        operation = Reveal(this=self, source_ref=SourceRef.back_frame())
+        return PublicUnsignedInteger(inner=operation)
+    
 @dataclass
 class SecretBoolean(NadaType):
+    def reveal(
+        self: "SecretBoolean",
+    ) -> "PublicBoolean":
+        operation = Reveal(this=self, source_ref=SourceRef.back_frame())
+        return PublicBoolean(inner=operation)
+    
     def if_else(
         self: "SecretBoolean",
         arg_0, arg_1: Union["Integer", "PublicInteger", "PublicUnsignedInteger", "SecretInteger", "SecretUnsignedInteger", "UnsignedInteger"]

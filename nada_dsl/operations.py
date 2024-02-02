@@ -125,6 +125,15 @@ class IfElse:
     arg_1: AllTypes # right
     source_ref: SourceRef
 
+@dataclass
+class Reveal:
+    '''
+    secret.reveal()
+    '''
+    this: AllTypes  # secret to reveal
+    source_ref: SourceRef
+
+
 def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
     right_type = Array.generic_type(array.inner_type.right_type, size=array.size)
     left_type = Array.generic_type(array.inner_type.left_type, size=array.size)
