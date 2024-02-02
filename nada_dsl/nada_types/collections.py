@@ -60,6 +60,13 @@ class ArrayType:
 
 
 @dataclass
+class ArrayNew(Generic[T]):
+    inner_type: AllTypesType
+    inner: [T]
+    source_ref: SourceRef
+
+
+@dataclass
 class Array(Generic[T], NadaType):
     """
     Arrays have fixed size at compile time.
@@ -96,9 +103,7 @@ class Array(Generic[T], NadaType):
             inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
 
-    def reduce(
-        self: "Array[T]", function: NadaFunction[T, R], initial: R
-    ) -> R:
+    def reduce(self: "Array[T]", function: NadaFunction[T, R], initial: R) -> R:
         return function.return_type(
             Reduce(
                 inner=self,
@@ -106,6 +111,25 @@ class Array(Generic[T], NadaType):
                 initial=initial,
                 source_ref=SourceRef.back_frame(),
             )
+        )
+
+    @classmethod
+    def new(cls, *args) -> "Array[T]":
+        if not args:
+            raise ValueError("At least one value is required")
+
+        first_arg = args[0]
+        if not all(isinstance(arg, type(first_arg)) for arg in args):
+            raise TypeError("All arguments must be of the same type")
+
+        return Array(
+            inner_type=first_arg,
+            size=len(args),
+            inner=ArrayNew(
+                inner=args,
+                source_ref=SourceRef.back_frame(),
+                inner_type=Array(inner_type=first_arg, size=len(args), inner=None),
+            ),
         )
 
     @classmethod

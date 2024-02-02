@@ -360,3 +360,36 @@ def test_nada_function_using_matrix(input_type, input_name):
     check_nada_function_arg_ref(
         zip_op["right"], matrix_addition_fn["id"], "b", b_arg_type
     )
+
+
+def test_array_new():
+    first_input = create_input(SecretInteger, "first", "party", **{})
+    second_input = create_input(SecretInteger, "second", "party", **{})
+    array = Array.new(first_input, second_input)
+    op = process_operation(array)
+
+    assert list(op.keys()) == ["New"]
+
+    inner = op["New"]
+
+    assert input_reference(inner["elements"][0]) == "first"
+    assert input_reference(inner["elements"][1]) == "second"
+    assert inner["type"]["Array"] == {
+        "inner_type": "SecretInteger",
+        "size": 2,
+    }
+
+
+def test_array_new_empty():
+    with pytest.raises(ValueError) as e:
+        Array.new()
+    assert str(e.value) == "At least one value is required"
+
+
+def test_array_new_same_type():
+    first_input = create_input(SecretInteger, "first", "party", **{})
+    second_input = create_input(SecretUnsignedInteger, "second", "party", **{})
+
+    with pytest.raises(TypeError) as e:
+        Array.new(first_input, second_input)
+    assert str(e.value) == "All arguments must be of the same type"

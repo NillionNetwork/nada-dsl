@@ -10,6 +10,7 @@ from nada_dsl.circuit_io import Input, Output, Party, Literal
 from nada_dsl.nada_types.types import Integer, UnsignedInteger, Boolean
 from nada_dsl.nada_types.collections import (
     Array,
+    ArrayNew,
     Vector,
     Tuple,
     ArrayType,
@@ -373,6 +374,13 @@ def process_operation(operation_wrapper):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
+    elif isinstance(operation, ArrayNew):
+        return {
+            "New": {
+                "elements": [process_operation(arg) for arg in operation.inner],
+                "type": to_type_dict(operation.inner_type),
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
     else:
-
-        raise Exception(f"Compilation of Operation {operation} not supported")
+        raise Exception(f"Compilation of Operation {operation} is not supported")
