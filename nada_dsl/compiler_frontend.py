@@ -11,6 +11,7 @@ from nada_dsl.nada_types.types import Integer, UnsignedInteger, Boolean
 from nada_dsl.nada_types.collections import (
     Array,
     ArrayNew,
+    TupleNew,
     Vector,
     Tuple,
     ArrayType,
@@ -378,6 +379,14 @@ def process_operation(operation_wrapper):
         return {
             "New": {
                 "elements": [process_operation(arg) for arg in operation.inner],
+                "type": to_type_dict(operation.inner_type),
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif isinstance(operation, TupleNew):
+        return {
+            "New": {
+                "elements": [process_operation(operation.inner[0]), process_operation(operation.inner[1])],
                 "type": to_type_dict(operation.inner_type),
                 "source_ref": operation.source_ref.to_dict(),
             }

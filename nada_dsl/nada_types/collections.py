@@ -1,6 +1,7 @@
 import copy
 from dataclasses import dataclass
-from typing import Generic, Optional, Tuple
+from typing import Generic, Optional
+import typing
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.errors import NadaNotAllowedException
@@ -33,14 +34,33 @@ class Reduce(Generic[T, R]):
 
 @dataclass
 class TupleType:
-    right_type: AllTypesType
     left_type: AllTypesType
+    right_type: AllTypesType
+
+
+@dataclass
+class TupleNew(Generic[T, U]):
+    inner_type: AllTypesType
+    inner: typing.Tuple[T, U]
+    source_ref: SourceRef
 
 
 @dataclass
 class Tuple(Generic[T, U], NadaType):
-    right_type: U
     left_type: T
+    right_type: U
+
+    @classmethod
+    def new(cls, left_type: T, right_type: U) -> "Tuple[T, U]":
+        return Tuple(
+            left_type=left_type,
+            right_type=right_type,
+            inner=TupleNew(
+                inner=(left_type, right_type),
+                source_ref=SourceRef.back_frame(),
+                inner_type=Tuple(left_type=left_type, right_type=right_type, inner=None),
+            ),
+        )
 
     @classmethod
     def generic_type(cls, left_type: U, right_type: T) -> TupleType:
