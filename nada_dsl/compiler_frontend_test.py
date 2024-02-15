@@ -393,3 +393,27 @@ def test_array_new_same_type():
     with pytest.raises(TypeError) as e:
         Array.new(first_input, second_input)
     assert str(e.value) == "All arguments must be of the same type"
+
+
+def test_tuple_new():
+    first_input = create_input(SecretInteger, "first", "party", **{})
+    second_input = create_input(PublicInteger, "second", "party", **{})
+    array = Tuple.new(first_input, second_input)
+    op = process_operation(array)
+
+    assert list(op.keys()) == ["New"]
+
+    inner = op["New"]
+
+    assert input_reference(inner["elements"][0]) == "first"
+    assert input_reference(inner["elements"][1]) == "second"
+    assert inner["type"]["Tuple"] == {
+        "left_type": "SecretInteger",
+        "right_type": "Integer",
+    }
+
+
+def test_tuple_new_empty():
+    with pytest.raises(TypeError) as e:
+        Tuple.new()
+    assert str(e.value) == "Tuple.new() missing 2 required positional arguments: 'left_type' and 'right_type'"
