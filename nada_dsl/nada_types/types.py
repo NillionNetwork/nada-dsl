@@ -75,13 +75,16 @@ class Integer(NadaType):
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["Integer", "PublicInteger"]
-    ) -> Union["Integer", "PublicInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["Integer", "PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             return Integer(value=int(self.value % other.value))
         elif isinstance(other, PublicInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
+        elif isinstance(other, SecretInteger):
+            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
@@ -209,13 +212,16 @@ class UnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value % other.value))
         elif isinstance(other, PublicUnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
+        elif isinstance(other, SecretUnsignedInteger):
+            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
@@ -331,8 +337,8 @@ class PublicInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "ShamirParticleInteger", "ShamirShareInteger"]
-    ) -> Union["PublicInteger", "SecretInteger", "ShamirParticleInteger", "ShamirShareInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
@@ -342,12 +348,6 @@ class PublicInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, ShamirShareInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirShareInteger(inner=operation)
-        elif isinstance(other, ShamirParticleInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirParticleInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
@@ -367,14 +367,17 @@ class PublicInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["Integer", "PublicInteger"]
-    ) -> "PublicInteger":
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         elif isinstance(other, PublicInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
+        elif isinstance(other, SecretInteger):
+            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
@@ -483,8 +486,8 @@ class PublicUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "ShamirParticleUnsignedInteger", "ShamirShareUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger", "ShamirParticleUnsignedInteger", "ShamirShareUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
@@ -494,12 +497,6 @@ class PublicUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, ShamirShareUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirShareUnsignedInteger(inner=operation)
-        elif isinstance(other, ShamirParticleUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirParticleUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
@@ -519,14 +516,17 @@ class PublicUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
-    ) -> "PublicUnsignedInteger":
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
+        elif isinstance(other, SecretUnsignedInteger):
+            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
@@ -741,12 +741,15 @@ class SecretInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["Integer", "PublicInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> "SecretInteger":
         if isinstance(other, Integer):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         elif isinstance(other, PublicInteger):
+            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(other, SecretInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         else:
@@ -897,12 +900,15 @@ class SecretUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> "SecretUnsignedInteger":
         if isinstance(other, UnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
+            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(other, SecretUnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         else:
@@ -1065,81 +1071,19 @@ class SecretBlob(NadaType):
     pass
 @dataclass
 class ShamirShareInteger(NadaType):
-    def __add__(
-        self, other: Union["PublicInteger", "ShamirShareInteger"]
-    ) -> "ShamirShareInteger":
-        if isinstance(other, PublicInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirShareInteger(inner=operation)
-        elif isinstance(other, ShamirShareInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirShareInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
-
-    def __mul__(
-        self, other: "PublicInteger"
-    ) -> "ShamirShareInteger":
-        if isinstance(other, PublicInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirShareInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} * {other}")
-
+    pass
 @dataclass
 class ShamirShareUnsignedInteger(NadaType):
-    def __add__(
-        self, other: Union["PublicUnsignedInteger", "ShamirShareUnsignedInteger"]
-    ) -> "ShamirShareUnsignedInteger":
-        if isinstance(other, PublicUnsignedInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirShareUnsignedInteger(inner=operation)
-        elif isinstance(other, ShamirShareUnsignedInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirShareUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
-
-    def __mul__(
-        self, other: "PublicUnsignedInteger"
-    ) -> "ShamirShareUnsignedInteger":
-        if isinstance(other, PublicUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirShareUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} * {other}")
-
+    pass
 @dataclass
 class ShamirShareBoolean(NadaType):
     pass
 @dataclass
 class ShamirParticleInteger(NadaType):
-    def __mul__(
-        self, other: Union["PublicInteger", "ShamirParticleInteger"]
-    ) -> "ShamirParticleInteger":
-        if isinstance(other, ShamirParticleInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirParticleInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirParticleInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} * {other}")
-
+    pass
 @dataclass
 class ShamirParticleUnsignedInteger(NadaType):
-    def __mul__(
-        self, other: Union["PublicUnsignedInteger", "ShamirParticleUnsignedInteger"]
-    ) -> "ShamirParticleUnsignedInteger":
-        if isinstance(other, ShamirParticleUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirParticleUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return ShamirParticleUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} * {other}")
-
+    pass
 @dataclass
 class ShamirParticleBoolean(NadaType):
     pass
