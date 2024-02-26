@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from nada_dsl.nada_types import AllTypes
+from nada_dsl.nada_types import AllTypes, NadaType
 
 from nada_dsl.source_ref import SourceRef
 
@@ -36,6 +36,7 @@ class Literal:
         self.value = value
         self.source_ref = source_ref
 
+
 @dataclass
 class Output:
     inner: AllTypes
@@ -44,7 +45,11 @@ class Output:
     source_ref: SourceRef
 
     def __init__(self, inner, name, party):
+        self.source_ref = SourceRef.back_frame()
+        if not issubclass(type(inner), NadaType):
+            raise Exception(
+                f"{self.source_ref.file}:{self.source_ref.lineno}: Output value {inner} of type {type(inner)} is not "
+                f"a Nada type so it isn't a valid output")
         self.inner = inner
         self.name = name
         self.party = party
-        self.source_ref = SourceRef.back_frame()
