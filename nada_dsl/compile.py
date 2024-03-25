@@ -1,3 +1,6 @@
+"""
+Compilation functions.
+"""
 import sys
 import os.path
 import base64

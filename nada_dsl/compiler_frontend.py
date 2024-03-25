@@ -1,3 +1,7 @@
+"""
+Compiler frontend consisting of wrapper functions for the classes and functions
+that constitute the Nada embedded domain-specific language (EDSL).
+"""
 import hashlib
 import json
 import os

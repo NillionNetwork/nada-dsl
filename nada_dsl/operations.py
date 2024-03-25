@@ -1,4 +1,6 @@
-"""Operation definitions."""
+"""
+Class definitions corresponding to Nada operations.
+"""
 from dataclasses import dataclass
 from typing import Generic, Optional
 

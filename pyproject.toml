@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nada_dsl"
 version = "0.1.0"
-description = "Nillion Nada DSL to create Nillion MPC programs"
+description = "Nillion Nada DSL to create Nillion MPC programs."
 requires-python = ">=3.10"
 readme = "README.md"
 dependencies = []
@@ -13,6 +13,16 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
 license = { file = "LICENSE" }
+
+[project.optional-dependencies]
+docs = [
+    "toml~=0.10.2",
+    "sphinx~=5.0",
+    "sphinx-rtd-theme~=1.0.0"
+]
+lint = [
+    "pylint~=2.17.0"
+]
 
 [tool.setuptools]
 packages = ["nada_dsl"]

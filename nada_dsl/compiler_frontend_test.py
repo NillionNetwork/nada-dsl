@@ -1,3 +1,6 @@
+"""
+Compiler frontend tests.
+"""
 import pytest
 import operator
 

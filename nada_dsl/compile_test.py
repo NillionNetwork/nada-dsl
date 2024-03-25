@@ -1,3 +1,6 @@
+"""
+Compilation tests.
+"""
 import os
 import json
 from nada_dsl.compile import transform_program

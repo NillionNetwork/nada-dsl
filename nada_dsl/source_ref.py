@@ -1,3 +1,6 @@
+"""
+Source reference representation data structure.
+"""
 import os
 from dataclasses import dataclass
 from typing import Tuple
@@ -8,8 +11,9 @@ USED_SOURCES = {}
 
 @dataclass
 class SourceRef:
-    """Represents a reference to a specific location in the source code."""
-
+    """
+    Source reference representation, i.e., a specific location in the source code.
+    """
     file: str
     lineno: int
     offset: int
