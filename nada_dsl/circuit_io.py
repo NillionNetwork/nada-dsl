@@ -7,6 +7,13 @@ from nada_dsl.source_ref import SourceRef
 
 
 class Party:
+    """
+    Represents a party involved in the computation.
+
+    Attributes:
+        name (str): The name of the party.
+    """
+
     name: str
     source_ref: SourceRef
 
@@ -16,6 +23,15 @@ class Party:
 
 
 class Input:
+    """
+    Represents an input to the computation.
+
+    Attributes:
+        name (str): The name of the input.
+        party (Party): The party providing the input.
+        doc (str): Documentation for the input (default "").
+    """
+
     name: str
     party: Party
     doc: str
@@ -29,6 +45,13 @@ class Input:
 
 
 class Literal:
+    """
+    Represents a literal value.
+
+    Attributes:
+        value (Any): The value of the literal.
+    """
+
     value: Any
     source_ref: SourceRef
 
@@ -39,6 +62,15 @@ class Literal:
 
 @dataclass
 class Output:
+    """
+    Represents an output from the computation.
+
+    Attributes:
+        inner (AllTypes): The type of the output.
+        party (Party): The party receiving the output.
+        name (str): The name of the output.
+    """
+
     inner: AllTypes
     party: Party
     name: str
