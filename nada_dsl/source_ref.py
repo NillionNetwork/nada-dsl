@@ -8,6 +8,8 @@ USED_SOURCES = {}
 
 @dataclass
 class SourceRef:
+    """Represents a reference to a specific location in the source code."""
+
     file: str
     lineno: int
     offset: int
@@ -15,6 +17,7 @@ class SourceRef:
 
     @classmethod
     def back_frame(cls) -> "SourceRef":
+        """Get the source reference of the calling frame."""
         backend_frame = inspect.currentframe().f_back.f_back
         lineno = backend_frame.f_lineno
         (offset, length, snippet) = SourceRef.try_get_line_info(backend_frame, lineno)
@@ -27,6 +30,7 @@ class SourceRef:
 
     @staticmethod
     def try_get_line_info(backend_frame, lineno) -> Tuple[int, int, str]:
+        """Try to get line information from the source code."""
         filename = os.path.basename(backend_frame.f_code.co_filename)
 
         src = None
@@ -50,6 +54,7 @@ class SourceRef:
             return 0, 0, ""
 
     def to_dict(self):
+        """Convert the SourceRef object to a dictionary."""
         return {
             "lineno": self.lineno,
             "offset": self.offset,
@@ -59,4 +64,5 @@ class SourceRef:
 
     @staticmethod
     def get_sources():
+        """Get all sources."""
         return USED_SOURCES

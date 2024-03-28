@@ -54,6 +54,8 @@ LITERALS = {}
 
 
 class ClassEncoder(JSONEncoder):
+    """Custom JSON encoder for classes."""
+
     def default(self, o):
         if inspect.isclass(o):
             return o.__name__
@@ -61,7 +63,8 @@ class ClassEncoder(JSONEncoder):
 
 
 def get_target_dir() -> str:
-    env_dir = os.environ.get("NADA_TARGET_DIR")
+    """Get the target directory for compilation output."""
+    env_dir = os.environ.get("Nada_TARGET_DIR")
     if env_dir:
         return env_dir
 
@@ -76,24 +79,13 @@ def get_target_dir() -> str:
 
 
 def nada_compile(outputs: List[Output]) -> str:
+    """Compile Nada to MIR and dump it as JSON."""
     compiled = nada_dsl_to_nada_mir(outputs)
     return json.dumps(compiled)
 
 
-def compile_to_nada_pydsl_hir(output_file, outputs, target_dir):
-    nada_pydsl_hir = json.dumps(outputs, cls=ClassEncoder, indent=2)
-    with open(f"{target_dir}/{output_file}.nada-pydsl-hir.json", "w") as file:
-        file.write(nada_pydsl_hir)
-
-
-def compile_to_nada_mir(target_dir, outputs, output_file):
-    circuit = nada_dsl_to_nada_mir(outputs)
-    nada_mir = json.dumps(circuit, indent=2)
-    with open(f"{target_dir}/{output_file}.nada.json", "w") as file:
-        file.write(nada_mir)
-
-
 def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
+    """Convert Nada DSL to Nada MIR."""
     new_outputs = []
     PARTIES.clear()
     INPUTS.clear()
@@ -123,6 +115,7 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
 
 
 def to_party_list(parties):
+    """Convert parties to a list."""
     return [
         {
             "name": party.name,
@@ -133,6 +126,7 @@ def to_party_list(parties):
 
 
 def to_input_list(inputs):
+    """Convert inputs to a list."""
     input_list = []
     for party_inputs in inputs.values():
         for program_input, program_type in party_inputs.values():
@@ -149,6 +143,7 @@ def to_input_list(inputs):
 
 
 def to_literal_list(literals):
+    """Convert literals to a list."""
     literal_list = []
     for name, (value, ty) in literals.items():
         literal_list.append(
@@ -162,10 +157,12 @@ def to_literal_list(literals):
 
 
 def to_function_list(functions: Dict[int, NadaFunction]) -> List[Dict]:
+    """Convert functions to a list."""
     return [to_fn_dict(function) for function in functions.values()]
 
 
 def to_type_dict(op_wrapper):
+    """Convert operation wrapper to a dictionary representing its type."""
     if type(op_wrapper) == Array or type(op_wrapper) == ArrayType:
         size = {"size": op_wrapper.size} if op_wrapper.size else {}
         from typing import TypeVar
@@ -197,7 +194,9 @@ def to_type_dict(op_wrapper):
     else:
         return to_type(op_wrapper.__class__.__name__)
 
+
 def to_type(name: str):
+    """Convert a type name."""
     # Rename public variables so they are considered as the same as literals.
     if name.startswith("Public"):
         name = name[len("Public") :].lstrip()
@@ -205,7 +204,9 @@ def to_type(name: str):
     else:
         return name
 
+
 def to_fn_dict(fn: NadaFunction):
+    """Convert a function to a dictionary."""
     return {
         "id": fn.id,
         "args": [
@@ -224,6 +225,7 @@ def to_fn_dict(fn: NadaFunction):
 
 
 def process_operation(operation_wrapper):
+    """Process an operation."""
     from nada_dsl.nada_types.function import NadaFunctionArg
 
     ty = to_type_dict(operation_wrapper)
