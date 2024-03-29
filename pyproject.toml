@@ -9,6 +9,10 @@ description = "Nillion Nada DSL to create Nillion MPC programs"
 requires-python = ">=3.10"
 readme = "README.md"
 dependencies = []
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+]
+license = { file = "LICENSE" }
 
 [tool.setuptools]
 packages = ["nada_dsl"]
