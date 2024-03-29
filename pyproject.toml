@@ -12,7 +12,7 @@ dependencies = []
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
-license = { file = "../../LICENSE" }
+license = { file = "LICENSE" }
 
 [tool.setuptools]
 packages = ["nada_dsl"]
