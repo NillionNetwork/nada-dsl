@@ -13,7 +13,7 @@ Framework][framework] and [Nada Program Examples][examples].
 Documentation for this package can be generated automatically via the commands below (using a variant of `python` appropriate for the environment):
 
 ```console
-python -m pip install .[docs]
+python -m pip install '.[docs]'
 cd docs
 make html
 ```

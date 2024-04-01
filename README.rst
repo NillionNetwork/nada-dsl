@@ -10,7 +10,7 @@ All installation and development dependencies are fully specified in ``pyproject
 
 .. code-block:: bash
 
-    python -m pip install .[docs,lint]
+    python -m pip install .'[docs,lint]'
 
 Documentation
 ^^^^^^^^^^^^^
@@ -18,7 +18,7 @@ The documentation can be generated automatically from the source files using `Sp
 
 .. code-block:: bash
 
-    python -m pip install .[docs]
+    python -m pip install .'[docs]'
     cd docs
     make html
 
@@ -28,5 +28,5 @@ Style conventions are enforced using `Pylint <https://pylint.readthedocs.io>`__:
 
 .. code-block:: bash
 
-    python -m pip install .[lint]
+    python -m pip install .'[lint]'
     python -m pylint nada_dsl
