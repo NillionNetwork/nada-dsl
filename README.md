@@ -15,5 +15,7 @@ Documentation for this package can be generated automatically via the commands b
 ```console
 python -m pip install '.[docs]'
 cd docs
-make html
+sphinx-build . _build
 ```
+
+Alternatively, you can use the `just` target (from the root of nillion): `just nada-dsl-doc`
