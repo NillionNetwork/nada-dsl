@@ -135,6 +135,14 @@ class Reveal:
     this: AllTypes  # secret to reveal
     source_ref: SourceRef
 
+@dataclass
+class TruncPr:
+    '''
+    left.trunc_pr(right)
+    '''
+    left: AllTypes  # number to truncate
+    right: AllTypes # number of bits to truncate
+    source_ref: SourceRef
 
 def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
     right_type = Array.generic_type(array.inner_type.right_type, size=array.size)

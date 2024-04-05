@@ -42,7 +42,8 @@ from nada_dsl.operations import (
     Unzip,
     Random,
     IfElse,
-    Reveal
+    Reveal,
+    TruncPr
 )
 
 from nada_dsl.nada_types.collections import (
@@ -377,6 +378,15 @@ def process_operation(operation_wrapper):
         return {
             "Reveal": {
                 "this": process_operation(operation.this),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+    elif isinstance(operation, TruncPr):
+        return {
+            "TruncPr": {
+                "left": process_operation(operation.left),
+                "right": process_operation(operation.right),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }

@@ -3,7 +3,7 @@
 from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, IfElse, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Reveal, RightShift, Subtraction
+from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, IfElse, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Reveal, RightShift, Subtraction, TruncPr
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -931,6 +931,25 @@ class SecretInteger(NadaType):
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
         return PublicInteger(inner=operation)
     
+    def trunc_pr(
+        self: "SecretInteger",
+        arg_0: Union["Integer", "PublicInteger", "PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretInteger":
+        if isinstance(arg_0, PublicInteger):
+            operation = TruncPr(left=self, right=arg_0, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(arg_0, Integer):
+            operation = TruncPr(left=self, right=arg_0, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(arg_0, PublicUnsignedInteger):
+            operation = TruncPr(left=self, right=arg_0, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(arg_0, UnsignedInteger):
+            operation = TruncPr(left=self, right=arg_0, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self}.TruncPr({arg_0})")
+    
 @dataclass
 class SecretUnsignedInteger(NadaType):
     def __add__(
@@ -1113,6 +1132,25 @@ class SecretUnsignedInteger(NadaType):
     ) -> "PublicUnsignedInteger":
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
         return PublicUnsignedInteger(inner=operation)
+    
+    def trunc_pr(
+        self: "SecretUnsignedInteger",
+        arg_0: Union["Integer", "PublicInteger", "PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
+        if isinstance(arg_0, PublicInteger):
+            operation = TruncPr(left=self, right=arg_0, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(arg_0, Integer):
+            operation = TruncPr(left=self, right=arg_0, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(arg_0, PublicUnsignedInteger):
+            operation = TruncPr(left=self, right=arg_0, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(arg_0, UnsignedInteger):
+            operation = TruncPr(left=self, right=arg_0, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self}.TruncPr({arg_0})")
     
 @dataclass
 class SecretBoolean(NadaType):
