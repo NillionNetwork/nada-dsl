@@ -3,7 +3,7 @@
 from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, IfElse, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Reveal, Subtraction
+from nada_dsl.operations import Addition, Division, GreaterOrEqualThan, GreaterThan, IfElse, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Reveal, Subtraction
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -236,6 +236,17 @@ class UnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} ** {other}")
 
+    def __lshift__(
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "UnsignedInteger"]:
+        if isinstance(other, UnsignedInteger):
+            return UnsignedInteger(value=int(self.value << other.value))
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} << {other}")
+
     def __lt__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
@@ -380,6 +391,18 @@ class PublicInteger(NadaType):
             return SecretInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
+
+    def __lshift__(
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "PublicInteger":
+        if isinstance(other, UnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicInteger(inner=operation)
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __lt__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
@@ -541,6 +564,18 @@ class PublicUnsignedInteger(NadaType):
             return PublicUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} ** {other}")
+
+    def __lshift__(
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "PublicUnsignedInteger":
+        if isinstance(other, UnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicUnsignedInteger(inner=operation)
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __lt__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
@@ -755,6 +790,18 @@ class SecretInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
+    def __lshift__(
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretInteger":
+        if isinstance(other, UnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} << {other}")
+
     def __lt__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> "SecretBoolean":
@@ -913,6 +960,18 @@ class SecretUnsignedInteger(NadaType):
             return SecretUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
+
+    def __lshift__(
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
+        if isinstance(other, UnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __lt__(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
