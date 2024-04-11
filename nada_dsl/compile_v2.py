@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import traceback
 import importlib.util
 import nada_dsl
-from nada_dsl.compiler_frontend import nada_compile
+from nada_dsl.compiler_frontend_v2 import nada_compile
 
 
 @dataclass

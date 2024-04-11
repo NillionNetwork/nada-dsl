@@ -3,7 +3,7 @@ Compilation tests.
 """
 import os
 import json
-from nada_dsl.compile import compile
+from nada_dsl.compile_v2 import compile
 
 
 def get_test_programs_folder():
