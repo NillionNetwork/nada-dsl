@@ -17,7 +17,7 @@ license = { file = "LICENSE" }
 [project.optional-dependencies]
 docs = [
     "toml~=0.10.2",
-    "sphinx~=5.0",
+    "sphinx>=5,<8",
     "sphinx-rtd-theme>=1.0,<2.1"
 ]
 lint = [
