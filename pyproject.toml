@@ -21,7 +21,7 @@ docs = [
     "sphinx-rtd-theme>=1.0,<2.1"
 ]
 lint = [
-    "pylint~=2.17.0"
+    "pylint>=2.17,<3.2"
 ]
 
 [tool.setuptools]
