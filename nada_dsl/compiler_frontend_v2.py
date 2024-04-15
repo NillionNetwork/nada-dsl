@@ -42,7 +42,8 @@ from nada_dsl.operations import (
     Unzip,
     Random,
     IfElse,
-    Reveal
+    Reveal,
+    TruncPr
 )
 
 from nada_dsl.nada_types.collections import (
@@ -264,6 +265,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             type(operation).__name__: {
+                "id": op_id,
                 "left": process_operation(operation.left, instructions),
                 "right": process_operation(operation.right, instructions),
                 "type": ty,
@@ -277,6 +279,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "Cast": {
+                "id": op_id,
                 "target": process_operation(operation.target, instructions),
                 "to": operation.to.__name__,
                 "type": ty,
@@ -299,6 +302,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "InputReference": {
+                "id": op_id,
                 "refers_to": operation.name,
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
@@ -315,6 +319,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "LiteralReference": {
+                "id": op_id,
                 "refers_to": literal_name,
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
@@ -328,6 +333,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "Map": {
+                "id": op_id,
                 "fn": operation.fn.id,
                 "inner": process_operation(operation.inner, instructions),
                 "type": ty,
@@ -342,6 +348,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "Reduce": {
+                "id": op_id,
                 "fn": operation.fn.id,
                 "inner": process_operation(operation.inner, instructions),
                 "initial": process_operation(operation.initial, instructions),
@@ -355,6 +362,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "Unzip": {
+                "id": op_id,
                 "inner": process_operation(operation.inner, instructions),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
@@ -366,6 +374,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "NadaFunctionArgRef": {
+                "id": op_id,
                 "function_id": operation.function_id,
                 "refers_to": operation.name,
                 "type": to_type_dict(operation.type),
@@ -380,6 +389,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "NadaFunctionCall": {
+                "id": op_id,
                 "function_id": operation.fn.id,
                 "args": [process_operation(arg, instructions) for arg in operation.args],
                 "type": ty,
@@ -393,6 +403,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "Random": {
+                "id": op_id,
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
@@ -403,6 +414,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "IfElse": {
+                "id": op_id,
                 "this": process_operation(operation.this, instructions),
                 "arg_0": process_operation(operation.arg_0, instructions),
                 "arg_1": process_operation(operation.arg_1, instructions),
@@ -416,7 +428,21 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "Reveal": {
+                "id": op_id,
                 "this": process_operation(operation.this, instructions),
+                "type": ty,
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+        instructions[op_id] = op_instruction
+        return op_id
+    elif isinstance(operation, TruncPr):
+        op_id = id(operation)
+        op_instruction = {
+            "TruncPr": {
+                "id": op_id,
+                "left": process_operation(operation.left, instructions),
+                "right": process_operation(operation.right, instructions),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
@@ -427,6 +453,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "New": {
+                "id": op_id,
                 "elements": [process_operation(arg, instructions) for arg in operation.inner],
                 "type": to_type_dict(operation.inner_type),
                 "source_ref": operation.source_ref.to_dict(),
@@ -438,6 +465,7 @@ def process_operation(operation_wrapper, instructions):
         op_id = id(operation)
         op_instruction = {
             "New": {
+                "id": op_id,
                 "elements": [process_operation(operation.inner[0], instructions),
                              process_operation(operation.inner[1], instructions)],
                 "type": to_type_dict(operation.inner_type),
