@@ -22,8 +22,15 @@ The documentation can be generated automatically from the source files using `Sp
     cd docs
     make html
 
-Conventions
-^^^^^^^^^^^
+Testing and Conventions
+^^^^^^^^^^^^^^^^^^^^^^^
+Unit tests are executed and their coverage is measured when using `pytest <https://docs.pytest.org>`__ (see the ``pyproject.toml`` file for configuration details):
+
+.. code-block:: bash
+
+    python -m pip install .'[test]'
+    python -m pytest
+
 Style conventions are enforced using `Pylint <https://pylint.readthedocs.io>`__:
 
 .. code-block:: bash
