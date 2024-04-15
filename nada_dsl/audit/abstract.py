@@ -87,7 +87,7 @@ class Output(Abstract):
         if not isinstance(name, str):
             raise TypeError('name parameter must be a string')
 
-        if not isinstance(name, str):
+        if not isinstance(party, Party):
             raise TypeError('party parameter must be a Party object')
 
         self.value = value
