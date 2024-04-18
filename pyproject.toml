@@ -20,9 +20,16 @@ docs = [
     "sphinx~=5.0",
     "sphinx-rtd-theme>=1.0,<2.1"
 ]
+test = [
+    "pytest~=7.4",
+    "pytest-cov~=4.0"
+]
 lint = [
     "pylint>=2.17,<3.2"
 ]
 
 [tool.setuptools]
 packages = ["nada_dsl"]
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules --ignore=docs --cov=nada_dsl --cov-report term-missing"
