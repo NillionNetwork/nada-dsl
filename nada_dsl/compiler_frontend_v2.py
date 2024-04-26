@@ -39,6 +39,7 @@ from nada_dsl.operations import (
     GreaterOrEqualThan,
     Equals,
     PublicOutputEquality,
+    Equals,
     Unzip,
     Random,
     IfElse,
