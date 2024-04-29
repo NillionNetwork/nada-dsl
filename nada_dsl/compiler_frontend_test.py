@@ -71,11 +71,13 @@ def test_root_conversion():
     assert len(mir["outputs"]) == 1
     assert "source_files" in mir
 
+    instructions = mir["instructions"]
     mir_output = mir["outputs"][0]
     assert mir_output["name"] == "output"
     assert mir_output["type"] == "SecretInteger"
     assert mir_output["party"] == "output_party"
-    assert list(mir_output["inner"].keys()) == ["InputReference"]
+
+    assert list(instructions[mir_output["instruction_id"]].keys()) == ["InputReference"]
 
 
 def test_input_conversion():
@@ -121,13 +123,17 @@ def test_zip(input_type, input_name):
     inner_input = create_input(SecretInteger, "right", "party", **{})
     right = create_collection(input_type, inner_input, 10, **{})
     zipped = left.zip(right)
-    op = process_operation(zipped)
+    instructions = {}
+    op_id = process_operation(zipped, instructions)
+    op = instructions[op_id]
     assert list(op.keys()) == ["Zip"]
 
     inner = op["Zip"]
 
-    assert input_reference(inner["left"]) == "left"
-    assert input_reference(inner["right"]) == "right"
+    left = instructions[inner["left"]]
+    right = instructions[inner["right"]]
+    assert input_reference(left) == "left"
+    assert input_reference(right) == "right"
     assert inner["type"][input_name]["inner_type"] == {
         "Tuple": {
             "left_type": "SecretInteger",
@@ -146,13 +152,15 @@ def test_unzip(input_type, input_name):
     inner_input = create_input(SecretInteger, "right", "party", **{})
     right = create_collection(input_type, inner_input, 10, **{})
     unzipped = unzip(left.zip(right))
-    op = process_operation(unzipped)
+    instructions = {}
+    op_id = process_operation(unzipped, instructions)
+    op = instructions[op_id]
 
     assert list(op.keys()) == ["Unzip"]
 
     inner = op["Unzip"]
-
-    assert list(inner["inner"].keys()) == [
+    inner_inner = instructions[inner["inner"]]
+    assert list(inner_inner.keys()) == [
         "Zip"
     ]  # We don't check Zip operation because it has its test
     assert inner["type"] == {
@@ -179,12 +187,16 @@ def test_map(input_type, input_name):
     inner_input = create_input(SecretInteger, "inner", "party", **{})
     left = create_collection(input_type, inner_input, 10, **{})
     map_operation = left.map(nada_function)
-    op = process_operation(map_operation)
+    instructions = {}
+    op_id = process_operation(map_operation, instructions)
+    op = instructions[op_id]
+
     assert list(op.keys()) == ["Map"]
     inner = op["Map"]
     assert inner["fn"] in FUNCTIONS
     assert list(inner["type"].keys()) == [input_name]
-    assert input_reference(inner["inner"]) == "inner"
+    inner_inner = instructions[inner["inner"]]
+    assert input_reference(inner_inner) == "inner"
     assert inner["type"][input_name]["inner_type"] == "SecretInteger"
 
 
@@ -202,12 +214,16 @@ def test_reduce(input_type, input_name):
     inner_input = create_input(SecretInteger, "inner", "party", **{})
     left = create_collection(input_type, inner_input, 10, **{})
     reduce_operation = left.reduce(nada_function, c)
-    op = process_operation(reduce_operation)
+    instructions = {}
+    op_id = process_operation(reduce_operation, instructions)
+    op = instructions[op_id]
+
     assert list(op.keys()) == ["Reduce"]
     inner = op["Reduce"]
     assert inner["fn"] in FUNCTIONS
     assert inner["type"] == "SecretInteger"
-    assert input_reference(inner["inner"]) == "inner"
+    inner_inner = instructions[inner["inner"]]
+    assert input_reference(inner_inner) == "inner"
 
 
 def check_arg(arg: NadaFunctionArg, arg_name, arg_type):
@@ -234,13 +250,17 @@ def test_nada_function_simple():
     check_arg(args[0], "a", "SecretInteger")
     check_arg(args[1], "b", "SecretInteger")
     assert nada_function["return_type"] == "SecretInteger"
-    assert list(nada_function["body"].keys()) == ["Addition"]
-    addition = nada_function["body"]["Addition"]
+
+    instruction = nada_function["instructions"]
+    return_op = instruction[nada_function['return_instruction_id']]
+    assert list(return_op.keys()) == ["Addition"]
+    addition = return_op["Addition"]
+
     check_nada_function_arg_ref(
-        addition["left"], nada_function["id"], "a", "SecretInteger"
+        instruction[addition["left"]], nada_function["id"], "a", "SecretInteger"
     )
     check_nada_function_arg_ref(
-        addition["right"], nada_function["id"], "b", "SecretInteger"
+        instruction[addition["right"]], nada_function["id"], "b", "SecretInteger"
     )
 
 
@@ -258,16 +278,24 @@ def test_nada_function_using_inputs():
     check_arg(args[0], "a", "SecretInteger")
     check_arg(args[1], "b", "SecretInteger")
     assert nada_function["return_type"] == "SecretInteger"
-    assert list(nada_function["body"].keys()) == ["Addition"]
-    addition = nada_function["body"]["Addition"]
-    assert input_reference(addition["right"]) == "c"
-    assert list(addition["left"].keys()) == ["Addition"]
-    addition = addition["left"]["Addition"]
+
+    instruction = nada_function["instructions"]
+    return_op = instruction[nada_function['return_instruction_id']]
+
+    assert list(return_op.keys()) == ["Addition"]
+    addition = return_op["Addition"]
+    addition_right = instruction[addition["right"]]
+    assert input_reference(addition_right) == "c"
+    addition_left = instruction[addition["left"]]
+    assert list(addition_left.keys()) == ["Addition"]
+
+    addition = addition_left["Addition"]
+
     check_nada_function_arg_ref(
-        addition["left"], nada_function["id"], "a", "SecretInteger"
+        instruction[addition["left"]], nada_function["id"], "a", "SecretInteger"
     )
     check_nada_function_arg_ref(
-        addition["right"], nada_function["id"], "b", "SecretInteger"
+        instruction[addition["right"]], nada_function["id"], "b", "SecretInteger"
     )
 
 
@@ -302,19 +330,28 @@ def test_nada_function_using_operations():
     check_arg(args[0], "a", "SecretInteger")
     check_arg(args[1], "b", "SecretInteger")
     assert nada_function["return_type"] == "SecretInteger"
-    assert list(nada_function["body"].keys()) == ["Addition"]
-    addition = nada_function["body"]["Addition"]
-    assert input_reference(addition["right"]) == "d"
-    assert list(addition["left"].keys()) == ["Addition"]
-    addition = addition["left"]["Addition"]
-    assert input_reference(addition["right"]) == "c"
-    assert list(addition["left"].keys()) == ["Addition"]
-    addition = addition["left"]["Addition"]
+
+    instruction = nada_function["instructions"]
+    return_op = instruction[nada_function['return_instruction_id']]
+
+    assert list(return_op.keys()) == ["Addition"]
+    addition = return_op["Addition"]
+
+    assert input_reference(instruction[addition["right"]]) == "d"
+    addition_left = instruction[addition["left"]]
+    assert list(addition_left.keys()) == ["Addition"]
+    addition = addition_left["Addition"]
+    assert input_reference(instruction[addition["right"]]) == "c"
+
+    addition_left = instruction[addition["left"]]
+    assert list(addition_left.keys()) == ["Addition"]
+    addition = addition_left["Addition"]
+
     check_nada_function_arg_ref(
-        addition["left"], nada_function["id"], "a", "SecretInteger"
+        instruction[addition["left"]], nada_function["id"], "a", "SecretInteger"
     )
     check_nada_function_arg_ref(
-        addition["right"], nada_function["id"], "b", "SecretInteger"
+        instruction[addition["right"]], nada_function["id"], "b", "SecretInteger"
     )
 
 
@@ -344,26 +381,32 @@ def test_nada_function_using_matrix(input_type, input_name):
     check_arg(args[1], "b", b_arg_type)
     assert matrix_addition_fn["return_type"] == "SecretInteger"
 
-    assert list(matrix_addition_fn["body"].keys()) == ["Reduce"]
-    reduce_op = matrix_addition_fn["body"]["Reduce"]
+    instructions = matrix_addition_fn["instructions"]
+    return_op = instructions[matrix_addition_fn["return_instruction_id"]]
+    assert list(return_op.keys()) == ["Reduce"]
+    reduce_op = return_op["Reduce"]
     reduce_op["function_id"] = add_fn["id"]
     reduce_op["type"] = "SecretInteger"
 
-    assert list(reduce_op["inner"].keys()) == ["Map"]
-    map_op = reduce_op["inner"]["Map"]
+    reduce_op_inner = instructions[reduce_op["inner"]]
+    assert list(reduce_op_inner.keys()) == ["Map"]
+    map_op = reduce_op_inner["Map"]
     map_op["function_id"] = add_fn["id"]
     map_op["type"] = {
         input_name: {"inner_type": "SecretInteger", "size": None}
     }
 
-    assert list(map_op["inner"].keys()) == ["Zip"]
-    zip_op = map_op["inner"]["Zip"]
+    map_op_inner = instructions[map_op["inner"]]
+    assert list(map_op_inner.keys()) == ["Zip"]
+    zip_op = map_op_inner["Zip"]
 
+    zip_op_left = instructions[zip_op["left"]]
+    zip_op_right = instructions[zip_op["right"]]
     check_nada_function_arg_ref(
-        zip_op["left"], matrix_addition_fn["id"], "a", a_arg_type
+        zip_op_left, matrix_addition_fn["id"], "a", a_arg_type
     )
     check_nada_function_arg_ref(
-        zip_op["right"], matrix_addition_fn["id"], "b", b_arg_type
+        zip_op_right, matrix_addition_fn["id"], "b", b_arg_type
     )
 
 
@@ -371,14 +414,19 @@ def test_array_new():
     first_input = create_input(SecretInteger, "first", "party", **{})
     second_input = create_input(SecretInteger, "second", "party", **{})
     array = Array.new(first_input, second_input)
-    op = process_operation(array)
+    instructions = {}
+    op_id = process_operation(array, instructions)
+    op = instructions[op_id]
 
     assert list(op.keys()) == ["New"]
 
     inner = op["New"]
 
-    assert input_reference(inner["elements"][0]) == "first"
-    assert input_reference(inner["elements"][1]) == "second"
+    first = instructions[inner["elements"][0]]
+    second = instructions[inner["elements"][1]]
+
+    assert input_reference(first) == "first"
+    assert input_reference(second) == "second"
     assert inner["type"]["Array"] == {
         "inner_type": "SecretInteger",
         "size": 2,
@@ -404,14 +452,17 @@ def test_tuple_new():
     first_input = create_input(SecretInteger, "first", "party", **{})
     second_input = create_input(PublicInteger, "second", "party", **{})
     array = Tuple.new(first_input, second_input)
-    op = process_operation(array)
+    instructions = {}
+    op_id = process_operation(array, instructions)
+    op = instructions[op_id]
 
     assert list(op.keys()) == ["New"]
 
     inner = op["New"]
-
-    assert input_reference(inner["elements"][0]) == "first"
-    assert input_reference(inner["elements"][1]) == "second"
+    left = instructions[inner["elements"][0]]
+    right = instructions[inner["elements"][1]]
+    assert input_reference(left) == "first"
+    assert input_reference(right) == "second"
     assert inner["type"]["Tuple"] == {
         "left_type": "SecretInteger",
         "right_type": "Integer",
