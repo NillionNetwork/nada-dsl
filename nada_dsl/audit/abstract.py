@@ -402,6 +402,48 @@ class AbstractInteger(Abstract):
         """
         return self.__add__(other)
 
+    def __sub__(self: AbstractInteger, other: AbstractInteger) -> AbstractInteger:
+        """
+        Subtraction of abstract values that are instances of integer classes.
+        """
+        if not isinstance(other, (Integer, PublicInteger, SecretInteger)):
+            raise TypeError('expecting Integer, PublicInteger, or SecretInteger')
+
+        result = Abstract(max(type(self), type(other)))
+
+        result.value = None
+        if self.value is not None and other.value is not None:
+            result.value = self.value - other.value
+
+        return result
+
+    def __rsub__(self: AbstractInteger, other: AbstractInteger) -> AbstractInteger:
+        """
+        Subtraction for cases in which the left-hand argument is not an instance
+        of a class derived from this class.
+        """
+        return self.__sub__(other)
+
+    def __neg__(self: AbstractInteger) -> AbstractInteger:
+        """
+        Negation of abstract values that are instances of integer classes.
+
+        >>> x = Input("x", Party("a"))
+        >>> type(-Integer(x)).__name__
+        'Integer'
+        >>> type(-PublicInteger(x)).__name__
+        'PublicInteger'
+        >>> type(-SecretInteger(x)).__name__
+        'SecretInteger'
+        """
+        result = Abstract(type(self))
+
+        result.value = None
+        if self.value is not None:
+            result.value = -self.value
+
+        return result
+
     def __mul__(self: AbstractInteger, other: AbstractInteger) -> AbstractInteger:
         """
         Multipliaction of abstract values that are instances of integer

@@ -91,7 +91,13 @@ def unify(t_a, t_b):
     """
     if t_a == t_b:
         return t_a
+
     if t_a.__name__ == 'list' and t_b.__name__ == 'list':
-        return t_a
+        if hasattr(t_a, '__args__') and len(t_a.__args__) == 1:
+            if hasattr(t_b, '__args__'):
+                if len(t_b.__args__) == 1:
+                    return unify(t_a.__args__[0], t_b.__args__[0])
+                return None
+            return t_a
 
     return None

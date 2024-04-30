@@ -4,6 +4,7 @@ subset of the Nada DSL syntax.
 """
 # pylint: disable=wildcard-import,unused-wildcard-import,invalid-name
 from __future__ import annotations
+from typing import Callable
 import ast
 import richreports
 
@@ -29,7 +30,62 @@ def _rules_restrictions_descendants(a):
                         audits(a__, 'rules', RuleInAncestor())
                         audits(a__, 'types', delete=True)
 
-def _types_binop_mult_add(t_l, t_r):
+def rules(a):
+    """
+    Mark all :obj:`ast` nodes as prohibited (as a starting point for a strict
+    static analysis).
+    """
+    if isinstance(a, ast.Module):
+        for a_ in ast.walk(a):
+            audits(
+                a_,
+                'rules',
+                SyntaxRestriction('use of this syntax is prohibited in strict mode')
+            )
+
+def _types_base(t):
+    """
+    Return a boolean value indicating whether the supplied type is a base
+    type.
+    """
+    return t in (
+        bool, int, str,
+        Integer, PublicInteger, SecretInteger,
+        Boolean, PublicBoolean, SecretBoolean
+    )
+
+def _types_list_monomorphic(t):
+    """
+    Return a boolean value indicating whether the supplied type represents a
+    monomorphic list type (*i.e.*, a list type wherein the types of the items
+    are fully specified).
+    """
+    if t.__name__ == 'list' and hasattr(t, '__args__') and len(t.__args__) == 1:
+        return _types_list_monomorphic(t.__args__[0])
+
+    if _types_base(t):
+        return True
+
+    return False
+
+def _types_list_monomorphic_depth(t):
+    """
+    Return an integer representing the depth of the monomorphic list type.
+    """
+    if t.__name__ == 'list' and hasattr(t, '__args__') and len(t.__args__) == 1:
+        return 1 + _types_list_monomorphic_depth(t.__args__[0])
+
+    return 0
+
+def _types_monomorphic(t):
+    """
+    Return a boolean value indicating whether the supplied type represents a
+    monomorphic type permitted by this static analysis submodule.
+    """
+    return _types_base(t) or _types_list_monomorphic(t)
+
+
+def _types_binop_mult_add_sub(t_l, t_r):
     """
     Determine the result type for multiplication and addition operations
     involving Nada DSL integers.
@@ -54,8 +110,10 @@ def _types_binop_mult_add(t_l, t_r):
     elif (t_l, t_r) == (SecretInteger, SecretInteger):
         t = SecretInteger
 
-    if isinstance(t_l, TypeError) or isinstance(t_r, TypeError):
-        t = typeerror_demote(t)
+    if isinstance(t_l, TypeError):
+        t = typeerror_demote(t_l)
+    elif isinstance(t_r, TypeError):
+        t = typeerror_demote(t_r)
 
     return t
 
@@ -84,23 +142,12 @@ def _types_compare(t_l, t_r):
     elif (t_l, t_r) == (SecretInteger, SecretInteger):
         t = SecretBoolean
 
-    if isinstance(t_l, TypeError) or isinstance(t_r, TypeError):
-        t = typeerror_demote(t)
+    if isinstance(t_l, TypeError):
+        t = typeerror_demote(t_l)
+    elif isinstance(t_r, TypeError):
+        t = typeerror_demote(t_r)
 
     return t
-
-def rules(a):
-    """
-    Mark all :obj:`ast` nodes as prohibited (as a starting point for a strict
-    static analysis).
-    """
-    if isinstance(a, ast.Module):
-        for a_ in ast.walk(a):
-            audits(
-                a_,
-                'rules',
-                SyntaxRestriction('use of this syntax is prohibited in strict mode')
-            )
 
 def types(a, env=None, func=False):
     """
@@ -146,23 +193,84 @@ def types(a, env=None, func=False):
                 env_ = dict(env)
                 for a_ in a.body:
                     env_ = types(a_, env_, func=True)
+            else:
+                rules_no_restriction(a)
+                rules_no_restriction(a.args)
+
+                t_ret = eval(ast.unparse(a.returns)) # pylint: disable=eval-used
+                if _types_monomorphic(t_ret):
+                    rules_no_restriction(a.returns)
+
+                env_ = dict(env)
+                ts = []
+                for arg in a.args.args:
+                    var = arg.arg
+                    t_var = eval(ast.unparse(arg.annotation)) # pylint: disable=eval-used
+                    if _types_monomorphic(t_var):
+                        rules_no_restriction(arg)
+                        rules_no_restriction(arg.annotation, recursive=True)
+                        env_[var] = t_var
+                        ts.append(t_var)
+                for a_ in a.body:
+                    env_ = types(a_, env_, func=True)
+                env[a.name] = Callable[ts, t_ret]
 
         return env
 
     if isinstance(a, ast.Assign):
-        if len(a.targets) == 1 and isinstance(a.targets[0], ast.Name):
-            rules_no_restriction(a)
-            rules_no_restriction(a.targets[0])
-            types(a.value, env, func)
-            t = audits(a.value, 'types')
-            if t is not None:
-                audits(a, 'types', typeerror_demote(t))
-                audits(a.targets[0], TypeInParent())
-                if not isinstance(t, TypeError):
-                    target = a.targets[0]
-                    if isinstance(target, ast.Name):
-                        var = target.id
-                        env[var] = t
+        if len(a.targets) == 1:
+            target = a.targets[0]
+            if isinstance(target, ast.Name):
+                rules_no_restriction(a)
+                rules_no_restriction(target)
+                types(a.value, env, func)
+                t = audits(a.value, 'types')
+                if t == list and not _types_list_monomorphic(t):
+                    t = TypeErrorRoot(
+                        'assignment of list value with underspecified ' +
+                        'type requires fully specified type annotation'
+                     )
+                    audits(a, 'types', t)
+                elif t is not None:
+                    audits(a, 'types', typeerror_demote(t))
+                    audits(target, TypeInParent())
+                    if not isinstance(t, TypeError):
+                        if isinstance(target, ast.Name):
+                            var = target.id
+                            env[var] = t
+            elif isinstance(target, ast.Subscript):
+                rules_no_restriction(a)
+                types(a.value, env, func)
+                t = audits(a.value, 'types')
+
+                target_ = target
+                invalid_index = False
+                depth = 0
+                while isinstance(target_, ast.Subscript):
+                    depth += 1
+                    rules_no_restriction(target_)
+                    types(target_.slice, env, func)
+                    t_s = audits(target_.slice, 'types')
+                    if t_s != int:
+                        invalid_index = True
+                        break
+                    if isinstance(target_.value, (ast.Name, ast.Subscript)):
+                        target_ = target_.value
+
+                if invalid_index:
+                    audits(a, 'types', TypeErrorRoot('indices must be integers'))
+
+                if isinstance(target_, ast.Name):
+                    rules_no_restriction(target)
+                    rules_no_restriction(target_)
+                    if target_.id in env:
+                        t_b = env[target_.id]
+                        if _types_list_monomorphic_depth(t_b) < depth:
+                            audits(a, 'types', TypeErrorRoot('target has incompatible type'))
+                        else:
+                            audits(a, 'types', typeerror_demote(t))
+                    else:
+                        audits(a, 'types', TypeErrorRoot('unbound variable: ' + target_.id))
 
         return env
 
@@ -175,6 +283,14 @@ def types(a, env=None, func=False):
             try:
                 t_a = eval(ast.unparse(a.annotation)) # pylint: disable=eval-used
                 rules_no_restriction(a.annotation, recursive=True)
+                if not _types_list_monomorphic(t_a):
+                    audits(
+                        a.annotation,
+                        'types',
+                        TypeErrorRoot(
+                            'assignment of list value requires fully specified type annotation'
+                        )
+                    )
             except: # pylint: disable=bare-except
                 t_a = TypeErrorRoot('invalid type annotation')
 
@@ -309,8 +425,14 @@ def types(a, env=None, func=False):
                     rules_no_restriction(a)
                     rules_no_restriction(a.func)
                     t_i = ats[0]
-                    if t_v.__name__ == 'list':
+                    if unify(t_v, list[t_i]):
                         audits(a, 'types', type(None))
+                    else:
+                        audits(
+                            a,
+                            'types',
+                            TypeErrorRoot('item type does not match list type')
+                        )
 
         elif isinstance(a.func, ast.Name):
             if a.func.id == 'Party':
@@ -537,6 +659,18 @@ def types(a, env=None, func=False):
                 audits(a, 'types', t)
                 audits(a.func, 'types', TypeInParent())
 
+            elif a.func.id in env:
+                rules_no_restriction(a)
+                rules_no_restriction(a.func)
+                t_f = env[a.func.id]
+                ts = t_f.__args__[:-1]
+                t = TypeErrorRoot('function arguments do not match function type')
+                if len(ats) == len(ts):
+                    if all(t_a == t for (t_a, t) in zip(ats, ts)):
+                        t = t_f.__args__[-1]
+                audits(a, 'types', t)
+                audits(a.func, 'types', TypeInParent())
+
     elif isinstance(a, ast.Subscript):
         rules_no_restriction(a)
         types(a.value, env, func)
@@ -585,17 +719,30 @@ def types(a, env=None, func=False):
         types(a.right, env, func)
         t_l = audits(a.left, 'types')
         t_r = audits(a.right, 'types')
-        if isinstance(a.op, ast.Mult):
+        if isinstance(a.op, ast.Add):
             rules_no_restriction(a)
-            t = _types_binop_mult_add(t_l, t_r)
-            audits(a, 'types', t)
-        elif isinstance(a.op, ast.Add):
-            rules_no_restriction(a)
-            t = TypeError('unsupported argument types')
-            if t_l == str and t_r == str:
+            t = TypeError('unsupported operand types')
+            if t_l == int and t_r == int:
+                t = int
+            elif t_l == str and t_r == str:
                 t = str
             else:
-                t = _types_binop_mult_add(t_l, t_r)
+                t = _types_binop_mult_add_sub(t_l, t_r)
+            audits(a, 'types', t)
+        elif isinstance(a.op, ast.Sub):
+            rules_no_restriction(a)
+            t = TypeError('unsupported operand types')
+            if t_l == int and t_r == int:
+                t = int
+            else:
+                t = _types_binop_mult_add_sub(t_l, t_r)
+            audits(a, 'types', t)
+        elif isinstance(a.op, ast.Mult):
+            rules_no_restriction(a)
+            if t_l == int and t_r == int:
+                t = int
+            else:
+                t = _types_binop_mult_add_sub(t_l, t_r)
             audits(a, 'types', t)
 
     elif isinstance(a, ast.Compare):
@@ -606,15 +753,22 @@ def types(a, env=None, func=False):
                 SyntaxRestriction('chained comparisons are prohibited in strict mode')
             )
         else:
+            op = a.ops[0]
             rules_no_restriction(a)
             types(a.left, env, func)
             types(a.comparators[0], env, func)
             t_l = audits(a.left, 'types')
             t_r = audits(a.comparators[0], 'types')
-            if isinstance(
-                a.ops[0],
-                (ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE)
-            ):
+            if isinstance(op, (ast.Eq, ast.NotEq)):
+                if t_l == bool and t_r == bool:
+                    t = bool
+                elif t_l == int and t_r == int:
+                    t = bool
+                elif t_l == str and t_r == str:
+                    t = bool
+                else:
+                    t = _types_compare(t_l, t_r)
+            elif isinstance(op, (ast.Lt, ast.LtE, ast.Gt, ast.GtE)):
                 if t_l == int and t_r == int:
                     t = bool
                 else:
@@ -654,7 +808,7 @@ def types(a, env=None, func=False):
         )
 
     elif isinstance(a, ast.Constant):
-        if a.value in (False, True):
+        if a.value in (False, True) and str(a.value) in ('False', 'True'):
             rules_no_restriction(a)
             audits(a, 'types', bool)
         elif isinstance(a.value, int):
