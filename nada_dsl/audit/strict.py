@@ -233,7 +233,7 @@ def types(a, env=None, func=False):
                     audits(a, 'types', t)
                 elif t is not None:
                     audits(a, 'types', typeerror_demote(t))
-                    audits(target, TypeInParent())
+                    audits(target, 'types', TypeInParent())
                     if not isinstance(t, TypeError):
                         if isinstance(target, ast.Name):
                             var = target.id
@@ -295,18 +295,18 @@ def types(a, env=None, func=False):
                 t_a = TypeErrorRoot('invalid type annotation')
 
             if isinstance(t, TypeError):
-                audits(a, t)
-                audits(a.target, t)
+                audits(a, 'types', t)
+                audits(a.target, 'types', t)
             else:
                 t_u = unify(t_a, t)
                 if t_u is None:
                     t = TypeErrorRoot('value type cannot be reconciled with type annotation')
-                    audits(a, t)
-                    audits(a.target, t)
+                    audits(a, 'types', t)
+                    audits(a.target, 'types', t)
                 else:
                     t = t_u
                     audits(a, 'types', t)
-                    audits(a.target, TypeInParent())
+                    audits(a.target, 'types', TypeInParent())
                     var = a.target.id
                     env[var] = t
 
@@ -826,6 +826,7 @@ def strict(source: str) -> richreports.report:
     analyze it (against the "strict" Nada DSL subset), and generate an
     interactive HTML report detailing the results.
     """
+    source = source.strip()
     (atok, skips) = parse(source)
     root = atok.tree
 

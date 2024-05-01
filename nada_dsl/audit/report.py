@@ -124,7 +124,8 @@ def enrich_keyword(report_, start, length):
     report_.enrich(
         (start_line, start_column), (start_line, start_column + length),
         '<span class="keyword">', '</span>',
-        True
+        enrich_intermediate_lines=True,
+        skip_whitespace=True
     )
 
 def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
@@ -162,6 +163,10 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
         elif isinstance(r, RuleInAncestor):
             pass # This node will be wrapped by an ancestor's enrichment.
 
+        elif isinstance(a, ast.ImportFrom):
+            (start, _) = locations(report_, atok, a)
+            enrich_keyword(report_, start, 4)
+
         elif isinstance(a, ast.Return):
             (start, end) = locations(report_, atok, a)
             if isinstance(r, SyntaxRestriction):
@@ -178,12 +183,33 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
         elif isinstance(a, ast.For):
             (start, end) = locations(report_, atok, a)
             enrich_keyword(report_, start, 3)
+            (_, start) = locations(report_, atok, a.target)
+            (end, _) = locations(report_, atok, a.iter)
+            report_.enrich(
+                start + (0, 1), end - (0, 1),
+                '<span class="keyword">', '</span>',
+                enrich_intermediate_lines=True,
+                skip_whitespace=True
+            )
 
         elif isinstance(a, ast.FunctionDef):
             (start, end) = locations(report_, atok, a)
             enrich_keyword(report_, start, 3)
             if isinstance(r, SyntaxRestriction):
                 enrich_syntaxrestriction(report_, r, start, end)
+
+        elif isinstance(a, ast.ListComp):
+            for generator in a.generators:
+                (start, _) = locations(report_, atok, generator)
+                enrich_keyword(report_, start, 3)
+                (_, start) = locations(report_, atok, generator.target)
+                (end, _) = locations(report_, atok, generator.iter)
+                report_.enrich(
+                    start + (0, 1), end - (0, 1),
+                    '<span class="keyword">', '</span>',
+                    enrich_intermediate_lines=True,
+                    skip_whitespace=True
+                )
 
         elif isinstance(a, ast.Call):
             (start, end) = locations(report_, atok, a.func)
