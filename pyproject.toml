@@ -33,7 +33,7 @@ lint = [
 ]
 
 [tool.setuptools]
-packages = ["nada_dsl"]
+packages = ["nada_dsl", "nada_dsl.audit", "nada_dsl.future", "nada_dsl.nada_types"]
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --ignore=docs --cov=nada_dsl --cov-report term-missing"
