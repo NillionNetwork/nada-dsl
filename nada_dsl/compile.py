@@ -17,8 +17,6 @@ class CompilerOutput:
     """ Compiler Output
     """
     mir: str
-    nada_dsl_path: str
-
 
 def compile(script_path: str) -> CompilerOutput:
     """Compiles a NADA program
@@ -43,8 +41,7 @@ def compile(script_path: str) -> CompilerOutput:
         raise Exception("'nada_dsl' entrypoint function is missing in program " + script_name)
     outputs = main()
     compile_output = nada_compile(outputs)
-    nada_dsl_path = nada_dsl.__path__[0]
-    return CompilerOutput(compile_output, nada_dsl_path)
+    return CompilerOutput(compile_output)
 
 
 def compile_string(script: str) -> CompilerOutput:
@@ -66,8 +63,7 @@ def compile_string(script: str) -> CompilerOutput:
 
     outputs = module.nada_main()
     compile_output = nada_compile(outputs)
-    nada_dsl_path = nada_dsl.__path__[0]
-    return CompilerOutput(compile_output, nada_dsl_path)
+    return CompilerOutput(compile_output)
 
 
 def print_output(output: CompilerOutput):
@@ -79,7 +75,6 @@ def print_output(output: CompilerOutput):
     output_json = {
         "result": "Success",
         "mir": output.mir,
-        "nada_dsl_path": output.nada_dsl_path,
     }
     print(json.dumps(output_json))
 
