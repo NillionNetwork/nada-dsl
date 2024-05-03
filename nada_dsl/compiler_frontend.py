@@ -95,14 +95,14 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
     PARTIES.clear()
     INPUTS.clear()
     LITERALS.clear()
-    instructions = {}
+    operations = {}
     for output in outputs:
-        out_instruction_id = process_operation(output.inner, instructions)
+        out_operation_id = process_operation(output.inner, operations)
         party = output.party
         PARTIES[party.name] = party
         new_outputs.append(
             {
-                "instruction_id": out_instruction_id,
+                "operation_id": out_operation_id,
                 "name": output.name,
                 "party": party.name,
                 "type": to_type_dict(output.inner),
@@ -116,7 +116,7 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
         "inputs": to_input_list(INPUTS),
         "literals": to_literal_list(LITERALS),
         "outputs": new_outputs,
-        "instructions": instructions,
+        "operations": operations,
         "source_files": SourceRef.get_sources(),
     }
 
@@ -215,8 +215,8 @@ def to_type(name: str):
 def to_fn_dict(fn: NadaFunction):
     """Convert a function to a dictionary."""
 
-    instructions = {}
-    op_id = process_operation(fn.inner, instructions)
+    operations = {}
+    op_id = process_operation(fn.inner, operations)
     return {
         "id": fn.id,
         "args": [
@@ -228,14 +228,14 @@ def to_fn_dict(fn: NadaFunction):
             for arg in fn.args
         ],
         "function": fn.function.__name__,
-        "return_instruction_id": op_id,
-        "instructions": instructions,
+        "return_operation_id": op_id,
+        "operations": operations,
         "return_type": to_type_dict(fn.return_type),
         "source_ref": fn.source_ref.to_dict(),
     }
 
 
-def process_operation(operation_wrapper, instructions):
+def process_operation(operation_wrapper, operations):
     """Process an operation."""
     from nada_dsl.nada_types.function import NadaFunctionArg
 
@@ -263,30 +263,30 @@ def process_operation(operation_wrapper, instructions):
             ),
     ):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             type(operation).__name__: {
                 "id": op_id,
-                "left": process_operation(operation.left, instructions),
-                "right": process_operation(operation.right, instructions),
+                "left": process_operation(operation.left, operations),
+                "right": process_operation(operation.right, operations),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
 
     elif isinstance(operation, Cast):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "Cast": {
                 "id": op_id,
-                "target": process_operation(operation.target, instructions),
+                "target": process_operation(operation.target, operations),
                 "to": operation.to.__name__,
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, Input):
         party_name = operation.party.name
@@ -300,7 +300,7 @@ def process_operation(operation_wrapper, instructions):
         else:
             INPUTS[party_name][operation.name] = (operation, ty)
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "InputReference": {
                 "id": op_id,
                 "refers_to": operation.name,
@@ -308,7 +308,7 @@ def process_operation(operation_wrapper, instructions):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, Literal):
         # Generate a unique name depending on the value and type to prevent duplicating literals in the bytecode.
@@ -317,7 +317,7 @@ def process_operation(operation_wrapper, instructions):
         ).hexdigest()
         LITERALS[literal_name] = (str(operation.value), ty)
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "LiteralReference": {
                 "id": op_id,
                 "refers_to": literal_name,
@@ -325,54 +325,54 @@ def process_operation(operation_wrapper, instructions):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, Map):
         if operation.fn.id not in FUNCTIONS:
             FUNCTIONS[operation.fn.id] = operation.fn
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "Map": {
                 "id": op_id,
                 "fn": operation.fn.id,
-                "inner": process_operation(operation.inner, instructions),
+                "inner": process_operation(operation.inner, operations),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, Reduce):
         if operation.fn.id not in FUNCTIONS:
             FUNCTIONS[operation.fn.id] = operation.fn
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "Reduce": {
                 "id": op_id,
                 "fn": operation.fn.id,
-                "inner": process_operation(operation.inner, instructions),
-                "initial": process_operation(operation.initial, instructions),
+                "inner": process_operation(operation.inner, operations),
+                "initial": process_operation(operation.initial, operations),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, Unzip):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "Unzip": {
                 "id": op_id,
-                "inner": process_operation(operation.inner, instructions),
+                "inner": process_operation(operation.inner, operations),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, NadaFunctionArg):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "NadaFunctionArgRef": {
                 "id": op_id,
                 "function_id": operation.function_id,
@@ -381,98 +381,98 @@ def process_operation(operation_wrapper, instructions):
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, NadaFunctionCall):
         if operation.fn.id not in FUNCTIONS:
             FUNCTIONS[operation.fn.id] = operation.fn
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "NadaFunctionCall": {
                 "id": op_id,
                 "function_id": operation.fn.id,
-                "args": [process_operation(arg, instructions) for arg in operation.args],
+                "args": [process_operation(arg, operations) for arg in operation.args],
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
                 "return_type": to_type_dict(operation.fn.return_type),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, Random):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "Random": {
                 "id": op_id,
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, IfElse):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "IfElse": {
                 "id": op_id,
-                "this": process_operation(operation.this, instructions),
-                "arg_0": process_operation(operation.arg_0, instructions),
-                "arg_1": process_operation(operation.arg_1, instructions),
+                "this": process_operation(operation.this, operations),
+                "arg_0": process_operation(operation.arg_0, operations),
+                "arg_1": process_operation(operation.arg_1, operations),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, Reveal):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "Reveal": {
                 "id": op_id,
-                "this": process_operation(operation.this, instructions),
+                "this": process_operation(operation.this, operations),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, TruncPr):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "TruncPr": {
                 "id": op_id,
-                "left": process_operation(operation.left, instructions),
-                "right": process_operation(operation.right, instructions),
+                "left": process_operation(operation.left, operations),
+                "right": process_operation(operation.right, operations),
                 "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, ArrayNew):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "New": {
                 "id": op_id,
-                "elements": [process_operation(arg, instructions) for arg in operation.inner],
+                "elements": [process_operation(arg, operations) for arg in operation.inner],
                 "type": to_type_dict(operation.inner_type),
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     elif isinstance(operation, TupleNew):
         op_id = id(operation)
-        op_instruction = {
+        op_operation = {
             "New": {
                 "id": op_id,
-                "elements": [process_operation(operation.inner[0], instructions),
-                             process_operation(operation.inner[1], instructions)],
+                "elements": [process_operation(operation.inner[0], operations),
+                             process_operation(operation.inner[1], operations)],
                 "type": to_type_dict(operation.inner_type),
                 "source_ref": operation.source_ref.to_dict(),
             }
         }
-        instructions[op_id] = op_instruction
+        operations[op_id] = op_operation
         return op_id
     else:
         raise Exception(f"Compilation of Operation {operation} is not supported")
