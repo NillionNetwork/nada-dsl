@@ -88,6 +88,28 @@ class Integer(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
+    def __lshift__(
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["Integer", "PublicUnsignedInteger"]:
+        if isinstance(other, UnsignedInteger):
+            return Integer(value=int(self.value << other.value))
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} << {other}")
+
+    def __rshift__(
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["Integer", "PublicUnsignedInteger"]:
+        if isinstance(other, UnsignedInteger):
+            return Integer(value=int(self.value >> other.value))
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicUnsignedInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} >> {other}")
+
     def __lt__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
