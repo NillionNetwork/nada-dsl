@@ -5,7 +5,7 @@ import typing
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.errors import NadaNotAllowedException
-from nada_dsl.nada_types.function import NadaFunction
+from nada_dsl.nada_types.function import NadaFunction, nada_fn
 from nada_dsl.nada_types.generics import U, T, R
 from . import NadaType, AllTypesType, OperationType
 
@@ -58,7 +58,9 @@ class Tuple(Generic[T, U], NadaType):
             inner=TupleNew(
                 inner=(left_type, right_type),
                 source_ref=SourceRef.back_frame(),
-                inner_type=Tuple(left_type=left_type, right_type=right_type, inner=None),
+                inner_type=Tuple(
+                    left_type=left_type, right_type=right_type, inner=None
+                ),
             ),
         )
 
@@ -94,7 +96,7 @@ class Array(Generic[T], NadaType):
 
     inner_type: T
     size: int
-    
+
     def __init__(self, inner, size, inner_type=None):
         self.inner_type = (
             inner_type if not inner or inner_type else get_inner_type(inner)
@@ -107,11 +109,14 @@ class Array(Generic[T], NadaType):
             "Cannot iterate/for loop over a nada Array, use functional style Array functions instead (map, reduce, zip)"
         )
 
-    def map(self: "Array[T]", function: NadaFunction[T, U]) -> "Array[U]":
+    def map(self: "Array[T]", function) -> "Array":
+        nada_function = function
+        if not isinstance(function, NadaFunction):
+            nada_function = nada_fn(function)
         return Array(
             size=self.size,
-            inner_type=function.return_type,
-            inner=Map(inner=self, fn=function, source_ref=SourceRef.back_frame()),
+            inner_type=nada_function.return_type,
+            inner=Map(inner=self, fn=nada_function, source_ref=SourceRef.back_frame()),
         )
 
     def zip(self: "Array[T]", other: "Array[U]") -> "Array[Tuple[T, U]]":
@@ -123,7 +128,9 @@ class Array(Generic[T], NadaType):
             inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
 
-    def reduce(self: "Array[T]", function: NadaFunction[T, R], initial: R) -> R:
+    def reduce(self: "Array[T]", function, initial: R) -> R:
+        if not isinstance(function, NadaFunction):
+            function = nada_fn(function)
         return function.return_type(
             Reduce(
                 inner=self,

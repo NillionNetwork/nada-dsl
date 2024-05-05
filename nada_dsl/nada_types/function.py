@@ -1,7 +1,12 @@
+"""function.py
+
+Nada functions and utilities.
+"""
+
 import inspect
 from dataclasses import dataclass
 from typing import Generic, List, Callable
-
+from copy import copy
 from nada_dsl import SourceRef
 from nada_dsl.nada_types.generics import T, R
 from nada_dsl.nada_types import NadaType
@@ -24,10 +29,13 @@ class NadaFunction(NadaType, Generic[T, R]):
     source_ref: SourceRef
 
     def __call__(self, *args, **kwargs) -> R:
-        return self.return_type(inner=NadaFunctionCall(self, args, source_ref=SourceRef.back_frame())) # type: ignore
+        return self.return_type(inner=NadaFunctionCall(self, args, source_ref=SourceRef.back_frame()))  # type: ignore
 
+
+@dataclass
 class NadaFunctionCall(NadaType, Generic[R]):
     """Represents a call to a Nada Function."""
+
     fn: NadaFunction
     args: List[NadaType]
     source_ref: SourceRef
@@ -36,6 +44,7 @@ class NadaFunctionCall(NadaType, Generic[R]):
         self.args = args
         self.fn = nada_function
         self.source_ref = source_ref
+
 
 def inner_type(ty):
     from nada_dsl import Vector, Array
@@ -59,7 +68,7 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
 
     args = inspect.getfullargspec(fn)
     nada_args = []
-    for idx, arg in enumerate(args.args):
+    for arg in args.args:
         arg_type = args_ty[arg] if args_ty else args.annotations[arg]
         arg_type = inner_type(arg_type)
         # We'll get the function source ref for now
@@ -72,7 +81,6 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
         nada_args.append(nada_arg)
 
     nada_args_type_wrapped = []
-    from copy import copy
 
     for arg in nada_args:
         arg_type = copy(arg.type)

@@ -1,6 +1,7 @@
 """
 Source reference representation data structure.
 """
+
 import os
 from dataclasses import dataclass
 from typing import Tuple
@@ -14,6 +15,7 @@ class SourceRef:
     """
     Source reference representation, i.e., a specific location in the source code.
     """
+
     file: str
     lineno: int
     offset: int
@@ -35,6 +37,10 @@ class SourceRef:
     @staticmethod
     def try_get_line_info(backend_frame, lineno) -> Tuple[int, int, str]:
         """Try to get line information from the source code."""
+        # We don't include file sources from nada_dsl package.
+        # This is to prevent 'nada_fn' wrongly adding nada_dsl source files from this package.
+        if "nada_dsl" in backend_frame.f_code.co_filename:
+            return 0, 0, ""
         filename = os.path.basename(backend_frame.f_code.co_filename)
 
         src = None
