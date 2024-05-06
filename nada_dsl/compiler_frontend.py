@@ -11,9 +11,9 @@ import inspect
 from typing import List, Dict, Any
 from nada_dsl.timer import timer
 
+from nada_dsl.errors import NadaNotAllowedException
 from nada_dsl.source_ref import SourceRef
-from nada_dsl.circuit_io import Input, Output, Party, Literal
-from nada_dsl.nada_types.types import Integer, UnsignedInteger, Boolean
+from nada_dsl.circuit_io import Input, Output, Literal
 from nada_dsl.nada_types.collections import (
     Array,
     ArrayNew,
@@ -118,7 +118,12 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
                 "source_ref": output.source_ref.to_dict(),
             }
         )
-
+    # Now we go through all the discovered functions and see if they are
+    # invoking other functions, which we will need to process and add to the FUNCTIONS dictionary
+    functions_dict = {}
+    for function in FUNCTIONS.values():
+        discover_functions(function.inner, functions_dict)
+    FUNCTIONS.update(functions_dict)
     return {
         "functions": to_function_list(FUNCTIONS),
         "parties": to_party_list(PARTIES),
@@ -244,7 +249,54 @@ def to_fn_dict(fn: NadaFunction):
     }
 
 
-def process_operation(operation_wrapper, operations):
+def discover_functions(operation_wrapper, functions_dict):
+    """Discover functions.
+
+    Navigates through the operations tree adding new functions as it finds.
+    """
+    operation = operation_wrapper.inner
+    if isinstance(
+        operation,
+        (
+            Addition,
+            Subtraction,
+            Multiplication,
+            Division,
+            Modulo,
+            Power,
+            RightShift,
+            LeftShift,
+            LessThan,
+            GreaterThan,
+            GreaterOrEqualThan,
+            LessOrEqualThan,
+            Equals,
+            PublicOutputEquality,
+            Zip,
+        ),
+    ):
+        discover_functions(operation.left, functions_dict)
+        discover_functions(operation.right, functions_dict)
+    if isinstance(operation, Map):
+        if operation.fn.id not in FUNCTIONS:
+            functions_dict[operation.fn.id] = operation.fn
+            discover_functions(operation.fn.inner, functions_dict)
+        discover_functions(operation.inner, functions_dict)
+    elif isinstance(operation, Reduce):
+        if operation.fn.id not in FUNCTIONS:
+            functions_dict[operation.fn.id] = operation.fn
+            discover_functions(operation.fn.inner, functions_dict)
+        discover_functions(operation.inner, functions_dict)
+        discover_functions(operation.initial, functions_dict)
+    elif isinstance(operation, NadaFunctionCall):
+        if operation.fn.id not in FUNCTIONS and operation.fn.id not in functions_dict:
+            functions_dict[operation.fn.id] = operation.fn
+            discover_functions(operation.fn.inner, functions_dict)
+        for arg in operation.args:
+            discover_functions(arg, functions_dict)
+
+
+def process_operation(operation_wrapper, operations) -> int:
     """Process an operation."""
 
     ty = to_type_dict(operation_wrapper)
