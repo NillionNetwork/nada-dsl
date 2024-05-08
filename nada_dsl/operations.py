@@ -161,3 +161,11 @@ def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
         left_type=left_type,
         inner=Unzip(inner=array, source_ref=SourceRef.back_frame()),
     )
+
+@dataclass
+class Not:
+    '''
+    ~cond
+    '''
+    this: AllTypes
+    source_ref: SourceRef

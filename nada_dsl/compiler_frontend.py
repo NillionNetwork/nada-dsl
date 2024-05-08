@@ -46,6 +46,7 @@ from nada_dsl.operations import (
     IfElse,
     Reveal,
     TruncPr,
+    Not
 )
 
 from nada_dsl.nada_types.collections import (
@@ -480,6 +481,18 @@ def process_operation(operation_wrapper, operations):
                     process_operation(operation.inner[1], operations),
                 ],
                 "type": to_type_dict(operation.inner_type),
+                "source_ref": operation.source_ref.to_dict(),
+            }
+        }
+        operations[op_id] = op_operation
+        return op_id
+    elif isinstance(operation, Not):
+        op_id = id(operation)
+        op_operation = {
+            "Not": {
+                "id": op_id,
+                "operand": process_operation(operation.this, operations),
+                "type": ty,
                 "source_ref": operation.source_ref.to_dict(),
             }
         }

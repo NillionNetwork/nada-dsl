@@ -3,7 +3,7 @@
 from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.operations import Addition, Division, Equals, GreaterOrEqualThan, GreaterThan, IfElse, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Power, PublicOutputEquality, Random, Reveal, RightShift, Subtraction, TruncPr
+from nada_dsl.operations import Addition, Division, Equals, GreaterOrEqualThan, GreaterThan, IfElse, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Not, Power, PublicOutputEquality, Random, Reveal, RightShift, Subtraction, TruncPr
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -382,6 +382,11 @@ class Boolean(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def __invert__(
+        self: "Boolean"
+    ) -> "Boolean":
+        return Boolean(value=bool(~self.value))
 
 @dataclass
 class PublicInteger(NadaType):
@@ -787,6 +792,12 @@ class PublicBoolean(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def __invert__(
+        self: "PublicBoolean"
+    ) -> "PublicBoolean":
+        operation = Not(this=self, source_ref=SourceRef.back_frame())
+        return PublicBoolean(inner=operation)
 
     def if_else(
         self: "PublicBoolean",
@@ -1305,6 +1316,12 @@ class SecretBoolean(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def __invert__(
+        self: "SecretBoolean"
+    ) -> "SecretBoolean":
+        operation = Not(this=self, source_ref=SourceRef.back_frame())
+        return SecretBoolean(inner=operation)
 
     def reveal(
         self: "SecretBoolean",
