@@ -1,6 +1,7 @@
 """
 Compilation functions.
 """
+
 import sys
 import os.path
 import base64
@@ -8,16 +9,18 @@ import json
 from dataclasses import dataclass
 import traceback
 import importlib.util
-import nada_dsl
 from nada_dsl.compiler_frontend import nada_compile
+from nada_dsl.timer import add_timer, timer
 
 
 @dataclass
 class CompilerOutput:
-    """ Compiler Output
-    """
+    """Compiler Output"""
+
     mir: str
 
+
+@add_timer(timer_name="nada_dsl.compile.compile")
 def compile(script_path: str) -> CompilerOutput:
     """Compiles a NADA program
 
@@ -32,18 +35,22 @@ def compile(script_path: str) -> CompilerOutput:
     script_name = os.path.basename(script_path)
     if script_name.endswith(".py"):
         script_name = script_name[:-3]
-
+    timer.start("nada_dsl.compile.compile.__import__")
     script = __import__(script_name)
+    timer.stop("nada_dsl.compile.compile.__import__")
 
     try:
         main = getattr(script, "nada_main")
     except:
-        raise Exception("'nada_dsl' entrypoint function is missing in program " + script_name)
+        raise Exception(
+            "'nada_dsl' entrypoint function is missing in program " + script_name
+        )
     outputs = main()
     compile_output = nada_compile(outputs)
     return CompilerOutput(compile_output)
 
 
+@add_timer(timer_name="nada_dsl.compile.compile_string")
 def compile_string(script: str) -> CompilerOutput:
     """Compiles a NADA program from a string
 
@@ -53,8 +60,8 @@ def compile_string(script: str) -> CompilerOutput:
     Returns:
         CompilerOutput: The Compiler Output
     """
-    decoded_program = base64.b64decode(script).decode('utf-8')
-    temp_name = 'temp_program'
+    decoded_program = base64.b64decode(script).decode("utf-8")
+    temp_name = "temp_program"
     spec = importlib.util.spec_from_loader(temp_name, loader=None)
     module = importlib.util.module_from_spec(spec)
     exec(decoded_program, module.__dict__)
@@ -66,28 +73,30 @@ def compile_string(script: str) -> CompilerOutput:
     return CompilerOutput(compile_output)
 
 
-def print_output(output: CompilerOutput):
+def print_output(out: CompilerOutput):
     """Prints compiler output
 
     Args:
-        output (CompilerOutput): Output of the compiler
+        out (CompilerOutput): Output of the compiler
     """
     output_json = {
         "result": "Success",
-        "mir": output.mir,
+        "mir": out.mir,
     }
     print(json.dumps(output_json))
 
 
 if __name__ == "__main__":
     try:
+        if os.environ.get("NADA_TIMER"):
+            timer.enable()
         args_length = len(sys.argv)
         if args_length < 2:
             raise Exception("expected program as argument")
         if args_length == 2:
             output = compile(sys.argv[1])
             print_output(output)
-        if args_length == 3 and sys.argv[1] == '-s':
+        if args_length == 3 and sys.argv[1] == "-s":
             output = compile_string(sys.argv[2])
             print_output(output)
 
@@ -95,3 +104,8 @@ if __name__ == "__main__":
         tb = traceback.format_exc()
         output = {"result": "Failure", "reason": str(ex), "traceback": str(tb)}
         print(json.dumps(output))
+
+    finally:
+        if timer.is_enabled():
+            with open("nada-timers.json", "w", encoding="utf-8") as fd:
+                json.dump(timer.report(), fd)

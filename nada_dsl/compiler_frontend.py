@@ -2,12 +2,14 @@
 Compiler frontend consisting of wrapper functions for the classes and functions
 that constitute the Nada embedded domain-specific language (EDSL).
 """
+
 import hashlib
 import json
 import os
 from json import JSONEncoder
 import inspect
 from typing import List, Dict, Any
+from nada_dsl.timer import timer
 
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.circuit_io import Input, Output, Party, Literal
@@ -22,7 +24,7 @@ from nada_dsl.nada_types.collections import (
     VectorType,
     TupleType,
 )
-from nada_dsl.nada_types.function import NadaFunction, NadaFunctionCall
+from nada_dsl.nada_types.function import NadaFunction, NadaFunctionCall, NadaFunctionArg
 from nada_dsl.future.operations import Cast
 from nada_dsl.operations import (
     Addition,
@@ -43,7 +45,7 @@ from nada_dsl.operations import (
     Random,
     IfElse,
     Reveal,
-    TruncPr
+    TruncPr,
 )
 
 from nada_dsl.nada_types.collections import (
@@ -97,7 +99,13 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
     LITERALS.clear()
     operations = {}
     for output in outputs:
+        timer.start(
+            f"nada_dsl.compiler_frontend.nada_dsl_to_nada_mir.{output.name}.process_operation"
+        )
         out_operation_id = process_operation(output.inner, operations)
+        timer.stop(
+            f"nada_dsl.compiler_frontend.nada_dsl_to_nada_mir.{output.name}.process_operation"
+        )
         party = output.party
         PARTIES[party.name] = party
         new_outputs.append(
@@ -206,7 +214,7 @@ def to_type(name: str):
     """Convert a type name."""
     # Rename public variables so they are considered as the same as literals.
     if name.startswith("Public"):
-        name = name[len("Public"):].lstrip()
+        name = name[len("Public") :].lstrip()
         return name
     else:
         return name
@@ -237,30 +245,29 @@ def to_fn_dict(fn: NadaFunction):
 
 def process_operation(operation_wrapper, operations):
     """Process an operation."""
-    from nada_dsl.nada_types.function import NadaFunctionArg
 
     ty = to_type_dict(operation_wrapper)
     operation = operation_wrapper.inner
 
     if isinstance(
-            operation,
-            (
-                    Addition,
-                    Subtraction,
-                    Multiplication,
-                    Division,
-                    Modulo,
-                    Power,
-                    RightShift,
-                    LeftShift,
-                    LessThan,
-                    GreaterThan,
-                    GreaterOrEqualThan,
-                    LessOrEqualThan,
-                    Equals,
-                    PublicOutputEquality,
-                    Zip,
-            ),
+        operation,
+        (
+            Addition,
+            Subtraction,
+            Multiplication,
+            Division,
+            Modulo,
+            Power,
+            RightShift,
+            LeftShift,
+            LessThan,
+            GreaterThan,
+            GreaterOrEqualThan,
+            LessOrEqualThan,
+            Equals,
+            PublicOutputEquality,
+            Zip,
+        ),
     ):
         op_id = id(operation)
         op_operation = {
@@ -294,7 +301,7 @@ def process_operation(operation_wrapper, operations):
         if party_name not in INPUTS:
             INPUTS[party_name] = {}
         if operation.name in INPUTS[party_name] and id(
-                INPUTS[party_name][operation.name][0]
+            INPUTS[party_name][operation.name][0]
         ) != id(operation):
             raise Exception(f"Input is duplicated: {operation.name}")
         else:
@@ -454,7 +461,9 @@ def process_operation(operation_wrapper, operations):
         op_operation = {
             "New": {
                 "id": op_id,
-                "elements": [process_operation(arg, operations) for arg in operation.inner],
+                "elements": [
+                    process_operation(arg, operations) for arg in operation.inner
+                ],
                 "type": to_type_dict(operation.inner_type),
                 "source_ref": operation.source_ref.to_dict(),
             }
@@ -466,8 +475,10 @@ def process_operation(operation_wrapper, operations):
         op_operation = {
             "New": {
                 "id": op_id,
-                "elements": [process_operation(operation.inner[0], operations),
-                             process_operation(operation.inner[1], operations)],
+                "elements": [
+                    process_operation(operation.inner[0], operations),
+                    process_operation(operation.inner[1], operations),
+                ],
                 "type": to_type_dict(operation.inner_type),
                 "source_ref": operation.source_ref.to_dict(),
             }
