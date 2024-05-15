@@ -88,6 +88,17 @@ class Integer(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
+    def __pow__(
+        self, other: Union["Integer", "PublicInteger"]
+    ) -> Union["Integer", "PublicInteger"]:
+        if isinstance(other, Integer):
+            return Integer(value=int(self.value ** other.value))
+        elif isinstance(other, PublicInteger):
+            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
+
     def __lshift__(
         self, other: "UnsignedInteger"
     ) -> "Integer":
@@ -464,6 +475,18 @@ class PublicInteger(NadaType):
             return SecretInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
+
+    def __pow__(
+        self, other: Union["Integer", "PublicInteger"]
+    ) -> "PublicInteger":
+        if isinstance(other, Integer):
+            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicInteger(inner=operation)
+        elif isinstance(other, PublicInteger):
+            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicInteger(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
         self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
