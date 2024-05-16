@@ -380,6 +380,9 @@ class Boolean(NadaType):
         else:
             raise ValueError(f"Expected bool, got {type(value).__name__}")
 
+    def __bool__(self) -> bool:
+        return self.value
+
     def __eq__(
         self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
