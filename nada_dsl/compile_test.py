@@ -6,8 +6,17 @@ import base64
 import os
 import json
 import pytest
+from nada_dsl.ast_util import AST_OPERATIONS
 from nada_dsl.compile import compile, compile_string
+from nada_dsl.compiler_frontend import FUNCTIONS, INPUTS, PARTIES
 
+@pytest.fixture(autouse=True)
+def clean_inputs():
+    PARTIES.clear()
+    INPUTS.clear()
+    FUNCTIONS.clear()
+    AST_OPERATIONS.clear()
+    yield
 
 def get_test_programs_folder():
     file_path = os.path.realpath(__file__)

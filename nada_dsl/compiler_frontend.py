@@ -3,62 +3,39 @@ Compiler frontend consisting of wrapper functions for the classes and functions
 that constitute the Nada embedded domain-specific language (EDSL).
 """
 
-import hashlib
+from dataclasses import dataclass
 import json
 import os
 from json import JSONEncoder
 import inspect
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Tuple
+from sortedcontainers import SortedDict
+
+from nada_dsl.ast_util import (
+    AST_OPERATIONS,
+    ASTOperation,
+    BinaryASTOperation,
+    CastASTOperation,
+    IfElseASTOperation,
+    InputASTOperation,
+    LiteralASTOperation,
+    MapASTOperation,
+    NadaFunctionASTOperation,
+    NadaFunctionArgASTOperation,
+    NadaFunctionCallASTOperation,
+    NewASTOperation,
+    RandomASTOperation,
+    ReduceASTOperation,
+    UnaryASTOperation,
+)
 from nada_dsl.timer import timer
-
-from nada_dsl.errors import NadaNotAllowedException
 from nada_dsl.source_ref import SourceRef
-from nada_dsl.circuit_io import Input, Output, Literal
-from nada_dsl.nada_types.collections import (
-    Array,
-    ArrayNew,
-    TupleNew,
-    Vector,
-    Tuple,
-    ArrayType,
-    VectorType,
-    TupleType,
-)
-from nada_dsl.nada_types.function import NadaFunction, NadaFunctionCall, NadaFunctionArg
-from nada_dsl.future.operations import Cast
-from nada_dsl.operations import (
-    Addition,
-    Subtraction,
-    Multiplication,
-    Division,
-    Modulo,
-    Power,
-    RightShift,
-    LeftShift,
-    LessThan,
-    GreaterThan,
-    LessOrEqualThan,
-    GreaterOrEqualThan,
-    PublicOutputEquality,
-    Equals,
-    Unzip,
-    Random,
-    IfElse,
-    Reveal,
-    TruncPr,
-    Not
-)
+from nada_dsl.circuit_io import Output
 
-from nada_dsl.nada_types.collections import (
-    Map,
-    Reduce,
-    Zip,
-)
-
-INPUTS = {}
-PARTIES = {}
-FUNCTIONS = {}
-LITERALS = {}
+INPUTS = SortedDict()
+PARTIES = SortedDict()
+FUNCTIONS: Dict[int, NadaFunctionASTOperation] = {}
+LITERALS: Dict[str, Tuple[str, object]] = {}
 
 
 class ClassEncoder(JSONEncoder):
@@ -98,12 +75,18 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
     PARTIES.clear()
     INPUTS.clear()
     LITERALS.clear()
-    operations = {}
+    operations: Dict[int, Dict] = {}
+    # Process outputs
     for output in outputs:
         timer.start(
             f"nada_dsl.compiler_frontend.nada_dsl_to_nada_mir.{output.name}.process_operation"
         )
-        out_operation_id = process_operation(output.inner, operations)
+        out_operation_id = output.inner.inner.id
+        extra_fns = traverse_and_process_operations(
+            out_operation_id, operations, FUNCTIONS
+        )
+        FUNCTIONS.update(extra_fns)
+
         timer.stop(
             f"nada_dsl.compiler_frontend.nada_dsl_to_nada_mir.{output.name}.process_operation"
         )
@@ -114,18 +97,15 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
                 "operation_id": out_operation_id,
                 "name": output.name,
                 "party": party.name,
-                "type": to_type_dict(output.inner),
+                "type": AST_OPERATIONS[out_operation_id].ty,
                 "source_ref": output.source_ref.to_dict(),
             }
         )
     # Now we go through all the discovered functions and see if they are
     # invoking other functions, which we will need to process and add to the FUNCTIONS dictionary
-    functions_dict = {}
-    for function in FUNCTIONS.values():
-        discover_functions(function.inner, functions_dict)
-    FUNCTIONS.update(functions_dict)
+
     return {
-        "functions": to_function_list(FUNCTIONS),
+        "functions": to_mir_function_list(FUNCTIONS),
         "parties": to_party_list(PARTIES),
         "inputs": to_input_list(INPUTS),
         "literals": to_literal_list(LITERALS),
@@ -135,8 +115,8 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
     }
 
 
-def to_party_list(parties):
-    """Convert parties to a list."""
+def to_party_list(parties) -> List[Dict]:
+    """Convert parties to a list in MIR format."""
     return [
         {
             "name": party.name,
@@ -146,8 +126,8 @@ def to_party_list(parties):
     ]
 
 
-def to_input_list(inputs):
-    """Convert inputs to a list."""
+def to_input_list(inputs) -> List[Dict]:
+    """Convert inputs to a list in MIR format."""
     input_list = []
     for party_inputs in inputs.values():
         for program_input, program_type in party_inputs.values():
@@ -163,8 +143,8 @@ def to_input_list(inputs):
     return input_list
 
 
-def to_literal_list(literals):
-    """Convert literals to a list."""
+def to_literal_list(literals: Dict[str, Tuple[str, object]]) -> List[Dict]:
+    """Convert literals to a list in MIR format."""
     literal_list = []
     for name, (value, ty) in literals.items():
         literal_list.append(
@@ -177,378 +157,169 @@ def to_literal_list(literals):
     return literal_list
 
 
-def to_function_list(functions: Dict[int, NadaFunction]) -> List[Dict]:
-    """Convert functions to a list."""
-    return [to_fn_dict(function) for function in functions.values()]
+def to_mir_function_list(functions: Dict[int, NadaFunctionASTOperation]) -> List[Dict]:
+    """Convert functions to a list in MIR format.
 
+    From a starting dictionary of functions, it traverses each one of them,
+    generating the corresponding MIR representation, discovering all the operations
+    in the function.
 
-def to_type_dict(op_wrapper):
-    """Convert operation wrapper to a dictionary representing its type."""
-    if type(op_wrapper) == Array or type(op_wrapper) == ArrayType:
-        size = {"size": op_wrapper.size} if op_wrapper.size else {}
-        from typing import TypeVar
+    The algorithm might find new function calls while processing the operations
+    in a function. These function calls might discover of new functions that are not
+    in the original dictionary. These functions will be processed in turn.
 
-        inner_type = (
-            "T"
-            if type(op_wrapper.inner_type) == TypeVar
-            else to_type_dict(op_wrapper.inner_type)
-        )
-        return {"Array": {"inner_type": inner_type, **size}}
-    elif type(op_wrapper) == Vector or type(op_wrapper) == VectorType:
-        from typing import TypeVar
+    This function is designed to be invoked after the initial operation discovery
+    which will find the starting set of functions.
 
-        inner_type = (
-            "T"
-            if type(op_wrapper.inner_type) == TypeVar
-            else to_type_dict(op_wrapper.inner_type)
-        )
-        return {"Vector": {"inner_type": inner_type}}
-    elif type(op_wrapper) == Tuple or type(op_wrapper) == TupleType:
-        return {
-            "Tuple": {
-                "left_type": to_type_dict(op_wrapper.left_type),
-                "right_type": to_type_dict(op_wrapper.right_type),
-            }
-        }
-    elif inspect.isclass(op_wrapper):
-        return to_type(op_wrapper.__name__)
-    else:
-        return to_type(op_wrapper.__class__.__name__)
-
-
-def to_type(name: str):
-    """Convert a type name."""
-    # Rename public variables so they are considered as the same as literals.
-    if name.startswith("Public"):
-        name = name[len("Public") :].lstrip()
-        return name
-    else:
-        return name
-
-
-def to_fn_dict(fn: NadaFunction):
-    """Convert a function to a dictionary."""
-
-    operations = {}
-    op_id = process_operation(fn.inner, operations)
-    return {
-        "id": fn.id,
-        "args": [
-            {
-                "name": arg.name,
-                "type": to_type_dict(arg.type),
-                "source_ref": arg.source_ref.to_dict(),
-            }
-            for arg in fn.args
-        ],
-        "function": fn.function.__name__,
-        "return_operation_id": op_id,
-        "operations": operations,
-        "return_type": to_type_dict(fn.return_type),
-        "source_ref": fn.source_ref.to_dict(),
-    }
-
-
-def discover_functions(operation_wrapper, functions_dict):
-    """Discover functions.
-
-    Navigates through the operations tree adding new functions as it finds.
+    Arguments
+    ---------
+    functions: Dict[int, NadaFunctionASTOperation]
+        A dictionary containing a starting list of functions
     """
-    operation = operation_wrapper.inner
-    if isinstance(
-        operation,
-        (
-            Addition,
-            Subtraction,
-            Multiplication,
-            Division,
-            Modulo,
-            Power,
-            RightShift,
-            LeftShift,
-            LessThan,
-            GreaterThan,
-            GreaterOrEqualThan,
-            LessOrEqualThan,
-            Equals,
-            PublicOutputEquality,
-            Zip,
-        ),
+    mir_functions = []
+    stack = list(functions.values())
+    while len(stack) > 0:
+        function = stack.pop()
+        function_operations = {}
+
+        extra_functions = traverse_and_process_operations(
+            function.inner,
+            function_operations,
+            functions,
+        )
+        if extra_functions:
+            stack.extend(extra_functions.values())
+            functions.update(extra_functions)
+        mir_functions.append(function.to_mir(function_operations))
+    return mir_functions
+
+
+def add_input_to_map(operation: InputASTOperation):
+    """Adds an input to the global INPUTS dictionary"""
+    party_name = operation.party.name
+    PARTIES[party_name] = operation.party
+    if party_name not in INPUTS:
+        INPUTS[party_name] = {}
+    if (
+        operation.name in INPUTS[party_name]
+        and INPUTS[party_name][operation.name][0].id != operation.id
     ):
-        discover_functions(operation.left, functions_dict)
-        discover_functions(operation.right, functions_dict)
-    if isinstance(operation, Map):
-        if operation.fn.id not in FUNCTIONS:
-            functions_dict[operation.fn.id] = operation.fn
-            discover_functions(operation.fn.inner, functions_dict)
-        discover_functions(operation.inner, functions_dict)
-    elif isinstance(operation, Reduce):
-        if operation.fn.id not in FUNCTIONS:
-            functions_dict[operation.fn.id] = operation.fn
-            discover_functions(operation.fn.inner, functions_dict)
-        discover_functions(operation.inner, functions_dict)
-        discover_functions(operation.initial, functions_dict)
-    elif isinstance(operation, NadaFunctionCall):
-        if operation.fn.id not in FUNCTIONS and operation.fn.id not in functions_dict:
-            functions_dict[operation.fn.id] = operation.fn
-            discover_functions(operation.fn.inner, functions_dict)
-        for arg in operation.args:
-            discover_functions(arg, functions_dict)
-
-
-def process_operation(operation_wrapper, operations) -> int:
-    """Process an operation."""
-
-    ty = to_type_dict(operation_wrapper)
-    operation = operation_wrapper.inner
-
-    if isinstance(
-        operation,
-        (
-            Addition,
-            Subtraction,
-            Multiplication,
-            Division,
-            Modulo,
-            Power,
-            RightShift,
-            LeftShift,
-            LessThan,
-            GreaterThan,
-            GreaterOrEqualThan,
-            LessOrEqualThan,
-            Equals,
-            PublicOutputEquality,
-            Zip,
-        ),
-    ):
-        op_id = id(operation)
-        op_operation = {
-            type(operation).__name__: {
-                "id": op_id,
-                "left": process_operation(operation.left, operations),
-                "right": process_operation(operation.right, operations),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-
-    elif isinstance(operation, Cast):
-        op_id = id(operation)
-        op_operation = {
-            "Cast": {
-                "id": op_id,
-                "target": process_operation(operation.target, operations),
-                "to": operation.to.__name__,
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, Input):
-        party_name = operation.party.name
-        PARTIES[party_name] = operation.party
-        if party_name not in INPUTS:
-            INPUTS[party_name] = {}
-        if operation.name in INPUTS[party_name] and id(
-            INPUTS[party_name][operation.name][0]
-        ) != id(operation):
-            raise Exception(f"Input is duplicated: {operation.name}")
-        else:
-            INPUTS[party_name][operation.name] = (operation, ty)
-        op_id = id(operation)
-        op_operation = {
-            "InputReference": {
-                "id": op_id,
-                "refers_to": operation.name,
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, Literal):
-        # Generate a unique name depending on the value and type to prevent duplicating literals in the bytecode.
-        literal_name = hashlib.md5(
-            (str(operation.value) + str(ty)).encode("UTF-8")
-        ).hexdigest()
-        LITERALS[literal_name] = (str(operation.value), ty)
-        op_id = id(operation)
-        op_operation = {
-            "LiteralReference": {
-                "id": op_id,
-                "refers_to": literal_name,
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, Map):
-        if operation.fn.id not in FUNCTIONS:
-            FUNCTIONS[operation.fn.id] = operation.fn
-        op_id = id(operation)
-        op_operation = {
-            "Map": {
-                "id": op_id,
-                "fn": operation.fn.id,
-                "inner": process_operation(operation.inner, operations),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, Reduce):
-        if operation.fn.id not in FUNCTIONS:
-            FUNCTIONS[operation.fn.id] = operation.fn
-        op_id = id(operation)
-        op_operation = {
-            "Reduce": {
-                "id": op_id,
-                "fn": operation.fn.id,
-                "inner": process_operation(operation.inner, operations),
-                "initial": process_operation(operation.initial, operations),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, Unzip):
-        op_id = id(operation)
-        op_operation = {
-            "Unzip": {
-                "id": op_id,
-                "inner": process_operation(operation.inner, operations),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, NadaFunctionArg):
-        op_id = id(operation)
-        op_operation = {
-            "NadaFunctionArgRef": {
-                "id": op_id,
-                "function_id": operation.function_id,
-                "refers_to": operation.name,
-                "type": to_type_dict(operation.type),
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, NadaFunctionCall):
-        if operation.fn.id not in FUNCTIONS:
-            FUNCTIONS[operation.fn.id] = operation.fn
-        op_id = id(operation)
-        op_operation = {
-            "NadaFunctionCall": {
-                "id": op_id,
-                "function_id": operation.fn.id,
-                "args": [process_operation(arg, operations) for arg in operation.args],
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-                "return_type": to_type_dict(operation.fn.return_type),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, Random):
-        op_id = id(operation)
-        op_operation = {
-            "Random": {
-                "id": op_id,
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, IfElse):
-        op_id = id(operation)
-        op_operation = {
-            "IfElse": {
-                "id": op_id,
-                "this": process_operation(operation.this, operations),
-                "arg_0": process_operation(operation.arg_0, operations),
-                "arg_1": process_operation(operation.arg_1, operations),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, Reveal):
-        op_id = id(operation)
-        op_operation = {
-            "Reveal": {
-                "id": op_id,
-                "this": process_operation(operation.this, operations),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, TruncPr):
-        op_id = id(operation)
-        op_operation = {
-            "TruncPr": {
-                "id": op_id,
-                "left": process_operation(operation.left, operations),
-                "right": process_operation(operation.right, operations),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, ArrayNew):
-        op_id = id(operation)
-        op_operation = {
-            "New": {
-                "id": op_id,
-                "elements": [
-                    process_operation(arg, operations) for arg in operation.inner
-                ],
-                "type": to_type_dict(operation.inner_type),
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, TupleNew):
-        op_id = id(operation)
-        op_operation = {
-            "New": {
-                "id": op_id,
-                "elements": [
-                    process_operation(operation.inner[0], operations),
-                    process_operation(operation.inner[1], operations),
-                ],
-                "type": to_type_dict(operation.inner_type),
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
-    elif isinstance(operation, Not):
-        op_id = id(operation)
-        op_operation = {
-            "Not": {
-                "id": op_id,
-                "operand": process_operation(operation.this, operations),
-                "type": ty,
-                "source_ref": operation.source_ref.to_dict(),
-            }
-        }
-        operations[op_id] = op_operation
-        return op_id
+        raise CompilerException(f"Input is duplicated: {operation.name}")
     else:
-        raise Exception(f"Compilation of Operation {operation} is not supported")
+        INPUTS[party_name][operation.name] = (operation, operation.ty)
+    return operation.to_mir()
+
+
+class CompilerException(Exception):
+    """Generic compiler exception"""
+
+
+def traverse_and_process_operations(
+    operation_id: int,
+    operations: Dict[int, Dict],
+    functions: Dict[int, NadaFunctionASTOperation],
+) -> Dict[int, NadaFunctionASTOperation]:
+    """Traverses the AST operations finding all the operation tree rooted at the given
+    operation. Uses an iterative DFS algorithm.
+
+    It invokes `process_operation` which in turn generates a MIR and optionally discover
+    extra functions.
+
+    Arguments
+    ---------
+    operation_id: int
+        The identifier of the root operation where the algorithm will start traversing the
+        operation graph
+    operations: Dict[int, Dict]
+        Dictionary that will be updated with the operations found
+    functions: Dict[int, NadaFunctionASTOperation]
+        Dictionary of existing functions. If a function is found that is not in this dictionary
+        it will added to the result dictionary
+
+    Returns
+    -------
+    Dict[int, NadaFunctionASTOperation]
+        Dictionary with all the new functions being found while traversing the operation tree
+    """
+
+    extra_functions = {}
+    stack = [operation_id]
+    while len(stack) > 0:
+        operation_id = stack.pop()
+        if operation_id not in operations:
+            operation = AST_OPERATIONS[operation_id]
+            wrapped_operation = process_operation(operation, functions)
+            operations[operation_id] = wrapped_operation.mir
+            if wrapped_operation.extra_function:
+                extra_functions[wrapped_operation.extra_function.id] = (
+                    wrapped_operation.extra_function
+                )
+            stack.extend(operation.inner_operations())
+    return extra_functions
+
+
+@dataclass
+class ProcessOperationOutput:
+    """Output of the process_operation function"""
+
+    mir: Dict[str, Dict]
+    extra_function: Optional[NadaFunctionASTOperation]
+
+
+def process_operation(
+    operation: ASTOperation, functions: Dict[int, NadaFunctionASTOperation]
+) -> ProcessOperationOutput:
+    """Process an AST operation.
+
+    For arithmetic operations it simply returns the MIR representation of the operation.
+
+    For inputs and literal types, it adds the corresponding value to the appropriate
+    dictionaries and returns the MIR representation.
+
+    For map, reduce and function call operations, adds the nada function if it's not in the
+    functions dictionary, and returns the MIR representation.
+
+    Whenever it finds a nada function, it adds it if it's not there. But it does not generate
+    a MIR representation as functions are processed separately.
+
+    It ignores nada function arguments as they should not be present in the MIR.
+    """
+
+    if isinstance(
+        operation,
+        (
+            BinaryASTOperation,
+            UnaryASTOperation,
+            CastASTOperation,
+            IfElseASTOperation,
+            NewASTOperation,
+            RandomASTOperation,
+            NadaFunctionArgASTOperation,
+        ),
+    ):
+        return ProcessOperationOutput(operation.to_mir(), None)
+
+    elif isinstance(operation, InputASTOperation):
+        add_input_to_map(operation)
+        return ProcessOperationOutput(operation.to_mir(), None)
+    elif isinstance(operation, LiteralASTOperation):
+
+        LITERALS[operation.literal_name] = (str(operation.value), operation.ty)
+        return ProcessOperationOutput(operation.to_mir(), None)
+    elif isinstance(
+        operation, (MapASTOperation, ReduceASTOperation, NadaFunctionCallASTOperation)
+    ):
+        extra_fn = None
+        if operation.fn not in functions:
+            extra_fn = AST_OPERATIONS[operation.fn]
+
+        return ProcessOperationOutput(operation.to_mir(), extra_fn)  # type: ignore
+    elif isinstance(operation, NadaFunctionASTOperation):
+        extra_fn = None
+        if operation.id not in functions:
+            extra_fn = AST_OPERATIONS[operation.id]
+        return ProcessOperationOutput({}, extra_fn)  # type: ignore
+    else:
+        raise CompilerException(
+            f"Compilation of Operation {operation} is not supported"
+        )

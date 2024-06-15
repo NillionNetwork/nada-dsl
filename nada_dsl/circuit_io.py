@@ -1,28 +1,13 @@
 from dataclasses import dataclass
 from typing import Any
 
-from nada_dsl.nada_types import AllTypes, NadaType
-
+from nada_dsl.ast_util import AST_OPERATIONS, InputASTOperation, LiteralASTOperation
+from nada_dsl.nada_types import AllTypes, Party
+from nada_dsl.nada_types import NadaType
 from nada_dsl.source_ref import SourceRef
 
 
-class Party:
-    """
-    Represents a party involved in the computation.
-
-    Attributes:
-        name (str): The name of the party.
-    """
-
-    name: str
-    source_ref: SourceRef
-
-    def __init__(self, name):
-        self.name = name
-        self.source_ref = SourceRef.back_frame()
-
-
-class Input:
+class Input(NadaType):
     """
     Represents an input to the computation.
 
@@ -38,13 +23,25 @@ class Input:
     source_ref: SourceRef
 
     def __init__(self, name, party, doc=""):
+        self.id = id(self)
         self.name = name
         self.party = party
         self.doc = doc
+        self.inner = None
         self.source_ref = SourceRef.back_frame()
 
+    def store_in_ast(self, ty: object):
+        AST_OPERATIONS[self.id] = InputASTOperation(
+            id=self.id,
+            name=self.name,
+            ty=ty,
+            party=self.party,
+            doc=self.doc,
+            source_ref=self.source_ref,
+        )
 
-class Literal:
+
+class Literal(NadaType):
     """
     Represents a literal value.
 
@@ -56,8 +53,19 @@ class Literal:
     source_ref: SourceRef
 
     def __init__(self, value, source_ref):
+        self.id = id(self)
         self.value = value
         self.source_ref = source_ref
+        self.inner = None
+
+    def store_in_ast(self, ty: object):
+        AST_OPERATIONS[self.id] = LiteralASTOperation(
+            operation_id=self.id,
+            name=self.__class__.__name__,
+            ty=ty,
+            value=self.value,
+            source_ref=self.source_ref,
+        )
 
 
 @dataclass
@@ -80,8 +88,10 @@ class Output:
         self.source_ref = SourceRef.back_frame()
         if not issubclass(type(inner), NadaType):
             raise Exception(
-                f"{self.source_ref.file}:{self.source_ref.lineno}: Output value {inner} of type {type(inner)} is not "
-                f"a Nada type so it isn't a valid output")
+                f"{self.source_ref.file}:{self.source_ref.lineno}: Output value "
+                f"{inner} of type {type(inner)} is not "
+                f"a Nada type so it isn't a valid output"
+            )
         self.inner = inner
         self.name = name
         self.party = party

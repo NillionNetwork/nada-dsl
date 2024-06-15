@@ -464,6 +464,8 @@ class Boolean(NadaType):
 
 @dataclass
 class PublicInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __add__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
     ) -> Union["PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
@@ -697,6 +699,8 @@ class PublicInteger(NadaType):
 
 @dataclass
 class PublicUnsignedInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __add__(
         self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
@@ -930,6 +934,8 @@ class PublicUnsignedInteger(NadaType):
 
 @dataclass
 class PublicBoolean(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __eq__(
         self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
@@ -1080,6 +1086,8 @@ class PublicBoolean(NadaType):
     
 @dataclass
 class SecretInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __add__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
     ) -> Union["SecretInteger", "SecretNonZeroInteger"]:
@@ -1323,6 +1331,8 @@ class SecretInteger(NadaType):
     
 @dataclass
 class SecretUnsignedInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __add__(
         self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
@@ -1566,6 +1576,8 @@ class SecretUnsignedInteger(NadaType):
     
 @dataclass
 class SecretNonZeroInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __add__(
         self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
     ) -> "SecretNonZeroInteger":
@@ -1799,6 +1811,8 @@ class SecretNonZeroInteger(NadaType):
 
 @dataclass
 class SecretNonZeroUnsignedInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __add__(
         self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> "SecretNonZeroUnsignedInteger":
@@ -2032,6 +2046,8 @@ class SecretNonZeroUnsignedInteger(NadaType):
 
 @dataclass
 class SecretBoolean(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __eq__(
         self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
     ) -> "SecretBoolean":
@@ -2164,15 +2180,23 @@ class SecretBoolean(NadaType):
     
 @dataclass
 class SecretBlob(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     pass
 @dataclass
 class ShamirShareInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     pass
 @dataclass
 class ShamirShareUnsignedInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     pass
 @dataclass
 class ShamirShareBoolean(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __invert__(
         self: "ShamirShareBoolean"
     ) -> "ShamirShareBoolean":
@@ -2182,12 +2206,18 @@ class ShamirShareBoolean(NadaType):
     pass
 @dataclass
 class ShamirParticleInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     pass
 @dataclass
 class ShamirParticleUnsignedInteger(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     pass
 @dataclass
 class ShamirParticleBoolean(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     def __invert__(
         self: "ShamirParticleBoolean"
     ) -> "ShamirParticleBoolean":
@@ -2197,7 +2227,11 @@ class ShamirParticleBoolean(NadaType):
     pass
 @dataclass
 class Array(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     pass
 @dataclass
 class Tuple(NadaType):
+    def __init__(self, inner: NadaType):
+        super().__init__(inner)
     pass

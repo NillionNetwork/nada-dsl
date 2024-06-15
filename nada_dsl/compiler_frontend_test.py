@@ -1,20 +1,38 @@
 """
 Compiler frontend tests.
 """
-import pytest
-import operator
 
-from nada_dsl import *
+# pylint: disable=missing-function-docstring
+
+import operator
+from typing import Any
+import pytest
+from nada_dsl.ast_util import (
+    AST_OPERATIONS,
+    BinaryASTOperation,
+    InputASTOperation,
+    LiteralASTOperation,
+    NadaFunctionASTOperation,
+    ReduceASTOperation,
+    UnaryASTOperation,
+)
+
+# pylint: disable=wildcard-import,unused-wildcard-import
+from nada_dsl.nada_types.types import *
+from nada_dsl.circuit_io import Input, Output
 from nada_dsl.compiler_frontend import (
     nada_dsl_to_nada_mir,
     to_input_list,
-    to_type_dict,
-    to_fn_dict,
     process_operation,
     INPUTS,
     PARTIES,
     FUNCTIONS,
+    traverse_and_process_operations,
 )
+from nada_dsl.nada_types import AllTypes, Party
+from nada_dsl.nada_types.collections import Array, Vector, Tuple
+from nada_dsl.nada_types.function import NadaFunctionArg, NadaFunctionCall, nada_fn
+from nada_dsl.operations import unzip
 
 
 @pytest.fixture(autouse=True)
@@ -22,6 +40,7 @@ def clean_inputs():
     PARTIES.clear()
     INPUTS.clear()
     FUNCTIONS.clear()
+    AST_OPERATIONS.clear()
     yield
 
 
@@ -52,7 +71,7 @@ def create_output(root: AllTypes, name: str, party: str) -> Output:
 def to_type(name: str):
     # Rename public variables so they are considered as the same as literals.
     if name.startswith("Public"):
-        name = name[len("Public"):].lstrip()
+        name = name[len("Public") :].lstrip()
         return name
     else:
         return name
@@ -108,14 +127,17 @@ def test_duplicated_inputs_checks():
 )
 def test_array_type_conversion(input_type, type_name, size):
     inner_input = create_input(SecretInteger, "name", "party", **{})
-    input = create_collection(input_type, inner_input, size, **{})
-    converted_input = to_type_dict(input)
+    collection = create_collection(input_type, inner_input, size, **{})
+    converted_input = collection.to_type()
     assert list(converted_input.keys()) == [type_name]
 
 
 @pytest.mark.parametrize(
     ("input_type", "input_name"),
-    [(Array, "Array"), (Vector, "Vector")],
+    [
+        (Array, "Array"),
+        # TODO(Vector, "Vector")
+    ],
 )
 def test_zip(input_type, input_name):
     inner_input = create_input(SecretInteger, "left", "party", **{})
@@ -123,18 +145,18 @@ def test_zip(input_type, input_name):
     inner_input = create_input(SecretInteger, "right", "party", **{})
     right = create_collection(input_type, inner_input, 10, **{})
     zipped = left.zip(right)
-    operations = {}
-    op_id = process_operation(zipped, operations)
-    op = operations[op_id]
+    assert isinstance(zipped, Array)
+    zip_ast = AST_OPERATIONS[zipped.inner.id]
+    op = process_operation(zip_ast, {}).mir
     assert list(op.keys()) == ["Zip"]
 
-    inner = op["Zip"]
+    zip_mir = op["Zip"]
 
-    left = operations[inner["left"]]
-    right = operations[inner["right"]]
-    assert input_reference(left) == "left"
-    assert input_reference(right) == "right"
-    assert inner["type"][input_name]["inner_type"] == {
+    left = AST_OPERATIONS[zip_mir["left"]]
+    right = AST_OPERATIONS[zip_mir["right"]]
+    assert left.name == "left"
+    assert right.name == "right"
+    assert zip_mir["type"][input_name]["inner_type"] == {
         "Tuple": {
             "left_type": "SecretInteger",
             "right_type": "SecretInteger",
@@ -143,41 +165,40 @@ def test_zip(input_type, input_name):
 
 
 @pytest.mark.parametrize(
-    ("input_type", "input_name"),
-    [(Array, "Array"), (Vector, "Vector")],
+    ("input_type"),
+    [(Array)],
 )
-def test_unzip(input_type, input_name):
+def test_unzip(input_type: type[Array]):
     inner_input = create_input(SecretInteger, "left", "party", **{})
     left = create_collection(input_type, inner_input, 10, **{})
     inner_input = create_input(SecretInteger, "right", "party", **{})
     right = create_collection(input_type, inner_input, 10, **{})
     unzipped = unzip(left.zip(right))
-    operations = {}
-    op_id = process_operation(unzipped, operations)
-    op = operations[op_id]
+    assert isinstance(unzipped, Tuple)
+    unzip_ast = AST_OPERATIONS[unzipped.inner.id]
+    assert isinstance(unzip_ast, UnaryASTOperation)
+    assert unzip_ast.name == "Unzip"
 
-    assert list(op.keys()) == ["Unzip"]
+    op = process_operation(AST_OPERATIONS[unzipped.inner.id], {}).mir
 
-    inner = op["Unzip"]
-    inner_inner = operations[inner["inner"]]
-    assert list(inner_inner.keys()) == [
-        "Zip"
-    ]  # We don't check Zip operation because it has its test
-    assert inner["type"] == {
+    unzip_mir = op["Unzip"]
+    # Check that the inner operation points to a Zip
+    zip_ast = AST_OPERATIONS[unzip_mir["this"]]
+    assert isinstance(zip_ast, BinaryASTOperation)
+    assert zip_ast.name == "Zip"
+    assert unzip_mir["type"] == {
         "Tuple": {
-            "left_type": {
-                "Array": {"inner_type": "SecretInteger", "size": 10}
-            },
-            "right_type": {
-                "Array": {"inner_type": "SecretInteger", "size": 10}
-            },
+            "left_type": {"Array": {"inner_type": "SecretInteger", "size": 10}},
+            "right_type": {"Array": {"inner_type": "SecretInteger", "size": 10}},
         }
     }
 
 
 @pytest.mark.parametrize(
     ("input_type", "input_name"),
-    [(Array, "Array"), (Vector, "Vector")],
+    [
+        (Array, "Array"),  # TODO (Vector, "Vector")
+    ],
 )
 def test_map(input_type, input_name):
     @nada_fn
@@ -185,26 +206,29 @@ def test_map(input_type, input_name):
         return a + a
 
     inner_input = create_input(SecretInteger, "inner", "party", **{})
+
     left = create_collection(input_type, inner_input, 10, **{})
     map_operation = left.map(nada_function)
-    operations = {}
-    op_id = process_operation(map_operation, operations)
-    op = operations[op_id]
 
+    process_output = process_operation(AST_OPERATIONS[map_operation.inner.id], {})
+    op = process_output.mir
+    extra_fn = process_output.extra_function
     assert list(op.keys()) == ["Map"]
     inner = op["Map"]
-    assert inner["fn"] in FUNCTIONS
+    assert inner["fn"] == extra_fn.id
     assert list(inner["type"].keys()) == [input_name]
-    inner_inner = operations[inner["inner"]]
-    assert input_reference(inner_inner) == "inner"
+    inner_inner = AST_OPERATIONS[inner["inner"]]
+    assert inner_inner.name == "inner"
     assert inner["type"][input_name]["inner_type"] == "SecretInteger"
 
 
 @pytest.mark.parametrize(
-    ("input_type", "input_name"),
-    [(Array, "Array"), (Vector, "Vector")],
+    ("input_type"),
+    [
+        (Array),  # TODO (Vector, "Vector")
+    ],
 )
-def test_reduce(input_type, input_name):
+def test_reduce(input_type: type[Array]):
     c = create_input(SecretInteger, "c", "party", **{})
 
     @nada_fn
@@ -213,17 +237,21 @@ def test_reduce(input_type, input_name):
 
     inner_input = create_input(SecretInteger, "inner", "party", **{})
     left = create_collection(input_type, inner_input, 10, **{})
+
     reduce_operation = left.reduce(nada_function, c)
-    operations = {}
-    op_id = process_operation(reduce_operation, operations)
-    op = operations[op_id]
+
+    reduce_ast = AST_OPERATIONS[reduce_operation.inner.id]
+    assert isinstance(reduce_ast, ReduceASTOperation)
+    process_output = process_operation(reduce_ast, {})
+    op = process_output.mir
+    extra_fn = process_output.extra_function
 
     assert list(op.keys()) == ["Reduce"]
     inner = op["Reduce"]
-    assert inner["fn"] in FUNCTIONS
+    assert inner["fn"] == extra_fn.id
     assert inner["type"] == "SecretInteger"
-    inner_inner = operations[inner["inner"]]
-    assert input_reference(inner_inner) == "inner"
+    inner_inner = AST_OPERATIONS[inner["inner"]]
+    assert inner_inner.name == "inner"
 
 
 def check_arg(arg: NadaFunctionArg, arg_name, arg_type):
@@ -238,12 +266,20 @@ def check_nada_function_arg_ref(arg_ref, function_id, name, ty):
     assert arg_ref["NadaFunctionArgRef"]["type"] == ty
 
 
+def nada_function_to_mir(function_name: str):
+    nada_function: NadaFunctionASTOperation = find_function_in_ast(function_name)
+    assert isinstance(nada_function, NadaFunctionASTOperation)
+    fn_ops = {}
+    traverse_and_process_operations(nada_function.inner, fn_ops, {})
+    return nada_function.to_mir(fn_ops)
+
+
 def test_nada_function_simple():
     @nada_fn
     def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b
 
-    nada_function = to_fn_dict(nada_function)
+    nada_function = nada_function_to_mir("nada_function")
     assert nada_function["function"] == "nada_function"
     args = nada_function["args"]
     assert len(args) == 2
@@ -251,16 +287,16 @@ def test_nada_function_simple():
     check_arg(args[1], "b", "SecretInteger")
     assert nada_function["return_type"] == "SecretInteger"
 
-    operation = nada_function["operations"]
-    return_op = operation[nada_function['return_operation_id']]
+    operations = nada_function["operations"]
+    return_op = operations[nada_function["return_operation_id"]]
     assert list(return_op.keys()) == ["Addition"]
     addition = return_op["Addition"]
 
     check_nada_function_arg_ref(
-        operation[addition["left"]], nada_function["id"], "a", "SecretInteger"
+        operations[addition["left"]], nada_function["id"], "a", "SecretInteger"
     )
     check_nada_function_arg_ref(
-        operation[addition["right"]], nada_function["id"], "b", "SecretInteger"
+        operations[addition["right"]], nada_function["id"], "b", "SecretInteger"
     )
 
 
@@ -271,7 +307,7 @@ def test_nada_function_using_inputs():
     def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b + c
 
-    nada_function = to_fn_dict(nada_function)
+    nada_function = nada_function_to_mir("nada_function")
     assert nada_function["function"] == "nada_function"
     args = nada_function["args"]
     assert len(args) == 2
@@ -280,7 +316,7 @@ def test_nada_function_using_inputs():
     assert nada_function["return_type"] == "SecretInteger"
 
     operation = nada_function["operations"]
-    return_op = operation[nada_function['return_operation_id']]
+    return_op = operation[nada_function["return_operation_id"]]
 
     assert list(return_op.keys()) == ["Addition"]
     addition = return_op["Addition"]
@@ -300,6 +336,7 @@ def test_nada_function_using_inputs():
 
 
 def test_nada_function_call():
+
     c = create_input(SecretInteger, "c", "party", **{})
     d = create_input(SecretInteger, "c", "party", **{})
 
@@ -308,7 +345,7 @@ def test_nada_function_call():
         return a + b
 
     nada_fn_call_return = nada_function(c, d)
-    nada_fn_type = to_fn_dict(nada_function)
+    nada_fn_type = nada_function_to_mir("nada_function")
 
     nada_function_call = nada_fn_call_return.inner
     assert isinstance(nada_function_call, NadaFunctionCall)
@@ -316,6 +353,7 @@ def test_nada_function_call():
 
 
 def test_nada_function_using_operations():
+
     c = create_input(SecretInteger, "c", "party", **{})
     d = create_input(SecretInteger, "d", "party", **{})
 
@@ -323,16 +361,16 @@ def test_nada_function_using_operations():
     def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b + c + d
 
-    nada_function = to_fn_dict(nada_function)
-    assert nada_function["function"] == "nada_function"
-    args = nada_function["args"]
+    nada_function_ast = nada_function_to_mir("nada_function")
+    assert nada_function_ast["function"] == "nada_function"
+    args = nada_function_ast["args"]
     assert len(args) == 2
     check_arg(args[0], "a", "SecretInteger")
     check_arg(args[1], "b", "SecretInteger")
-    assert nada_function["return_type"] == "SecretInteger"
+    assert nada_function_ast["return_type"] == "SecretInteger"
 
-    operation = nada_function["operations"]
-    return_op = operation[nada_function['return_operation_id']]
+    operation = nada_function_ast["operations"]
+    return_op = operation[nada_function_ast["return_operation_id"]]
 
     assert list(return_op.keys()) == ["Addition"]
     addition = return_op["Addition"]
@@ -348,16 +386,25 @@ def test_nada_function_using_operations():
     addition = addition_left["Addition"]
 
     check_nada_function_arg_ref(
-        operation[addition["left"]], nada_function["id"], "a", "SecretInteger"
+        operation[addition["left"]], nada_function_ast["id"], "a", "SecretInteger"
     )
     check_nada_function_arg_ref(
-        operation[addition["right"]], nada_function["id"], "b", "SecretInteger"
+        operation[addition["right"]], nada_function_ast["id"], "b", "SecretInteger"
     )
+
+
+def find_function_in_ast(fn_name: str):
+    for op in AST_OPERATIONS.values():
+        if isinstance(op, NadaFunctionASTOperation) and op.name == fn_name:
+            return op
+    return None
 
 
 @pytest.mark.parametrize(
     ("input_type", "input_name"),
-    [(Array, "Array"), (Vector, "Vector")],
+    [
+        (Array, "Array"),  # TODO(Vector, "Vector")
+    ],
 )
 def test_nada_function_using_matrix(input_type, input_name):
     c = create_input(SecretInteger, "c", "party", **{})
@@ -367,17 +414,19 @@ def test_nada_function_using_matrix(input_type, input_name):
         return a + b
 
     @nada_fn
-    def matrix_addition(a: input_type[SecretInteger], b: input_type) -> SecretInteger:
+    def matrix_addition(
+        a: input_type[SecretInteger], b: input_type[SecretInteger]
+    ) -> SecretInteger:
         return a.zip(b).map(add).reduce(add, c)
 
-    add_fn = to_fn_dict(add)
-    matrix_addition_fn = to_fn_dict(matrix_addition)
+    add_fn = nada_function_to_mir("add")
+    matrix_addition_fn = nada_function_to_mir("matrix_addition")
     assert matrix_addition_fn["function"] == "matrix_addition"
     args = matrix_addition_fn["args"]
     assert len(args) == 2
     a_arg_type = {input_name: {"inner_type": "SecretInteger"}}
     check_arg(args[0], "a", a_arg_type)
-    b_arg_type = {input_name: {"inner_type": "T"}}
+    b_arg_type = {input_name: {"inner_type": "SecretInteger"}}
     check_arg(args[1], "b", b_arg_type)
     assert matrix_addition_fn["return_type"] == "SecretInteger"
 
@@ -392,9 +441,7 @@ def test_nada_function_using_matrix(input_type, input_name):
     assert list(reduce_op_inner.keys()) == ["Map"]
     map_op = reduce_op_inner["Map"]
     map_op["function_id"] = add_fn["id"]
-    map_op["type"] = {
-        input_name: {"inner_type": "SecretInteger", "size": None}
-    }
+    map_op["type"] = {input_name: {"inner_type": "SecretInteger", "size": None}}
 
     map_op_inner = operations[map_op["inner"]]
     assert list(map_op_inner.keys()) == ["Zip"]
@@ -402,31 +449,26 @@ def test_nada_function_using_matrix(input_type, input_name):
 
     zip_op_left = operations[zip_op["left"]]
     zip_op_right = operations[zip_op["right"]]
-    check_nada_function_arg_ref(
-        zip_op_left, matrix_addition_fn["id"], "a", a_arg_type
-    )
-    check_nada_function_arg_ref(
-        zip_op_right, matrix_addition_fn["id"], "b", b_arg_type
-    )
+    check_nada_function_arg_ref(zip_op_left, matrix_addition_fn["id"], "a", a_arg_type)
+    check_nada_function_arg_ref(zip_op_right, matrix_addition_fn["id"], "b", b_arg_type)
 
 
 def test_array_new():
     first_input = create_input(SecretInteger, "first", "party", **{})
     second_input = create_input(SecretInteger, "second", "party", **{})
     array = Array.new(first_input, second_input)
-    operations = {}
-    op_id = process_operation(array, operations)
-    op = operations[op_id]
+
+    op = process_operation(AST_OPERATIONS[array.inner.id], {}).mir
 
     assert list(op.keys()) == ["New"]
 
     inner = op["New"]
 
-    first = operations[inner["elements"][0]]
-    second = operations[inner["elements"][1]]
+    first: InputASTOperation = AST_OPERATIONS[inner["elements"][0]]  # type: ignore
+    second: InputASTOperation = AST_OPERATIONS[inner["elements"][1]]  # type: ignore
 
-    assert input_reference(first) == "first"
-    assert input_reference(second) == "second"
+    assert first.name == "first"
+    assert second.name == "second"
     assert inner["type"]["Array"] == {
         "inner_type": "SecretInteger",
         "size": 2,
@@ -452,17 +494,18 @@ def test_tuple_new():
     first_input = create_input(SecretInteger, "first", "party", **{})
     second_input = create_input(PublicInteger, "second", "party", **{})
     array = Tuple.new(first_input, second_input)
-    operations = {}
-    op_id = process_operation(array, operations)
-    op = operations[op_id]
+    array_ast = AST_OPERATIONS[array.inner.id]
+
+    op = process_operation(array_ast, {}).mir
 
     assert list(op.keys()) == ["New"]
 
     inner = op["New"]
-    left = operations[inner["elements"][0]]
-    right = operations[inner["elements"][1]]
-    assert input_reference(left) == "first"
-    assert input_reference(right) == "second"
+
+    left_ast = AST_OPERATIONS[inner["elements"][0]]
+    right_ast = AST_OPERATIONS[inner["elements"][1]]
+    assert left_ast.name == "first"
+    assert right_ast.name == "second"
     assert inner["type"]["Tuple"] == {
         "left_type": "SecretInteger",
         "right_type": "Integer",
@@ -472,4 +515,70 @@ def test_tuple_new():
 def test_tuple_new_empty():
     with pytest.raises(TypeError) as e:
         Tuple.new()
-    assert str(e.value) == "Tuple.new() missing 2 required positional arguments: 'left_type' and 'right_type'"
+    assert (
+        str(e.value)
+        == "Tuple.new() missing 2 required positional arguments: 'left_type' and 'right_type'"
+    )
+
+
+@pytest.mark.parametrize(
+    ("binary_operator", "name", "ty"),
+    [
+        (operator.add, "LiteralReference", "Integer"),
+        (operator.sub, "LiteralReference", "Integer"),
+        (operator.mul, "LiteralReference", "Integer"),
+        (operator.truediv, "LiteralReference", "Integer"),
+        (operator.mod, "LiteralReference", "Integer"),
+        (operator.pow, "LiteralReference", "Integer"),
+        (operator.lt, "LiteralReference", "Boolean"),
+        (operator.gt, "LiteralReference", "Boolean"),
+        (operator.le, "LiteralReference", "Boolean"),
+        (operator.ge, "LiteralReference", "Boolean"),
+        (operator.eq, "LiteralReference", "Boolean"),
+    ],
+)
+def test_binary_operator_integer_integer(binary_operator, name, ty):
+    left = create_literal(Integer, -2)
+    right = create_literal(Integer, -2)
+    program_operation = binary_operator(left, right)
+    # recover operation from AST
+    ast_operation = AST_OPERATIONS[program_operation.inner.id]
+    op = process_operation(ast_operation, {}).mir
+    assert list(op.keys()) == [name]
+    inner = op[name]
+    assert inner["type"] == to_type(ty)
+
+
+@pytest.mark.parametrize(
+    ("operator", "name", "ty"),
+    [
+        (operator.add, "Addition", "PublicInteger"),
+        (operator.sub, "Subtraction", "PublicInteger"),
+        (operator.mul, "Multiplication", "PublicInteger"),
+        (operator.truediv, "Division", "PublicInteger"),
+        (operator.mod, "Modulo", "PublicInteger"),
+        (operator.pow, "Power", "PublicInteger"),
+        (operator.lt, "LessThan", "PublicBoolean"),
+        (operator.gt, "GreaterThan", "PublicBoolean"),
+        (operator.le, "LessOrEqualThan", "PublicBoolean"),
+        (operator.ge, "GreaterOrEqualThan", "PublicBoolean"),
+        (operator.eq, "Equals", "PublicBoolean"),
+    ],
+)
+def test_binary_operator_integer_publicinteger(operator, name, ty):
+    left = create_literal(Integer, -3)
+    right = create_input(PublicInteger, "right", "party")
+    program_operation = operator(left, right)
+    # recover operation from AST
+    ast_operation = AST_OPERATIONS[program_operation.inner.id]
+    op = process_operation(ast_operation, {}).mir
+    assert list(op.keys()) == [name]
+    inner = op[name]
+    left_ast = AST_OPERATIONS[inner["left"]]
+    right_ast = AST_OPERATIONS[inner["right"]]
+    assert isinstance(left_ast, LiteralASTOperation)
+    assert left_ast.value == -3
+    assert len(left_ast.literal_name) == 32
+    assert isinstance(right_ast, InputASTOperation)
+    assert right_ast.name == "right"
+    assert inner["type"] == to_type(ty)

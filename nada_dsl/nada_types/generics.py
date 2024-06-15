@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from . import NadaType
+from nada_dsl.nada_types import NadaType
 
 R = TypeVar("R", bound=NadaType)
 T = TypeVar("T", bound=NadaType)
