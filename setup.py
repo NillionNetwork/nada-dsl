@@ -17,7 +17,8 @@ def require_version_file_update() -> bool:
     if os.path.isfile(VERSION_FILE):
         with open(VERSION_FILE, "r", encoding="utf-8") as file:
             nada_dsl_commit = file.read().rstrip().split(" ")[1][:-2]
-            return get_head_commit() != nada_dsl_commit
+            head_commit = get_head_commit()
+            return len(head_commit) > 0 and head_commit != nada_dsl_commit
     return True
 
 
