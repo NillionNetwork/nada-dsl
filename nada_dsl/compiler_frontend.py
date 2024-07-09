@@ -98,7 +98,7 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
                 "name": output.name,
                 "party": party.name,
                 "type": AST_OPERATIONS[out_operation_id].ty,
-                "source_ref": output.source_ref.to_dict(),
+                "source_ref_index": output.source_ref.to_index(),
             }
         )
     # Now we go through all the discovered functions and see if they are
@@ -112,6 +112,7 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
         "outputs": new_outputs,
         "operations": operations,
         "source_files": SourceRef.get_sources(),
+        "source_refs": SourceRef.get_refs(),
     }
 
 
@@ -120,7 +121,7 @@ def to_party_list(parties) -> List[Dict]:
     return [
         {
             "name": party.name,
-            "source_ref": party.source_ref.to_dict(),
+            "source_ref_index": party.source_ref.to_index(),
         }
         for party in parties.values()
     ]
@@ -137,7 +138,7 @@ def to_input_list(inputs) -> List[Dict]:
                     "type": program_type,
                     "party": program_input.party.name,
                     "doc": program_input.doc,
-                    "source_ref": program_input.source_ref.to_dict(),
+                    "source_ref_index": program_input.source_ref.to_index(),
                 }
             )
     return input_list

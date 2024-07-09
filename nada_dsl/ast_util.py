@@ -66,7 +66,7 @@ class BinaryASTOperation(ASTOperation):
                 "left": self.left,
                 "right": self.right,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -88,7 +88,7 @@ class UnaryASTOperation(ASTOperation):
                 "id": self.id,
                 "this": self.inner,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -112,7 +112,7 @@ class IfElseASTOperation(ASTOperation):
                 "arg_0": self.arg_0,
                 "arg_1": self.arg_1,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -129,7 +129,7 @@ class RandomASTOperation(ASTOperation):
             "Random": {
                 "id": self.id,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -148,7 +148,7 @@ class InputASTOperation(ASTOperation):
                 "id": self.id,
                 "refers_to": self.name,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -186,7 +186,7 @@ class LiteralASTOperation(ASTOperation):
                 "id": self.id,
                 "refers_to": self.literal_name,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -210,7 +210,7 @@ class ReduceASTOperation(ASTOperation):
                 "inner": self.inner,
                 "initial": self.initial,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -232,7 +232,7 @@ class MapASTOperation(ASTOperation):
                 "fn": self.fn,
                 "inner": self.inner,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -254,7 +254,7 @@ class NewASTOperation(ASTOperation):
                 "id": self.id,
                 "elements": self.elements,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -276,7 +276,7 @@ class NadaFunctionCallASTOperation(ASTOperation):
                 "function_id": self.fn,
                 "args": self.args,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
                 "return_type": self.ty,
             }
         }
@@ -296,7 +296,7 @@ class NadaFunctionArgASTOperation(ASTOperation):
                 "function_id": self.fn,
                 "refers_to": self.name,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }
 
@@ -322,7 +322,7 @@ class NadaFunctionASTOperation(ASTOperation):
                 {
                     "name": arg.name,
                     "type": arg.ty,
-                    "source_ref": arg.source_ref.to_dict(),
+                    "source_ref_index": arg.source_ref.to_index(),
                 }
                 for arg in arg_operations
             ],
@@ -330,7 +330,7 @@ class NadaFunctionASTOperation(ASTOperation):
             "return_operation_id": self.inner,
             "operations": operations,
             "return_type": self.ty,
-            "source_ref": self.source_ref.to_dict(),
+            "source_ref_index": self.source_ref.to_index(),
         }
 
     def __hash__(self) -> int:
@@ -354,6 +354,6 @@ class CastASTOperation(ASTOperation):
                 "target": self.target,
                 "to": self.ty,
                 "type": self.ty,
-                "source_ref": self.source_ref.to_dict(),
+                "source_ref_index": self.source_ref.to_index(),
             }
         }

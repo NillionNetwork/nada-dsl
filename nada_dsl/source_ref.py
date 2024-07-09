@@ -8,7 +8,10 @@ from typing import Tuple
 import inspect
 
 USED_SOURCES = {}
+REFS = []
 
+tuple_index_map = {}
+next_index = 0
 
 @dataclass
 class SourceRef:
@@ -63,7 +66,20 @@ class SourceRef:
         else:
             return 0, 0, ""
 
-    def to_dict(self):
+    def to_index(self):
+        """Adds the current object into a dict as a key as well as an entry in an array, and returns an index to it"""
+        global next_index
+        key = self.to_key()
+        value = self.to_value()
+        if key in tuple_index_map:
+            return tuple_index_map[key]
+        else:
+            tuple_index_map[key] = next_index
+            REFS.append(value)
+            next_index += 1
+            return tuple_index_map[key]
+
+    def to_value(self):
         """Convert the SourceRef object to a dictionary."""
         return {
             "lineno": self.lineno,
@@ -72,7 +88,15 @@ class SourceRef:
             "length": self.length,
         }
 
+    def to_key(self):
+        return (self.lineno, self.offset, self.file, self.length)
+
     @staticmethod
     def get_sources():
         """Get all sources."""
         return USED_SOURCES
+
+    @staticmethod
+    def get_refs():
+        """Get all refs."""
+        return REFS
