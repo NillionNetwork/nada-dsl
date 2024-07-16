@@ -116,14 +116,14 @@ class NadaType:
             self.inner.store_in_ast(self.to_type())
 
     def to_type(self):
-        """Default implementation for the Conversio of a type into MIR representation."""
-        # Rename public variables so they are considered as the same as literals.
+        """Default implementation for the Conversion of a type into MIR representation."""
         return self.__class__.class_to_type()
 
     @classmethod
     def class_to_type(cls):
         """Converts a class into a type"""
         name = cls.__name__
+        # Rename public variables so they are considered as the same as literals.
         if name.startswith("Public"):
             name = name[len("Public") :].lstrip()
             return name

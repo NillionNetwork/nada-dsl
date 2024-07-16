@@ -11,7 +11,6 @@ from nada_dsl.ast_util import (
     RandomASTOperation,
     UnaryASTOperation,
 )
-from nada_dsl.nada_types.collections import Array, ArrayType, Tuple
 from nada_dsl.nada_types.generics import T, R
 from nada_dsl.nada_types import AllTypes
 
@@ -106,10 +105,6 @@ class PublicOutputEquality(BinaryOperation):
     pass
 
 
-class Unzip(UnaryOperation):
-    pass
-
-
 class Random:
     source_ref: SourceRef
 
@@ -161,17 +156,6 @@ class Reveal(UnaryOperation):
 
 class TruncPr(BinaryOperation):
     pass
-
-
-def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
-    right_type = ArrayType(inner_type=array.inner_type.right_type, size=array.size)
-    left_type = ArrayType(inner_type=array.inner_type.left_type, size=array.size)
-
-    return Tuple(
-        right_type=right_type,
-        left_type=left_type,
-        inner=Unzip(inner=array, source_ref=SourceRef.back_frame()),
-    )
 
 
 class Not(UnaryOperation):

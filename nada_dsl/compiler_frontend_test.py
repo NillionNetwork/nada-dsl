@@ -30,9 +30,8 @@ from nada_dsl.compiler_frontend import (
     traverse_and_process_operations,
 )
 from nada_dsl.nada_types import AllTypes, Party
-from nada_dsl.nada_types.collections import Array, Vector, Tuple
+from nada_dsl.nada_types.collections import Array, Vector, Tuple, unzip
 from nada_dsl.nada_types.function import NadaFunctionArg, NadaFunctionCall, nada_fn
-from nada_dsl.operations import unzip
 
 
 @pytest.fixture(autouse=True)

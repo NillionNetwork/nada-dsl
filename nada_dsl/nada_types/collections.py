@@ -11,13 +11,32 @@ from nada_dsl.ast_util import (
     MapASTOperation,
     NewASTOperation,
     ReduceASTOperation,
+    UnaryASTOperation,
 )
 from nada_dsl.nada_types import NadaType
+
+# Wildcard import due to non-zero types
+from nada_dsl.nada_types.types import *  # pylint: disable=W0614:wildcard-import
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.errors import NadaNotAllowedException
 from nada_dsl.nada_types.function import NadaFunction, nada_fn
 from nada_dsl.nada_types.generics import U, T, R
 from . import AllTypes, AllTypesType, NadaTypeRepr, OperationType
+
+
+def is_primitive_integer(nada_type_str: str):
+    """TODO: Autogenerate this method"""
+    return (
+        nada_type_str
+        in (
+            "Integer",
+            "PublicInteger",
+            "SecretInteger",
+            "UnsignedInteger",
+            "PublicUnsignedInteger",
+            "SecretUnsignedInteger",
+        ),
+    )
 
 
 class Collection(NadaType):
@@ -187,6 +206,42 @@ class Zip:
         )
 
 
+class Unzip:
+    def __init__(self, inner: AllTypes, source_ref: SourceRef):
+        self.id = id(self)
+        self.inner = inner
+        self.source_ref = source_ref
+
+    def store_in_ast(self, ty: NadaTypeRepr):
+        AST_OPERATIONS[self.id] = UnaryASTOperation(
+            id=self.id,
+            name="Unzip",
+            inner=self.inner.inner.id,
+            source_ref=self.source_ref,
+            ty=ty,
+        )
+
+
+class InnerProduct:
+    """Inner product of two arrays."""
+
+    def __init__(self, left: AllTypes, right: AllTypes, source_ref: SourceRef):
+        self.id = id(self)
+        self.left = left
+        self.right = right
+        self.source_ref = source_ref
+
+    def store_in_ast(self, ty: NadaTypeRepr):
+        AST_OPERATIONS[self.id] = BinaryASTOperation(
+            id=self.id,
+            name="InnerProduct",
+            left=self.left.inner.id,
+            right=self.right.inner.id,
+            source_ref=self.source_ref,
+            ty=ty,
+        )
+
+
 @dataclass
 class ArrayType:
     """Marker type for arrays."""
@@ -261,6 +316,28 @@ class Array(Generic[T], Collection):
             ),
             inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
+
+    def inner_product(self: "Array[T]", other: "Array[T]") -> T:
+        if self.size != other.size:
+            raise Exception("Cannot do inner product of arrays of different size")
+
+        if is_primitive_integer(self.retrieve_inner_type()) and is_primitive_integer(
+            other.retrieve_inner_type()
+        ):
+            callable = (
+                self.inner_type
+                if inspect.isclass(self.inner_type)
+                else self.inner_type.__class__
+            )
+            return callable(
+                inner=InnerProduct(
+                    left=self, right=other, source_ref=SourceRef.back_frame()
+                )
+            )  # type: ignore
+        else:
+            raise Exception(
+                "Inner product is only implemented for arrays of integer types"
+            )
 
     @classmethod
     def new(cls, *args) -> "Array[T]":
@@ -377,6 +454,17 @@ class TupleNew(Generic[T, U]):
             ty=ty,
             inner_type=self.inner_type,
         )
+
+
+def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
+    right_type = ArrayType(inner_type=array.inner_type.right_type, size=array.size)
+    left_type = ArrayType(inner_type=array.inner_type.left_type, size=array.size)
+
+    return Tuple(
+        right_type=right_type,
+        left_type=left_type,
+        inner=Unzip(inner=array, source_ref=SourceRef.back_frame()),
+    )
 
 
 @dataclass
