@@ -19,8 +19,8 @@ class Integer(NadaType):
             raise ValueError(f"Expected int, got {type(value).__name__}")
 
     def __add__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["Integer", "PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             return Integer(value=int(self.value + other.value))
         elif isinstance(other, PublicInteger):
@@ -29,15 +29,12 @@ class Integer(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["Integer", "PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             return Integer(value=int(self.value - other.value))
         elif isinstance(other, PublicInteger):
@@ -46,15 +43,12 @@ class Integer(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["Integer", "PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             return Integer(value=int(self.value * other.value))
         elif isinstance(other, PublicInteger):
@@ -63,15 +57,12 @@ class Integer(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["Integer", "PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             return Integer(value=int(self.value / other.value))
         elif isinstance(other, PublicInteger):
@@ -80,15 +71,12 @@ class Integer(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["Integer", "PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             return Integer(value=int(self.value % other.value))
         elif isinstance(other, PublicInteger):
@@ -97,50 +85,38 @@ class Integer(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
-        self, other: Union["Integer", "PublicInteger", "SecretNonZeroInteger"]
-    ) -> Union["Integer", "PublicInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger"]
+    ) -> Union["Integer", "PublicInteger"]:
         if isinstance(other, Integer):
             return Integer(value=int(self.value ** other.value))
         elif isinstance(other, PublicInteger):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
-        self, other: Union["SecretNonZeroInteger", "UnsignedInteger"]
-    ) -> Union["Integer", "SecretNonZeroInteger"]:
-        if isinstance(other, SecretNonZeroInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: "UnsignedInteger"
+    ) -> "Integer":
+        if isinstance(other, UnsignedInteger):
             return Integer(value=int(self.value << other.value))
         else:
             raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
-        self, other: Union["SecretNonZeroInteger", "UnsignedInteger"]
-    ) -> Union["Integer", "SecretNonZeroInteger"]:
-        if isinstance(other, SecretNonZeroInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: "UnsignedInteger"
+    ) -> "Integer":
+        if isinstance(other, UnsignedInteger):
             return Integer(value=int(self.value >> other.value))
         else:
             raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             return Boolean(value=bool(self.value < other.value))
@@ -150,14 +126,11 @@ class Integer(NadaType):
         elif isinstance(other, SecretInteger):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             return Boolean(value=bool(self.value > other.value))
@@ -167,14 +140,11 @@ class Integer(NadaType):
         elif isinstance(other, SecretInteger):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             return Boolean(value=bool(self.value <= other.value))
@@ -184,14 +154,11 @@ class Integer(NadaType):
         elif isinstance(other, SecretInteger):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             return Boolean(value=bool(self.value >= other.value))
@@ -201,14 +168,11 @@ class Integer(NadaType):
         elif isinstance(other, SecretInteger):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             return Boolean(value=bool(self.value == other.value))
@@ -216,9 +180,6 @@ class Integer(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
@@ -236,8 +197,8 @@ class UnsignedInteger(NadaType):
             raise ValueError(f"Expected int, got {type(value).__name__}")
 
     def __add__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value + other.value))
         elif isinstance(other, PublicUnsignedInteger):
@@ -246,15 +207,12 @@ class UnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value - other.value))
         elif isinstance(other, PublicUnsignedInteger):
@@ -263,15 +221,12 @@ class UnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value * other.value))
         elif isinstance(other, PublicUnsignedInteger):
@@ -280,15 +235,12 @@ class UnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value / other.value))
         elif isinstance(other, PublicUnsignedInteger):
@@ -297,15 +249,12 @@ class UnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value % other.value))
         elif isinstance(other, PublicUnsignedInteger):
@@ -314,56 +263,44 @@ class UnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value ** other.value))
         elif isinstance(other, PublicUnsignedInteger):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value << other.value))
         elif isinstance(other, PublicUnsignedInteger):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "UnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             return UnsignedInteger(value=int(self.value >> other.value))
         elif isinstance(other, PublicUnsignedInteger):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             return Boolean(value=bool(self.value < other.value))
@@ -373,14 +310,11 @@ class UnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             return Boolean(value=bool(self.value > other.value))
@@ -390,14 +324,11 @@ class UnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             return Boolean(value=bool(self.value <= other.value))
@@ -407,14 +338,11 @@ class UnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             return Boolean(value=bool(self.value >= other.value))
@@ -424,14 +352,11 @@ class UnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             return Boolean(value=bool(self.value == other.value))
@@ -439,9 +364,6 @@ class UnsignedInteger(NadaType):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
@@ -485,8 +407,8 @@ class PublicInteger(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
     def __add__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
@@ -496,15 +418,12 @@ class PublicInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
@@ -514,15 +433,12 @@ class PublicInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
@@ -532,15 +448,12 @@ class PublicInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
@@ -550,15 +463,12 @@ class PublicInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["PublicInteger", "SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["PublicInteger", "SecretInteger"]:
         if isinstance(other, Integer):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
@@ -568,34 +478,25 @@ class PublicInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
-        self, other: Union["Integer", "PublicInteger", "SecretNonZeroInteger"]
-    ) -> Union["PublicInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger"]
+    ) -> "PublicInteger":
         if isinstance(other, Integer):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         elif isinstance(other, PublicInteger):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroInteger", "UnsignedInteger"]
-    ) -> Union["PublicInteger", "SecretNonZeroInteger"]:
-        if isinstance(other, SecretNonZeroInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "PublicInteger":
+        if isinstance(other, UnsignedInteger):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -605,12 +506,9 @@ class PublicInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroInteger", "UnsignedInteger"]
-    ) -> Union["PublicInteger", "SecretNonZeroInteger"]:
-        if isinstance(other, SecretNonZeroInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "PublicInteger":
+        if isinstance(other, UnsignedInteger):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -620,7 +518,7 @@ class PublicInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -629,16 +527,13 @@ class PublicInteger(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -647,16 +542,13 @@ class PublicInteger(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -665,16 +557,13 @@ class PublicInteger(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -683,16 +572,13 @@ class PublicInteger(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, Integer):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -703,22 +589,16 @@ class PublicInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
     def public_equals(
-        self, other: Union["PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["PublicInteger", "SecretInteger"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicInteger):
             operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
@@ -729,8 +609,8 @@ class PublicUnsignedInteger(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
     def __add__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
@@ -740,15 +620,12 @@ class PublicUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
@@ -758,15 +635,12 @@ class PublicUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
@@ -776,15 +650,12 @@ class PublicUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
@@ -794,15 +665,12 @@ class PublicUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicUnsignedInteger", "SecretUnsignedInteger"]:
         if isinstance(other, UnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
@@ -812,34 +680,25 @@ class PublicUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __pow__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "PublicUnsignedInteger":
         if isinstance(other, UnsignedInteger):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
             operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger"]:
-        if isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "PublicUnsignedInteger":
+        if isinstance(other, UnsignedInteger):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -849,12 +708,9 @@ class PublicUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger"]:
-        if isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "PublicUnsignedInteger":
+        if isinstance(other, UnsignedInteger):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -864,7 +720,7 @@ class PublicUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -873,16 +729,13 @@ class PublicUnsignedInteger(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -891,16 +744,13 @@ class PublicUnsignedInteger(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -909,16 +759,13 @@ class PublicUnsignedInteger(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -927,16 +774,13 @@ class PublicUnsignedInteger(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> Union["PublicBoolean", "SecretBoolean"]:
         if isinstance(other, UnsignedInteger):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -947,22 +791,16 @@ class PublicUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
     def public_equals(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicUnsignedInteger):
             operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
         else:
@@ -1059,8 +897,8 @@ class SecretInteger(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
     def __add__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> "SecretInteger":
         if isinstance(other, Integer):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
@@ -1070,15 +908,12 @@ class SecretInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> "SecretInteger":
         if isinstance(other, Integer):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
@@ -1088,15 +923,12 @@ class SecretInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> "SecretInteger":
         if isinstance(other, Integer):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
@@ -1106,15 +938,12 @@ class SecretInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> "SecretInteger":
         if isinstance(other, Integer):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
@@ -1124,15 +953,12 @@ class SecretInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> Union["SecretInteger", "SecretNonZeroInteger"]:
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> "SecretInteger":
         if isinstance(other, Integer):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
@@ -1142,19 +968,13 @@ class SecretInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __lshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroInteger", "UnsignedInteger"]
-    ) -> Union["SecretInteger", "SecretNonZeroInteger"]:
-        if isinstance(other, SecretNonZeroInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretInteger":
+        if isinstance(other, UnsignedInteger):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -1164,12 +984,9 @@ class SecretInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroInteger", "UnsignedInteger"]
-    ) -> Union["SecretInteger", "SecretNonZeroInteger"]:
-        if isinstance(other, SecretNonZeroInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretInteger":
+        if isinstance(other, UnsignedInteger):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -1179,7 +996,7 @@ class SecretInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, Integer):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1188,16 +1005,13 @@ class SecretInteger(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, Integer):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1206,16 +1020,13 @@ class SecretInteger(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, Integer):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1224,16 +1035,13 @@ class SecretInteger(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, Integer):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1242,16 +1050,13 @@ class SecretInteger(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         elif isinstance(other, SecretInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, Integer):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1262,14 +1067,11 @@ class SecretInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
     def public_equals(
-        self, other: Union["PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
+        self, other: Union["PublicInteger", "SecretInteger"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicInteger):
             operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1277,19 +1079,13 @@ class SecretInteger(NadaType):
         elif isinstance(other, SecretInteger):
             operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
 
     def trunc_pr(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroInteger", "UnsignedInteger"]
-    ) -> Union["SecretInteger", "SecretNonZeroInteger"]:
-        if isinstance(other, SecretNonZeroInteger):
-            operation = TruncPr(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretInteger":
+        if isinstance(other, UnsignedInteger):
             operation = TruncPr(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -1313,8 +1109,8 @@ class SecretUnsignedInteger(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
     def __add__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
         if isinstance(other, UnsignedInteger):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
@@ -1324,15 +1120,12 @@ class SecretUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} + {other}")
 
     def __sub__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
         if isinstance(other, UnsignedInteger):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
@@ -1342,15 +1135,12 @@ class SecretUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} - {other}")
 
     def __mul__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
         if isinstance(other, UnsignedInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
@@ -1360,15 +1150,12 @@ class SecretUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} * {other}")
 
     def __truediv__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
         if isinstance(other, UnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
@@ -1378,15 +1165,12 @@ class SecretUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} / {other}")
 
     def __mod__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
         if isinstance(other, UnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
@@ -1396,19 +1180,13 @@ class SecretUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} % {other}")
 
     def __lshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
-        if isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
+        if isinstance(other, UnsignedInteger):
             operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -1418,12 +1196,9 @@ class SecretUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} << {other}")
 
     def __rshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
-        if isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
+        if isinstance(other, UnsignedInteger):
             operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -1433,7 +1208,7 @@ class SecretUnsignedInteger(NadaType):
             raise TypeError(f"Invalid operation: {self} >> {other}")
 
     def __lt__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, UnsignedInteger):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1442,16 +1217,13 @@ class SecretUnsignedInteger(NadaType):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} < {other}")
 
     def __gt__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, UnsignedInteger):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1460,16 +1232,13 @@ class SecretUnsignedInteger(NadaType):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} > {other}")
 
     def __le__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, UnsignedInteger):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1478,16 +1247,13 @@ class SecretUnsignedInteger(NadaType):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} <= {other}")
 
     def __ge__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, UnsignedInteger):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1496,16 +1262,13 @@ class SecretUnsignedInteger(NadaType):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         elif isinstance(other, SecretUnsignedInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
             operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} >= {other}")
 
     def __eq__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
     ) -> "SecretBoolean":
         if isinstance(other, UnsignedInteger):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1516,14 +1279,11 @@ class SecretUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
     def public_equals(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger"]
     ) -> "PublicBoolean":
         if isinstance(other, PublicUnsignedInteger):
             operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
@@ -1531,19 +1291,13 @@ class SecretUnsignedInteger(NadaType):
         elif isinstance(other, SecretUnsignedInteger):
             operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
             return PublicBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self}.public_equals({other})")
 
     def trunc_pr(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> Union["SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]:
-        if isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = TruncPr(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, UnsignedInteger):
+        self, other: Union["PublicUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretUnsignedInteger":
+        if isinstance(other, UnsignedInteger):
             operation = TruncPr(left=self, right=other, source_ref=SourceRef.back_frame())
             return SecretUnsignedInteger(inner=operation)
         elif isinstance(other, PublicUnsignedInteger):
@@ -1562,518 +1316,6 @@ class SecretUnsignedInteger(NadaType):
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
         return PublicUnsignedInteger(inner=operation)
     
-@dataclass
-class SecretNonZeroInteger(NadaType):
-    def __init__(self, inner: NadaType):
-        super().__init__(inner)
-    def __add__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretNonZeroInteger":
-        if isinstance(other, Integer):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
-
-    def __sub__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretNonZeroInteger":
-        if isinstance(other, Integer):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} - {other}")
-
-    def __mul__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretNonZeroInteger":
-        if isinstance(other, Integer):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} * {other}")
-
-    def __truediv__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretNonZeroInteger":
-        if isinstance(other, Integer):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} / {other}")
-
-    def __mod__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretNonZeroInteger":
-        if isinstance(other, Integer):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} % {other}")
-
-    def __pow__(
-        self, other: Union["Integer", "PublicInteger", "SecretNonZeroInteger"]
-    ) -> "SecretNonZeroInteger":
-        if isinstance(other, Integer):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} ** {other}")
-
-    def __lshift__(
-        self, other: "SecretNonZeroInteger"
-    ) -> "SecretNonZeroInteger":
-        if isinstance(other, SecretNonZeroInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} << {other}")
-
-    def __rshift__(
-        self, other: "SecretNonZeroInteger"
-    ) -> "SecretNonZeroInteger":
-        if isinstance(other, SecretNonZeroInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} >> {other}")
-
-    def __lt__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, Integer):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} < {other}")
-
-    def __gt__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, Integer):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} > {other}")
-
-    def __le__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, Integer):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} <= {other}")
-
-    def __ge__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, Integer):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} >= {other}")
-
-    def __eq__(
-        self, other: Union["Integer", "PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, Integer):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} == {other}")
-
-    def public_equals(
-        self, other: Union["PublicInteger", "SecretInteger", "SecretNonZeroInteger"]
-    ) -> "PublicBoolean":
-        if isinstance(other, PublicInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
-        elif isinstance(other, SecretInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self}.public_equals({other})")
-
-    def trunc_pr(
-        self, other: "SecretNonZeroInteger"
-    ) -> "SecretNonZeroInteger":
-        if isinstance(other, SecretNonZeroInteger):
-            operation = TruncPr(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self}.trunc_pr({other})")
-
-    def __invert__(
-        self: "SecretNonZeroInteger"
-    ) -> "SecretNonZeroInteger":
-        operation = Not(this=self, source_ref=SourceRef.back_frame())
-        return SecretNonZeroInteger(inner=operation)
-
-@dataclass
-class SecretNonZeroUnsignedInteger(NadaType):
-    def __init__(self, inner: NadaType):
-        super().__init__(inner)
-    def __add__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretNonZeroUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Addition(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} + {other}")
-
-    def __sub__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretNonZeroUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Subtraction(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} - {other}")
-
-    def __mul__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretNonZeroUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Multiplication(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} * {other}")
-
-    def __truediv__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretNonZeroUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Division(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} / {other}")
-
-    def __mod__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretNonZeroUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Modulo(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} % {other}")
-
-    def __pow__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretNonZeroUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} ** {other}")
-
-    def __lshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretNonZeroUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = LeftShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} << {other}")
-
-    def __rshift__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretNonZeroUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = RightShift(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} >> {other}")
-
-    def __lt__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, UnsignedInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = LessThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} < {other}")
-
-    def __gt__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, UnsignedInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = GreaterThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} > {other}")
-
-    def __le__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, UnsignedInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = LessOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} <= {other}")
-
-    def __ge__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, UnsignedInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = GreaterOrEqualThan(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} >= {other}")
-
-    def __eq__(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretBoolean":
-        if isinstance(other, UnsignedInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = Equals(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self} == {other}")
-
-    def public_equals(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "SecretUnsignedInteger"]
-    ) -> "PublicBoolean":
-        if isinstance(other, PublicUnsignedInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
-        elif isinstance(other, SecretUnsignedInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = PublicOutputEquality(left=self, right=other, source_ref=SourceRef.back_frame())
-            return PublicBoolean(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self}.public_equals({other})")
-
-    def trunc_pr(
-        self, other: Union["PublicUnsignedInteger", "SecretNonZeroUnsignedInteger", "UnsignedInteger"]
-    ) -> "SecretNonZeroUnsignedInteger":
-        if isinstance(other, UnsignedInteger):
-            operation = TruncPr(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, PublicUnsignedInteger):
-            operation = TruncPr(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        elif isinstance(other, SecretNonZeroUnsignedInteger):
-            operation = TruncPr(left=self, right=other, source_ref=SourceRef.back_frame())
-            return SecretNonZeroUnsignedInteger(inner=operation)
-        else:
-            raise TypeError(f"Invalid operation: {self}.trunc_pr({other})")
-
-    def __invert__(
-        self: "SecretNonZeroUnsignedInteger"
-    ) -> "SecretNonZeroUnsignedInteger":
-        operation = Not(this=self, source_ref=SourceRef.back_frame())
-        return SecretNonZeroUnsignedInteger(inner=operation)
-
 @dataclass
 class SecretBoolean(NadaType):
     def __init__(self, inner: NadaType):
