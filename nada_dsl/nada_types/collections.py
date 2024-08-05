@@ -272,11 +272,13 @@ class Array(Generic[T], Collection):
 
     def __init__(self, inner, size: int, inner_type: T = None):
         self.inner_type = (
-            inner_type if not inner or inner_type else get_inner_type(inner)
+            inner_type
+            if (inner is None or inner_type is not None)
+            else get_inner_type(inner)
         )
         self.size = size
-        self.inner = inner if inner_type else getattr(inner, "inner", None)
-        if self.inner:
+        self.inner = inner if inner_type is not None else getattr(inner, "inner", None)
+        if self.inner is not None:
             self.inner.store_in_ast(self.to_type())
 
     def __iter__(self):
@@ -341,7 +343,7 @@ class Array(Generic[T], Collection):
 
     @classmethod
     def new(cls, *args) -> "Array[T]":
-        if not args:
+        if len(args) == 0:
             raise ValueError("At least one value is required")
 
         first_arg = args[0]
@@ -383,7 +385,9 @@ class Vector(Generic[T], Collection):
 
     def __init__(self, inner, size, inner_type=None):
         self.inner_type = (
-            inner_type if not inner or inner_type else get_inner_type(inner)
+            inner_type
+            if (inner is None or inner_type is not None)
+            else get_inner_type(inner)
         )
         self.size = size
         self.inner = inner if inner_type else getattr(inner, "inner", None)

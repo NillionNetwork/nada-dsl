@@ -581,3 +581,26 @@ def test_binary_operator_integer_publicinteger(operator, name, ty):
     assert isinstance(right_ast, InputASTOperation)
     assert right_ast.name == "right"
     assert inner["type"] == to_type(ty)
+
+
+def test_logical_operations():
+    party1 = Party(name="Party1")
+    int1 = SecretInteger(Input(name="my_int_1", party=party1))
+    int2 = SecretInteger(Input(name="my_int_2", party=party1))
+    with pytest.raises(NotImplementedError):
+        int1 or int2
+    with pytest.raises(NotImplementedError):
+        int1 and int2
+    with pytest.raises(NotImplementedError):
+        not int1
+
+def test_logical_operations_with_secret_boolean():
+    party1 = Party(name="Party1")
+    bool1 = SecretBoolean(Input(name="my_bool_1", party=party1))
+    bool2 = SecretBoolean(Input(name="my_bool_2", party=party1))
+    with pytest.raises(NotImplementedError):
+        bool1 or bool2
+    with pytest.raises(NotImplementedError):
+        bool1 and bool2
+    with pytest.raises(NotImplementedError):
+        not bool1
