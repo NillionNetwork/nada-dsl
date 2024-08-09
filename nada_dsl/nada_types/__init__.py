@@ -112,7 +112,7 @@ class NadaType:
             inner (OperationType): The inner operation of this Data type
         """
         self.inner = inner
-        if self.inner:
+        if self.inner is not None:
             self.inner.store_in_ast(self.to_type())
 
     def to_type(self):
@@ -128,3 +128,6 @@ class NadaType:
             name = name[len("Public") :].lstrip()
             return name
         return name
+
+    def __bool__(self):
+        raise NotImplementedError
