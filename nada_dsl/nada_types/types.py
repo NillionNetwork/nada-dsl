@@ -1445,17 +1445,6 @@ class ShamirParticleUnsignedInteger(NadaType):
         super().__init__(inner)
     pass
 @dataclass
-class ShamirParticleBoolean(NadaType):
-    def __init__(self, inner: NadaType):
-        super().__init__(inner)
-    def __invert__(
-        self: "ShamirParticleBoolean"
-    ) -> "ShamirParticleBoolean":
-        operation = Not(this=self, source_ref=SourceRef.back_frame())
-        return ShamirParticleBoolean(inner=operation)
-
-    pass
-@dataclass
 class Array(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
