@@ -400,7 +400,7 @@ class Boolean(NadaType):
     def __invert__(
         self: "Boolean"
     ) -> "Boolean":
-        return Boolean(value=bool(~self.value))
+        return Boolean(value=bool(not self.value))
 
 @dataclass
 class PublicInteger(NadaType):

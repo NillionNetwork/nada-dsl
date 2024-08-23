@@ -604,3 +604,21 @@ def test_logical_operations_with_secret_boolean():
         bool1 and bool2
     with pytest.raises(NotImplementedError):
         not bool1
+
+def test_not():
+    party1 = Party(name="Party1")
+    bool1 = SecretBoolean(Input(name="my_bool_1", party=party1))
+    operation = ~bool1
+    ast = AST_OPERATIONS[operation.inner.id]
+    op = process_operation(ast, {}).mir
+    assert list(op.keys()) == ["Not"]
+
+    bool1 = PublicBoolean(Input(name="my_bool_1", party=party1))
+    operation = ~bool1
+    ast = AST_OPERATIONS[operation.inner.id]
+    op = process_operation(ast, {}).mir
+    assert list(op.keys()) == ["Not"]
+
+    bool1 = Boolean(True)
+    bool2 = ~bool1
+    assert bool2 == Boolean(False)
