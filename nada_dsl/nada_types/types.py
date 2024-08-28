@@ -3,7 +3,7 @@
 from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.operations import Addition, Division, Equals, GreaterOrEqualThan, GreaterThan, IfElse, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Not, Power, PublicOutputEquality, Random, Reveal, RightShift, Subtraction, TruncPr
+from nada_dsl.operations import Addition, Division, Equals, GreaterOrEqualThan, GreaterThan, IfElse, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Not, NotEquals, Power, PublicOutputEquality, Random, Reveal, RightShift, Subtraction, TruncPr
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -184,6 +184,20 @@ class Integer(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def __ne__(
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Integer):
+            return Boolean(value=bool(self.value != other.value))
+        elif isinstance(other, PublicInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} != {other}")
 
 @dataclass
 class UnsignedInteger(NadaType):
@@ -369,6 +383,20 @@ class UnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
+    def __ne__(
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, UnsignedInteger):
+            return Boolean(value=bool(self.value != other.value))
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretUnsignedInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} != {other}")
+
 @dataclass
 class Boolean(NadaType):
     value: bool
@@ -396,6 +424,20 @@ class Boolean(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def __ne__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Boolean):
+            return Boolean(value=bool(self.value != other.value))
+        elif isinstance(other, PublicBoolean):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} != {other}")
 
     def __invert__(
         self: "Boolean"
@@ -591,6 +633,21 @@ class PublicInteger(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def __ne__(
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> Union["PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Integer):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, PublicInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} != {other}")
 
     def public_equals(
         self, other: Union["PublicInteger", "SecretInteger"]
@@ -794,6 +851,21 @@ class PublicUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
+    def __ne__(
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> Union["PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, UnsignedInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretUnsignedInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} != {other}")
+
     def public_equals(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger"]
     ) -> "PublicBoolean":
@@ -824,6 +896,21 @@ class PublicBoolean(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def __ne__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> Union["PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Boolean):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, PublicBoolean):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} != {other}")
 
     def __invert__(
         self: "PublicBoolean"
@@ -1070,6 +1157,21 @@ class SecretInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
+    def __ne__(
+        self, other: Union["Integer", "PublicInteger", "SecretInteger"]
+    ) -> "SecretBoolean":
+        if isinstance(other, Integer):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, PublicInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, SecretInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} != {other}")
+
     def public_equals(
         self, other: Union["PublicInteger", "SecretInteger"]
     ) -> "PublicBoolean":
@@ -1282,6 +1384,21 @@ class SecretUnsignedInteger(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
 
+    def __ne__(
+        self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger", "UnsignedInteger"]
+    ) -> "SecretBoolean":
+        if isinstance(other, UnsignedInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, PublicUnsignedInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, SecretUnsignedInteger):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} != {other}")
+
     def public_equals(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger"]
     ) -> "PublicBoolean":
@@ -1334,6 +1451,21 @@ class SecretBoolean(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} == {other}")
+
+    def __ne__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> "SecretBoolean":
+        if isinstance(other, Boolean):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, PublicBoolean):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = NotEquals(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} != {other}")
 
     def __invert__(
         self: "SecretBoolean"

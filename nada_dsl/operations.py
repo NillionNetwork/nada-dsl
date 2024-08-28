@@ -101,6 +101,10 @@ class Equals(BinaryOperation):
     pass
 
 
+class NotEquals(BinaryOperation):
+    pass
+
+
 class PublicOutputEquality(BinaryOperation):
     pass
 
