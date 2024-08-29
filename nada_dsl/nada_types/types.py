@@ -1200,7 +1200,7 @@ class SecretInteger(NadaType):
     def random(cls) -> "SecretInteger":
         return SecretInteger(inner=Random(source_ref=SourceRef.back_frame()))
     
-    def reveal(
+    def to_public(
         self: "SecretInteger",
     ) -> "PublicInteger":
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
@@ -1427,7 +1427,7 @@ class SecretUnsignedInteger(NadaType):
     def random(cls) -> "SecretUnsignedInteger":
         return SecretUnsignedInteger(inner=Random(source_ref=SourceRef.back_frame()))
     
-    def reveal(
+    def to_public(
         self: "SecretUnsignedInteger",
     ) -> "PublicUnsignedInteger":
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
@@ -1473,7 +1473,7 @@ class SecretBoolean(NadaType):
         operation = Not(this=self, source_ref=SourceRef.back_frame())
         return SecretBoolean(inner=operation)
 
-    def reveal(
+    def to_public(
         self: "SecretBoolean",
     ) -> "PublicBoolean":
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
