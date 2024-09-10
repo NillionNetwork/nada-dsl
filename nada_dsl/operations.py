@@ -11,7 +11,6 @@ from nada_dsl.ast_util import (
     RandomASTOperation,
     UnaryASTOperation,
 )
-from nada_dsl.nada_types.generics import T, R
 from nada_dsl.nada_types import AllTypes
 
 

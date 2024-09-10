@@ -21,7 +21,7 @@ def clean_inputs():
 def get_test_programs_folder():
     file_path = os.path.realpath(__file__)
     this_directory = os.path.dirname(file_path)
-    return this_directory + "/../../test-programs/programs"
+    return this_directory + "../test-programs/"
 
 
 def test_compile_nada_fn_simple():

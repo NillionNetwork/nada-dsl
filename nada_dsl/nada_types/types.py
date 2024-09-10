@@ -1565,24 +1565,24 @@ class ShamirShareBoolean(NadaType):
         operation = Not(this=self, source_ref=SourceRef.back_frame())
         return ShamirShareBoolean(inner=operation)
 
-    pass
+    
 @dataclass
 class ShamirParticleInteger(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
-    pass
+    
 @dataclass
 class ShamirParticleUnsignedInteger(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
-    pass
+    
 @dataclass
 class Array(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
-    pass
+    
 @dataclass
 class Tuple(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
-    pass
+    

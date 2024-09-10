@@ -11,3 +11,6 @@ docs/_build
 dist/
 
 nada_dsl/version.py
+
+*.log
+*.out
