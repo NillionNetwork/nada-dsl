@@ -1,0 +1,10 @@
+recursive-include nada_dsl *.py
+recursive-include nada_dsl/audit *.py
+recursive-include nada_dsl/nada_types *.py
+recursive-include nada_dsl/future *.py
+
+# Explicitly exclude some files
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .git*
+global-exclude .DS_Store

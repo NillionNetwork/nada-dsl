@@ -1,0 +1,9 @@
+.DS_Store
+.coverage
+
+*.pyc
+__pycache__
+*.egg-info
+.pytest_cache
+
+build/
