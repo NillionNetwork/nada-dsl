@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nada_dsl"
-version = "0.1.0"
+version = "0.6.0"
 description = "Nillion Nada DSL to create Nillion MPC programs."
 requires-python = ">=3.10"
 readme = "README.pyproject.md"
@@ -12,29 +12,23 @@ dependencies = [
     "asttokens~=2.4",
     "richreports~=0.2",
     "parsial~=0.1",
-    "sortedcontainers~=2.4"
+    "sortedcontainers~=2.4",
 ]
-classifiers = [
-    "License :: OSI Approved :: Apache Software License",
-]
+classifiers = ["License :: OSI Approved :: Apache Software License"]
 license = { file = "LICENSE" }
 
 [project.optional-dependencies]
-docs = [
-    "toml~=0.10.2",
-    "sphinx>=5,<9",
-    "sphinx-rtd-theme>=1.0,<2.1"
-]
-test = [
-    "pytest>=7.4,<9.0",
-    "pytest-cov>=4,<6"
-]
-lint = [
-    "pylint>=2.17,<3.3"
-]
+docs = ["toml~=0.10.2", "sphinx>=5,<9", "sphinx-rtd-theme>=1.0,<2.1"]
+test = ["pytest>=7.4,<9.0", "pytest-cov>=4,<6"]
+lint = ["pylint>=2.17,<3.3"]
 
 [tool.setuptools]
-packages = ["nada_dsl", "nada_dsl.audit", "nada_dsl.future", "nada_dsl.nada_types"]
+packages = [
+    "nada_dsl",
+    "nada_dsl.audit",
+    "nada_dsl.future",
+    "nada_dsl.nada_types",
+]
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --ignore=docs --cov=nada_dsl --cov-report term-missing"
