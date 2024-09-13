@@ -3,7 +3,7 @@
 from . import NadaType
 from dataclasses import dataclass
 from nada_dsl.circuit_io import Literal
-from nada_dsl.operations import Addition, Division, Equals, GreaterOrEqualThan, GreaterThan, IfElse, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Not, NotEquals, Power, PublicOutputEquality, Random, Reveal, RightShift, Subtraction, TruncPr
+from nada_dsl.operations import Addition, BooleanAnd, BooleanOr, BooleanXor, Division, Equals, GreaterOrEqualThan, GreaterThan, IfElse, LeftShift, LessOrEqualThan, LessThan, Modulo, Multiplication, Not, NotEquals, Power, PublicOutputEquality, Random, Reveal, RightShift, Subtraction, TruncPr
 from nada_dsl.source_ref import SourceRef
 from typing import Union
 
@@ -438,6 +438,48 @@ class Boolean(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} != {other}")
+
+    def __and__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Boolean):
+            return Boolean(value=bool(self.value & other.value))
+        elif isinstance(other, PublicBoolean):
+            operation = BooleanAnd(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = BooleanAnd(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} & {other}")
+
+    def __or__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Boolean):
+            return Boolean(value=bool(self.value | other.value))
+        elif isinstance(other, PublicBoolean):
+            operation = BooleanOr(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = BooleanOr(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} | {other}")
+
+    def __xor__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> Union["Boolean", "PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Boolean):
+            return Boolean(value=bool(self.value ^ other.value))
+        elif isinstance(other, PublicBoolean):
+            operation = BooleanXor(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = BooleanXor(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ^ {other}")
 
     def __invert__(
         self: "Boolean"
@@ -911,6 +953,51 @@ class PublicBoolean(NadaType):
             return SecretBoolean(inner=operation)
         else:
             raise TypeError(f"Invalid operation: {self} != {other}")
+
+    def __and__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> Union["PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Boolean):
+            operation = BooleanAnd(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, PublicBoolean):
+            operation = BooleanAnd(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = BooleanAnd(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} & {other}")
+
+    def __or__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> Union["PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Boolean):
+            operation = BooleanOr(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, PublicBoolean):
+            operation = BooleanOr(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = BooleanOr(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} | {other}")
+
+    def __xor__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> Union["PublicBoolean", "SecretBoolean"]:
+        if isinstance(other, Boolean):
+            operation = BooleanXor(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, PublicBoolean):
+            operation = BooleanXor(left=self, right=other, source_ref=SourceRef.back_frame())
+            return PublicBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = BooleanXor(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ^ {other}")
 
     def __invert__(
         self: "PublicBoolean"
@@ -1467,6 +1554,51 @@ class SecretBoolean(NadaType):
         else:
             raise TypeError(f"Invalid operation: {self} != {other}")
 
+    def __and__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> "SecretBoolean":
+        if isinstance(other, Boolean):
+            operation = BooleanAnd(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, PublicBoolean):
+            operation = BooleanAnd(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = BooleanAnd(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} & {other}")
+
+    def __or__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> "SecretBoolean":
+        if isinstance(other, Boolean):
+            operation = BooleanOr(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, PublicBoolean):
+            operation = BooleanOr(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = BooleanOr(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} | {other}")
+
+    def __xor__(
+        self, other: Union["Boolean", "PublicBoolean", "SecretBoolean"]
+    ) -> "SecretBoolean":
+        if isinstance(other, Boolean):
+            operation = BooleanXor(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, PublicBoolean):
+            operation = BooleanXor(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        elif isinstance(other, SecretBoolean):
+            operation = BooleanXor(left=self, right=other, source_ref=SourceRef.back_frame())
+            return SecretBoolean(inner=operation)
+        else:
+            raise TypeError(f"Invalid operation: {self} ^ {other}")
+
     def __invert__(
         self: "SecretBoolean"
     ) -> "SecretBoolean":
@@ -1565,24 +1697,24 @@ class ShamirShareBoolean(NadaType):
         operation = Not(this=self, source_ref=SourceRef.back_frame())
         return ShamirShareBoolean(inner=operation)
 
-    
+    pass
 @dataclass
 class ShamirParticleInteger(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
-    
+    pass
 @dataclass
 class ShamirParticleUnsignedInteger(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
-    
+    pass
 @dataclass
 class Array(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
-    
+    pass
 @dataclass
 class Tuple(NadaType):
     def __init__(self, inner: NadaType):
         super().__init__(inner)
-    
+    pass

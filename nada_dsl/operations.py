@@ -108,6 +108,18 @@ class PublicOutputEquality(BinaryOperation):
     pass
 
 
+class BooleanAnd(BinaryOperation):
+    pass
+
+
+class BooleanOr(BinaryOperation):
+    pass
+
+
+class BooleanXor(BinaryOperation):
+    pass
+
+
 class Random:
     source_ref: SourceRef
 
