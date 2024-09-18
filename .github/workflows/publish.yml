@@ -34,6 +34,7 @@ jobs:
           echo "Public version: ${{ steps.versioncheck.outputs.public_version }}"   # e.g., 0.1.0
 
   github-release:
+    needs: checkversion
     if: needs.checkversion.outputs.local_version_is_higher == 'true'
     runs-on: ubuntu-latest
     steps:
