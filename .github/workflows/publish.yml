@@ -1,4 +1,5 @@
 # Release workflow
+# - When there is a push to 'main', it detects if the local version has changed and is higher than the remote (PyPI) version.
 # - Generates a new nada-dsl release, signes it and pushes it to PyPI when a PR is merged that updates the version number in pyproject.toml.
 
 name: Create a new release
@@ -33,6 +34,34 @@ jobs:
           echo "Local version: ${{ steps.versioncheck.outputs.local_version }}"     # e.g., 0.1.1
           echo "Public version: ${{ steps.versioncheck.outputs.public_version }}"   # e.g., 0.1.0
 
+  # Build distribution files
+  build-distribution:
+    needs: checkversion
+    if: needs.checkversion.outputs.local_version_is_higher == 'true'
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "^3.10"
+      - name: Install pypa/build
+        run: >-
+          python3 -m
+          pip install
+          build
+          --user
+      - name: Build a binary wheel and a source tarball
+        run: python3 -m build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  # Generates a Github release with the version taken from the one in pyproject.toml
   github-release:
     needs: checkversion
     if: needs.checkversion.outputs.local_version_is_higher == 'true'
@@ -41,20 +70,35 @@ jobs:
       - name: Print release message
         run: |
           echo "Creating release: ${{ needs.checkversion.outputs.local_version }}"
-
-    # steps:
-    #   - uses: actions/checkout@v4
-    #   - name: Set up Python
-    #     uses: actions/setup-python@v3
-    #     with:
-    #       python-version: "3.10"
-    #   - name: Install dependencies
-    #     run: |
-    #       python -m pip install --upgrade pip
-    #       pip install --upgrade build
-    #   - name: Build package
-    #     run: python -m build --no-isolation
-    #   - name: Publish package
-    #     run: |
-    #       poetry config pypi-token.pypi ${{ secrets.NILLION_PYPI_TOKEN }}
-    #       poetry publish
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create Release
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        run: |
+          gh release create v${{ needs.checkversion.outputs.local_version }} --generate-notes
+  # Publishes released artifact to PyPI
+  publish-to-pypi:
+    needs: [checkversion, build-distribution]
+    if: needs.checkversion.outputs.local_version_is_higher == 'true'
+    name: >-
+      Publish Python 🐍 distribution 📦 to PyPI
+      if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/nada-dsl
+    permissions:
+      id-token: write # IMPORTANT: mandatory for trusted publishing
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
+          repository-url: https://pypi.org/p/nada-dsl
