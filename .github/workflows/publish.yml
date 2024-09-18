@@ -63,7 +63,7 @@ jobs:
 
   # Generates a Github release with the version taken from the one in pyproject.toml
   github-release:
-    needs: checkversion
+    needs: [checkversion, build-distribution]
     if: needs.checkversion.outputs.local_version_is_higher == 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -74,12 +74,32 @@ jobs:
           echo "Creating release: ${{ needs.checkversion.outputs.local_version }}"
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Sign the dists with Sigstore
+        uses: sigstore/gh-action-sigstore-python@v2.1.1
+        with:
+          inputs: >-
+            ./dist/*.tar.gz
+            ./dist/*.whl
       - name: Create Release
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         run: |
           gh release create v${{ needs.checkversion.outputs.local_version }} --generate-notes
+      - name: Upload artifact signatures to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Upload to GitHub Release using the `gh` CLI.
+        # `dist/` contains the built packages, and the
+        # sigstore-produced signatures and certificates.
+        run: >-
+          gh release upload
+          'v${{ needs.checkversion.outputs.local_version }}' dist/**
   # Publishes released artifact to PyPI
   publish-to-pypi:
     needs: [checkversion, build-distribution]
@@ -100,7 +120,5 @@ jobs:
           name: python-package-distributions
           path: dist/
       - name: Publish distribution 📦 to PyPI
+        # Publishes using trusted publishers
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_TOKEN }}
-          repository-url:  https://upload.pypi.org/legacy/
