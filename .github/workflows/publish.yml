@@ -12,22 +12,34 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  checkversion:
     runs-on: ubuntu-latest
+    outputs:
+      local_version_is_higher: ${{ steps.versioncheck.outputs.local_version_is_higher }}
+      local_version: ${{ steps.versioncheck.outputs.local_version }}
+      remote_version: ${{ steps.versioncheck.outputs.public_version }}
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Check pypi versions
         uses: maybe-hello-world/pyproject-check-version@v4
         id: versioncheck
         with:
-          pyproject-path: "./pyproject.toml"    # default value
-      
+          pyproject-path: "./pyproject.toml" # default value
+
       - name: check output
         run: |
-            echo "Output: ${{ steps.versioncheck.outputs.local_version_is_higher }}"  # 'true' or 'false
-            echo "Local version: ${{ steps.versioncheck.outputs.local_version }}"     # e.g., 0.1.1
-            echo "Public version: ${{ steps.versioncheck.outputs.public_version }}"   # e.g., 0.1.0
+          echo "Output: ${{ steps.versioncheck.outputs.local_version_is_higher }}"  # 'true' or 'false
+          echo "Local version: ${{ steps.versioncheck.outputs.local_version }}"     # e.g., 0.1.1
+          echo "Public version: ${{ steps.versioncheck.outputs.public_version }}"   # e.g., 0.1.0
+
+  github-release:
+    if: needs.checkversion.outputs.local_version_is_higher == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print release message
+        run: |
+          echo "Creating release: ${{ needs.checkversion.outputs.local_version }}"
 
     # steps:
     #   - uses: actions/checkout@v4
