@@ -1,32 +1,125 @@
-# This workflow will upload a Python Package using Twine when a release is created
+# Release workflow
+# - When there is a push to 'main', it detects if the local version has changed and is higher than the remote (PyPI) version.
+# - Generates a new nada-dsl release, signes it and pushes it to PyPI when a PR is merged that updates the version number in pyproject.toml.
 
-name: Upload Python Package
+name: Create a new release
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
+  checkversion:
+    runs-on: ubuntu-latest
+    outputs:
+      local_version_is_higher: ${{ steps.versioncheck.outputs.local_version_is_higher }}
+      local_version: ${{ steps.versioncheck.outputs.local_version }}
+      remote_version: ${{ steps.versioncheck.outputs.public_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check pypi versions
+        uses: maybe-hello-world/pyproject-check-version@v4
+        id: versioncheck
+        with:
+          pyproject-path: "./pyproject.toml" # default value
+
+      - name: check output
+        run: |
+          echo "Output: ${{ steps.versioncheck.outputs.local_version_is_higher }}"  # 'true' or 'false
+          echo "Local version: ${{ steps.versioncheck.outputs.local_version }}"     # e.g., 0.1.1
+          echo "Public version: ${{ steps.versioncheck.outputs.public_version }}"   # e.g., 0.1.0
+
+  # Build distribution files
+  build-distribution:
+    needs: checkversion
+    if: needs.checkversion.outputs.local_version_is_higher == 'true'
+    name: Build distribution 📦
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-      - name: Install dependencies
+          python-version: "^3.10"
+      - name: Install pypa/build
+        run: >-
+          python3 -m
+          pip install
+          build
+          --user
+      - name: Build a binary wheel and a source tarball
+        run: python3 -m build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  # Generates a Github release with the version taken from the one in pyproject.toml
+  github-release:
+    needs: [checkversion, build-distribution]
+    if: needs.checkversion.outputs.local_version_is_higher == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Print release message
         run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install --with dev
-      - name: Build package
-        run: poetry build
-      - name: Publish package
+          echo "Creating release: ${{ needs.checkversion.outputs.local_version }}"
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Sign the dists with Sigstore
+        uses: sigstore/gh-action-sigstore-python@v2.1.1
+        with:
+          inputs: >-
+            ./dist/*.tar.gz
+            ./dist/*.whl
+      - name: Create Release
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         run: |
-          poetry config pypi-token.pypi ${{ secrets.NILLION_PYPI_TOKEN }}
-          poetry publish
+          gh release create v${{ needs.checkversion.outputs.local_version }} --generate-notes
+      - name: Upload artifact signatures to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Upload to GitHub Release using the `gh` CLI.
+        # `dist/` contains the built packages, and the
+        # sigstore-produced signatures and certificates.
+        run: >-
+          gh release upload
+          'v${{ needs.checkversion.outputs.local_version }}' dist/**
+  # Publishes released artifact to PyPI
+  publish-to-pypi:
+    needs: [checkversion, build-distribution]
+    if: needs.checkversion.outputs.local_version_is_higher == 'true'
+    name: >-
+      Publish Python 🐍 distribution 📦 to PyPI
+      if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/nada-dsl/
+    permissions:
+      id-token: write # IMPORTANT: mandatory for trusted publishing
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
+        # Publishes using trusted publishers
+        uses: pypa/gh-action-pypi-publish@release/v1
