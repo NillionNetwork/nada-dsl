@@ -20,7 +20,7 @@ jobs:
       local_version: ${{ steps.versioncheck.outputs.local_version }}
       remote_version: ${{ steps.versioncheck.outputs.public_version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Check pypi versions
         uses: maybe-hello-world/pyproject-check-version@v4
@@ -66,12 +66,14 @@ jobs:
     needs: checkversion
     if: needs.checkversion.outputs.local_version_is_higher == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Print release message
         run: |
           echo "Creating release: ${{ needs.checkversion.outputs.local_version }}"
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Create Release
         id: create_release
         env:
@@ -88,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/nada-dsl
+      url: https://pypi.org/p/nada-dsl/
     permissions:
       id-token: write # IMPORTANT: mandatory for trusted publishing
     steps:
@@ -101,4 +103,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
-          repository-url: https://pypi.org/p/nada-dsl
+          repository-url: https://pypi.org/p/nada-dsl/
