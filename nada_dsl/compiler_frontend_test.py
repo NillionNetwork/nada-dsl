@@ -18,7 +18,7 @@ from nada_dsl.ast_util import (
 )
 
 # pylint: disable=wildcard-import,unused-wildcard-import
-from nada_dsl.nada_types.types import *
+from nada_dsl.nada_types.scalar_types import *
 from nada_dsl.circuit_io import Input, Output
 from nada_dsl.compiler_frontend import (
     nada_dsl_to_nada_mir,

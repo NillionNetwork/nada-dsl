@@ -16,7 +16,7 @@ from nada_dsl.ast_util import (
 from nada_dsl.nada_types import NadaType
 
 # Wildcard import due to non-zero types
-from nada_dsl.nada_types.types import *  # pylint: disable=W0614:wildcard-import
+from nada_dsl.nada_types.scalar_types import *  # pylint: disable=W0614:wildcard-import
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.errors import NadaNotAllowedException
 from nada_dsl.nada_types.function import NadaFunction, nada_fn

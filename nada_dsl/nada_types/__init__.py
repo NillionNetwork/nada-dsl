@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Dict, TypeAlias, Union, Type
 from nada_dsl.source_ref import SourceRef
 
@@ -81,6 +82,18 @@ or a dictionary (Array{inner_type=SecretInteger, size=3}).
 """
 
 
+class Mode(Enum):
+    CONSTANT = 1
+    PUBLIC = 2
+    SECRET = 3
+
+
+class BaseType(Enum):
+    BOOLEAN = 1
+    INTEGER = 2
+    UNSIGNED_INTEGER = 3
+
+
 @dataclass
 class NadaType:
     """Nada type class.
@@ -125,9 +138,10 @@ class NadaType:
         name = cls.__name__
         # Rename public variables so they are considered as the same as literals.
         if name.startswith("Public"):
-            name = name[len("Public") :].lstrip()
+            name = name[len("Public"):].lstrip()
             return name
         return name
 
     def __bool__(self):
         raise NotImplementedError
+

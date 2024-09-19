@@ -15,7 +15,7 @@ nada\_dsl.nada\_types
    :show-inheritance:
 
 
-.. automodule:: nada_dsl.nada_types.types
+.. automodule:: nada_dsl.nada_types.scalar_types
    :members:
    :undoc-members:
    :show-inheritance:
