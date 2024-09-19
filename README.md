@@ -6,7 +6,7 @@ See the official Nillion documentation site for more about the [Nada-Lang
 Framework][framework] and [Nada By Example][examples].
 
 [examples]: https://docs.nillion.com/nada-by-example
-[framework]: https://docs.nillion.com/nada-lang-framework
+[framework]: https://docs.nillion.com/nada-lang
 
 ## Auto-Generated Documentation
 
