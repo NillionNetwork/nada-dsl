@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/nada-dsl/badge/?version=latest)](https://nada-dsl.readthedocs.io/en/latest/?badge=latest)
+
 # nada-dsl
 
 nada-dsl is a Python DSL for building MPC programs on the Nillion Network.
