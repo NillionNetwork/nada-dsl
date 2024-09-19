@@ -132,14 +132,6 @@ class NadaType:
         """Default implementation for the Conversion of a type into MIR representation."""
         return self.__class__.class_to_type()
 
-    def to_mode(self) -> Mode:
-        """Default implementation for getting the mode for a type"""
-        raise NotImplementedError()
-
-    def to_base_type(self) -> BaseType:
-        """Default implementation for getting the base type for a type"""
-        raise NotImplementedError()
-
     @classmethod
     def class_to_type(cls):
         """Converts a class into a type"""

@@ -1,47 +1,37 @@
-from . import NadaType, Mode, BaseType
+from . import NadaType, Mode, BaseType, OperationType
 from nada_dsl.circuit_io import Literal
 from typing import Union
 from nada_dsl.operations import *
 from .. import SourceRef
 
-
-def new_constant(base_type: BaseType, value):
-    """Wrap a constant value in a literal type"""
-    if base_type == BaseType.BOOLEAN:
-        return Boolean(value=bool(value))
-    elif base_type == BaseType.INTEGER:
-        return Integer(value=int(value))
-    else:
-        return UnsignedInteger(value=int(value))
+SCALAR_TYPES = {}
 
 
-def new_public(base_type: BaseType, operation):
-    """Wrap an operation in a public type"""
-    if base_type == BaseType.BOOLEAN:
-        return PublicBoolean(inner=operation)
-    elif base_type == BaseType.INTEGER:
-        return PublicInteger(inner=operation)
-    else:
-        return PublicUnsignedInteger(inner=operation)
+def register_scalar_type(mode: Mode, base_type: BaseType):
+    def decorator(scalar_type):
+        SCALAR_TYPES[(mode, base_type)] = scalar_type
+        return scalar_type
+    return decorator
 
 
-def new_secret(base_type: BaseType, operation):
-    """Wrap an operation in a secret type"""
-    if base_type == BaseType.BOOLEAN:
-        return SecretBoolean(inner=operation)
-    elif base_type == BaseType.INTEGER:
-        return SecretInteger(inner=operation)
-    else:
-        return SecretUnsignedInteger(inner=operation)
+def new_scalar_type(mode: Mode, base_type: BaseType):
+    return SCALAR_TYPES.get((mode, base_type))
 
 
 class ScalarType(NadaType):
+    base_type: BaseType
+    mode: Mode
     """This abstraction represents all scalar types:
         - Boolean, PublicBoolean, SecretBoolean
         - Integer, PublicInteger, SecretInteger
         - UnsignedInteger, PublicUnsignedInteger, SecretUnsignedInteger
-        It is used to overload the common operation for all specific types are mentioned above.
+        It provides common operation implementations for all the scalar types, defined above.
      """
+
+    def __init__(self, inner: OperationType, base_type: BaseType, mode: Mode):
+        super().__init__(inner=inner)
+        self.base_type = base_type
+        self.mode = mode
 
     def __eq__(self, other):
         return equals_operation("Equals", "==", self, other, lambda lhs, rhs: lhs == rhs)
@@ -52,10 +42,10 @@ class ScalarType(NadaType):
 
 def equals_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
     """This function is an abstraction for the equality operations"""
-    base_type = left.to_base_type()
-    if base_type != right.to_base_type():
+    base_type = left.base_type
+    if base_type != right.base_type:
         raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
+    mode = Mode(max([left.mode.value, right.mode.value]))
     if mode == Mode.CONSTANT:
         return Boolean(value=bool(f(left.value, right.value)))
     elif mode == Mode.PUBLIC:
@@ -70,7 +60,7 @@ class NumericType(ScalarType):
     """This abstraction represents all numeric types:
         - Integer, PublicInteger, SecretInteger
         - UnsignedInteger, PublicUnsignedInteger, SecretUnsignedInteger
-        It is used to overload the common operation for all specific types are mentioned above.
+        It provides common operation implementations for all the numeric types, defined above.
      """
 
     def __add__(self, other):
@@ -89,16 +79,16 @@ class NumericType(ScalarType):
         return binary_arithmetic_operation("Modulo", "%", self, other, lambda lhs, rhs: lhs % rhs)
 
     def __pow__(self, other):
-        base_type = self.to_base_type()
-        if (base_type != other.to_base_type() or
+        base_type = self.base_type
+        if (base_type != other.base_type or
                 not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
             raise TypeError(f"Invalid operation: {self} ** {other}")
-        mode = Mode(max([self.to_mode().value, other.to_mode().value]))
+        mode = Mode(max([self.mode.value, other.mode.value]))
         if mode == Mode.CONSTANT:
-            return new_constant(base_type, self.value ** other.value)
+            return new_scalar_type(mode, base_type)(self.value ** other.value)
         elif mode == Mode.PUBLIC:
-            operation = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return new_public(base_type, operation)
+            inner = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+            return new_scalar_type(mode, base_type)(inner)
         else:
             raise TypeError(f"Invalid operation: {self} ** {other}")
 
@@ -123,77 +113,67 @@ class NumericType(ScalarType):
 
 def binary_arithmetic_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
     """This function is an abstraction for the binary arithmetic operations"""
-    base_type = left.to_base_type()
-    if (base_type != right.to_base_type() or
+    base_type = left.base_type
+    if (base_type != right.base_type or
             not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
         raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
+    mode = Mode(max([left.mode.value, right.mode.value]))
     if mode == Mode.CONSTANT:
-        return new_constant(base_type, f(left.value, right.value))
-    elif mode == Mode.PUBLIC:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return new_public(base_type, operation)
+        return new_scalar_type(mode, base_type)(f(left.value, right.value))
     else:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return new_secret(base_type, operation)
+        inner = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return new_scalar_type(mode, base_type)(inner)
 
 
 def shift_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
     """This function is an abstraction for the shift operations"""
-    base_type = left.to_base_type()
-    right_base_type = right.to_base_type()
+    base_type = left.base_type
+    right_base_type = right.base_type
     if (not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)
             or not right_base_type == BaseType.UNSIGNED_INTEGER):
         raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    right_mode = right.to_mode()
+    right_mode = right.mode
     if not (right_mode == Mode.CONSTANT or right_mode == Mode.PUBLIC):
         raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right_mode.value]))
+    mode = Mode(max([left.mode.value, right_mode.value]))
     if mode == Mode.CONSTANT:
-        return new_constant(base_type, f(left.value, right.value))
-    elif mode == Mode.PUBLIC:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return new_public(base_type, operation)
+        return new_scalar_type(mode, base_type)(f(left.value, right.value))
     else:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return new_secret(base_type, operation)
+        inner = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return new_scalar_type(mode, base_type)(inner)
 
 
 def binary_relational_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
     """This function is an abstraction for the binary relational operations"""
-    base_type = left.to_base_type()
-    if (base_type != right.to_base_type() or
+    base_type = left.base_type
+    if (base_type != right.base_type or
             not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
         raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
+    mode = Mode(max([left.mode.value, right.mode.value]))
     if mode == Mode.CONSTANT:
-        return Boolean(value=bool(f(left.value, right.value)))
-    elif mode == Mode.PUBLIC:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return PublicBoolean(inner=operation)
+        return new_scalar_type(mode, BaseType.BOOLEAN)(f(left.value, right.value))
     else:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return SecretBoolean(inner=operation)
+        inner = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return new_scalar_type(mode, BaseType.BOOLEAN)(inner)
 
 
 # Public equals can not be called by a literal, for this reason, it's not implemented by NumericType
 def public_equals_operation(left: ScalarType, right: ScalarType) -> ScalarType:
     """This function is an abstraction for the public_equals."""
-    base_type = left.to_base_type()
-    if (base_type != right.to_base_type() or
+    base_type = left.base_type
+    if (base_type != right.base_type or
             not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
         raise TypeError(f"Invalid operation: {left}.public_equals({right})")
-    if left.to_mode() == Mode.CONSTANT or right.to_mode() == Mode.CONSTANT:
+    if left.mode == Mode.CONSTANT or right.mode == Mode.CONSTANT:
         raise TypeError(f"Invalid operation: {left}.public_equals({right})")
     else:
-        operation = PublicOutputEquality(left=left, right=right, source_ref=SourceRef.back_frame())
-        return PublicBoolean(inner=operation)
+        return PublicBoolean(inner=PublicOutputEquality(left=left, right=right, source_ref=SourceRef.back_frame()))
 
 
 class BooleanType(ScalarType):
     """This abstraction represents all boolean types:
         - Boolean, PublicBoolean, SecretBoolean
-        It is used to overload the common operation for all specific types are mentioned above.
+        It provides common operation implementations for all the boolean types, defined above.
      """
 
     def __and__(self, other):
@@ -207,23 +187,22 @@ class BooleanType(ScalarType):
 
     def if_else(self, arg_0: ScalarType, arg_1: ScalarType) -> ScalarType:
         """This function implements the function 'if_else' for every class that extends 'BooleanType'."""
-        base_type = arg_0.to_base_type()
-        if base_type != arg_1.to_base_type() or base_type == BaseType.BOOLEAN or self.to_mode() == Mode.CONSTANT:
+        base_type = arg_0.base_type
+        if base_type != arg_1.base_type or base_type == BaseType.BOOLEAN or self.mode == Mode.CONSTANT:
             raise TypeError(f"Invalid operation: {self}.IfElse({arg_0}, {arg_1})")
-        mode = Mode(max([self.to_mode().value, arg_0.to_mode().value, arg_1.to_mode().value]))
-        operation = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
-        if mode == Mode.CONSTANT or mode == Mode.PUBLIC:
-            return new_public(base_type, operation)
-        else:
-            return new_secret(base_type, operation)
+        mode = Mode(max([self.mode.value, arg_0.mode.value, arg_1.mode.value]))
+        inner = IfElse(this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame())
+        if mode == Mode.CONSTANT:
+            mode = Mode.PUBLIC
+        return new_scalar_type(mode, base_type)(inner)
 
 
 def binary_logical_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
     """This function is an abstraction for the logical operations."""
-    base_type = left.to_base_type()
-    if base_type != right.to_base_type() or not base_type == BaseType.BOOLEAN:
+    base_type = left.base_type
+    if base_type != right.base_type or not base_type == BaseType.BOOLEAN:
         raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
+    mode = Mode(max([left.mode.value, right.mode.value]))
     if mode == Mode.CONSTANT:
         return Boolean(value=bool(f(left.value, right.value)))
     elif mode == Mode.PUBLIC:
@@ -235,66 +214,49 @@ def binary_logical_operation(operation, operator, left: ScalarType, right: Scala
 
 
 @dataclass
+@register_scalar_type(Mode.CONSTANT, BaseType.INTEGER)
 class Integer(NumericType):
     value: int
 
-    def __init__(self, value: int):
-        super().__init__(inner=Literal(value=value, source_ref=SourceRef.back_frame()))
-        if isinstance(value, int):
-            self.value = value
-        else:
-            raise ValueError(f"Expected int, got {type(value).__name__}")
-
-    def to_base_type(self) -> BaseType:
-        return BaseType.INTEGER
-
-    def to_mode(self) -> Mode:
-        return Mode.CONSTANT
+    def __init__(self, value):
+        value = int(value)
+        super().__init__(Literal(value=value, source_ref=SourceRef.back_frame()), BaseType.INTEGER, Mode.CONSTANT)
+        self.value = value
 
     def __eq__(self, other):
         return ScalarType.__eq__(self, other)
 
 
 @dataclass
+@register_scalar_type(Mode.CONSTANT, BaseType.UNSIGNED_INTEGER)
 class UnsignedInteger(NumericType):
     value: int
 
-    def __init__(self, value: int):
-        super().__init__(inner=Literal(value=value, source_ref=SourceRef.back_frame()))
-        if isinstance(value, int):
-            self.value = value
-        else:
-            raise ValueError(f"Expected int, got {type(value).__name__}")
-
-    def to_base_type(self) -> BaseType:
-        return BaseType.UNSIGNED_INTEGER
-
-    def to_mode(self) -> Mode:
-        return Mode.CONSTANT
+    def __init__(self, value):
+        value = int(value)
+        super().__init__(
+            Literal(value=value, source_ref=SourceRef.back_frame()),
+            BaseType.UNSIGNED_INTEGER,
+            Mode.CONSTANT
+        )
+        self.value = value
 
     def __eq__(self, other):
         return ScalarType.__eq__(self, other)
 
 
 @dataclass
+@register_scalar_type(Mode.CONSTANT, BaseType.BOOLEAN)
 class Boolean(BooleanType):
     value: bool
 
-    def __init__(self, value: bool):
-        super().__init__(inner=Literal(value=value, source_ref=SourceRef.back_frame()))
-        if isinstance(value, bool):
-            self.value = value
-        else:
-            raise ValueError(f"Expected bool, got {type(value).__name__}")
+    def __init__(self, value):
+        value = bool(value)
+        super().__init__(Literal(value=value, source_ref=SourceRef.back_frame()), BaseType.BOOLEAN, Mode.CONSTANT)
+        self.value = value
 
     def __bool__(self) -> bool:
         return self.value
-
-    def to_base_type(self) -> BaseType:
-        return BaseType.BOOLEAN
-
-    def to_mode(self) -> Mode:
-        return Mode.CONSTANT
 
     def __eq__(self, other):
         return ScalarType.__eq__(self, other)
@@ -304,16 +266,11 @@ class Boolean(BooleanType):
 
 
 @dataclass
+@register_scalar_type(Mode.PUBLIC, BaseType.INTEGER)
 class PublicInteger(NumericType):
 
     def __init__(self, inner: NadaType):
-        super().__init__(inner)
-
-    def to_base_type(self) -> BaseType:
-        return BaseType.INTEGER
-
-    def to_mode(self) -> Mode:
-        return Mode.PUBLIC
+        super().__init__(inner, BaseType.INTEGER, Mode.PUBLIC)
 
     def __eq__(self, other):
         return ScalarType.__eq__(self, other)
@@ -323,16 +280,11 @@ class PublicInteger(NumericType):
 
 
 @dataclass
+@register_scalar_type(Mode.PUBLIC, BaseType.UNSIGNED_INTEGER)
 class PublicUnsignedInteger(NumericType):
 
     def __init__(self, inner: NadaType):
-        super().__init__(inner)
-
-    def to_base_type(self) -> BaseType:
-        return BaseType.UNSIGNED_INTEGER
-
-    def to_mode(self) -> Mode:
-        return Mode.PUBLIC
+        super().__init__(inner, BaseType.UNSIGNED_INTEGER, Mode.PUBLIC)
 
     def __eq__(self, other):
         return ScalarType.__eq__(self, other)
@@ -342,16 +294,11 @@ class PublicUnsignedInteger(NumericType):
 
 
 @dataclass
+@register_scalar_type(Mode.PUBLIC, BaseType.BOOLEAN)
 class PublicBoolean(BooleanType):
 
     def __init__(self, inner: NadaType):
-        super().__init__(inner)
-
-    def to_base_type(self) -> BaseType:
-        return BaseType.BOOLEAN
-
-    def to_mode(self) -> Mode:
-        return Mode.PUBLIC
+        super().__init__(inner, BaseType.BOOLEAN, Mode.PUBLIC)
 
     def __eq__(self, other):
         return ScalarType.__eq__(self, other)
@@ -362,16 +309,11 @@ class PublicBoolean(BooleanType):
 
 
 @dataclass
+@register_scalar_type(Mode.SECRET, BaseType.INTEGER)
 class SecretInteger(NumericType):
 
     def __init__(self, inner: NadaType):
-        super().__init__(inner)
-
-    def to_base_type(self) -> BaseType:
-        return BaseType.INTEGER
-
-    def to_mode(self) -> Mode:
-        return Mode.SECRET
+        super().__init__(inner, BaseType.INTEGER, Mode.SECRET)
 
     def __eq__(self, other):
         return ScalarType.__eq__(self, other)
@@ -399,15 +341,10 @@ class SecretInteger(NumericType):
 
 
 @dataclass
+@register_scalar_type(Mode.SECRET, BaseType.UNSIGNED_INTEGER)
 class SecretUnsignedInteger(NumericType):
     def __init__(self, inner: NadaType):
-        super().__init__(inner)
-
-    def to_base_type(self) -> BaseType:
-        return BaseType.UNSIGNED_INTEGER
-
-    def to_mode(self) -> Mode:
-        return Mode.SECRET
+        super().__init__(inner, BaseType.UNSIGNED_INTEGER, Mode.SECRET)
 
     def __eq__(self, other):
         return ScalarType.__eq__(self, other)
@@ -435,15 +372,10 @@ class SecretUnsignedInteger(NumericType):
 
 
 @dataclass
+@register_scalar_type(Mode.SECRET, BaseType.BOOLEAN)
 class SecretBoolean(BooleanType):
     def __init__(self, inner: NadaType):
-        super().__init__(inner)
-
-    def to_base_type(self) -> BaseType:
-        return BaseType.BOOLEAN
-
-    def to_mode(self) -> Mode:
-        return Mode.SECRET
+        super().__init__(inner, BaseType.BOOLEAN, Mode.SECRET)
 
     def __eq__(self, other):
         return ScalarType.__eq__(self, other)
