@@ -1,3 +1,5 @@
+"""Operations that will be supported in the future."""
+
 from dataclasses import dataclass
 
 from nada_dsl import SourceRef
@@ -7,6 +9,8 @@ from nada_dsl.nada_types import AllTypes, AllTypesType
 
 @dataclass
 class Cast:
+    """Cast operation."""
+
     target: AllTypes
     to: AllTypesType
     source_ref: SourceRef
@@ -18,7 +22,7 @@ class Cast:
         self.source_ref = source_ref
 
     def store_in_ast(self, ty: object):
-        # We don't need to use ty because the output type is part of the operation.
+        """Store object in AST"""
         AST_OPERATIONS[self.id] = CastASTOperation(
-            id=self.id, target=self.target, to=self.to, source_ref=self.source_ref
+            id=self.id, target=self.target, ty=ty, source_ref=self.source_ref
         )

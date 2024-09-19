@@ -10,6 +10,7 @@ from dataclasses import dataclass
 import traceback
 import importlib.util
 from nada_dsl.compiler_frontend import nada_compile
+from nada_dsl.errors import MissingEntryPointError, MissingProgramArgumentError
 from nada_dsl.timer import add_timer, timer
 
 
@@ -21,7 +22,7 @@ class CompilerOutput:
 
 
 @add_timer(timer_name="nada_dsl.compile.compile")
-def compile(script_path: str) -> CompilerOutput:
+def compile_script(script_path: str) -> CompilerOutput:
     """Compiles a NADA program
 
     Args:
@@ -41,10 +42,10 @@ def compile(script_path: str) -> CompilerOutput:
 
     try:
         main = getattr(script, "nada_main")
-    except:
-        raise Exception(
+    except Exception as exc:
+        raise MissingEntryPointError(
             "'nada_dsl' entrypoint function is missing in program " + script_name
-        )
+        ) from exc
     outputs = main()
     compile_output = nada_compile(outputs)
     return CompilerOutput(compile_output)
@@ -64,7 +65,7 @@ def compile_string(script: str) -> CompilerOutput:
     temp_name = "temp_program"
     spec = importlib.util.spec_from_loader(temp_name, loader=None)
     module = importlib.util.module_from_spec(spec)
-    exec(decoded_program, module.__dict__)
+    exec(decoded_program, module.__dict__)  # pylint:disable=W0122
     sys.modules[temp_name] = module
     globals()[temp_name] = module
 
@@ -92,17 +93,20 @@ if __name__ == "__main__":
             timer.enable()
         args_length = len(sys.argv)
         if args_length < 2:
-            raise Exception("expected program as argument")
+            raise MissingProgramArgumentError("expected program as argument")
         if args_length == 2:
-            output = compile(sys.argv[1])
+            output = compile_script(sys.argv[1])
             print_output(output)
         if args_length == 3 and sys.argv[1] == "-s":
             output = compile_string(sys.argv[2])
             print_output(output)
 
     except Exception as ex:
-        tb = traceback.format_exc()
-        output = {"result": "Failure", "reason": str(ex), "traceback": str(tb)}
+        output = {
+            "result": "Failure",
+            "reason": str(ex),
+            "traceback": str(traceback.format_exc()),
+        }
         print(json.dumps(output))
 
     finally:

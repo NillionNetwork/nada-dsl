@@ -1,6 +1,6 @@
 .DS_Store
 .coverage
-
+.vscode/
 *.pyc
 __pycache__
 *.egg-info

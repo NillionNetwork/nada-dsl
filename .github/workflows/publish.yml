@@ -1,6 +1,7 @@
 # Release workflow
 # - When there is a push to 'main', it detects if the local version has changed and is higher than the remote (PyPI) version.
 # - Generates a new nada-dsl release, signes it and pushes it to PyPI when a PR is merged that updates the version number in pyproject.toml.
+# - Generates a new nada-dsl Github release
 
 name: Create a new release
 

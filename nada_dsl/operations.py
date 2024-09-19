@@ -15,6 +15,8 @@ from nada_dsl.nada_types import AllTypes
 
 
 class BinaryOperation:
+    """Superclass of all the binary operations."""
+
     def __init__(self, left: AllTypes, right: AllTypes, source_ref: SourceRef):
         self.id = id(self)
         self.left = left
@@ -22,6 +24,7 @@ class BinaryOperation:
         self.source_ref = source_ref
 
     def store_in_ast(self, ty: object):
+        """Store object in AST"""
         AST_OPERATIONS[self.id] = BinaryASTOperation(
             id=self.id,
             name=self.__class__.__name__,
@@ -33,12 +36,15 @@ class BinaryOperation:
 
 
 class UnaryOperation:
+    """Superclass of all the unary operations."""
+
     def __init__(self, inner: AllTypes, source_ref: SourceRef):
         self.id = id(self)
         self.inner = inner
         self.source_ref = source_ref
 
     def store_in_ast(self, ty: object):
+        """Store object in AST."""
         AST_OPERATIONS[self.id] = UnaryASTOperation(
             id=self.id,
             name=self.__class__.__name__,
@@ -49,78 +55,80 @@ class UnaryOperation:
 
 
 class Addition(BinaryOperation):
-    pass
+    """Addition operation"""
 
 
 class Subtraction(BinaryOperation):
-    pass
+    """Subtraction operation."""
 
 
 class Multiplication(BinaryOperation):
-    pass
+    """Multiplication operation"""
 
 
 class Division(BinaryOperation):
-    pass
+    """Division operation"""
 
 
 class Modulo(BinaryOperation):
-    pass
+    """Modulo operation"""
 
 
 class Power(BinaryOperation):
-    pass
+    """Power operation"""
 
 
 class RightShift(BinaryOperation):
-    pass
+    """Right shift (>>) operation."""
 
 
 class LeftShift(BinaryOperation):
-    pass
+    """Left shift (<<)operation."""
 
 
 class LessThan(BinaryOperation):
-    pass
+    """Less than (<) operation"""
 
 
 class GreaterThan(BinaryOperation):
-    pass
+    """Greater than (>) operation."""
 
 
 class LessOrEqualThan(BinaryOperation):
-    pass
+    """Less or equal (<=) operation."""
 
 
 class GreaterOrEqualThan(BinaryOperation):
-    pass
+    """Greater or equal (>=) operation."""
 
 
 class Equals(BinaryOperation):
-    pass
+    """Equals (==) operation"""
 
 
 class NotEquals(BinaryOperation):
-    pass
+    """Not equals (!=) operation."""
 
 
 class PublicOutputEquality(BinaryOperation):
-    pass
+    """Public output equality operation."""
 
 
 class BooleanAnd(BinaryOperation):
-    pass
+    """Boolean AND (&) operation."""
 
 
 class BooleanOr(BinaryOperation):
-    pass
+    """Boolean OR (|) operation."""
 
 
 class BooleanXor(BinaryOperation):
-    pass
+    """Boolean XOR (^) operation."""
 
 
 class Random:
+    """Random operation."""
+
     source_ref: SourceRef
 
     def __init__(self, source_ref):
@@ -128,6 +136,7 @@ class Random:
         self.source_ref = source_ref
 
     def store_in_ast(self, ty):
+        """Store object in AST."""
         AST_OPERATIONS[self.id] = RandomASTOperation(
             id=self.id, ty=ty, source_ref=self.source_ref
         )
@@ -154,6 +163,7 @@ class IfElse:
         self.source_ref = source_ref
 
     def store_in_ast(self, ty):
+        """Store object in AST."""
         AST_OPERATIONS[self.id] = IfElseASTOperation(
             id=self.id,
             this=self.this.inner.id,
@@ -165,14 +175,18 @@ class IfElse:
 
 
 class Reveal(UnaryOperation):
+    """Reveal (i.e. make public) operation."""
+
     def __init__(self, this: AllTypes, source_ref: SourceRef):
         super().__init__(inner=this, source_ref=source_ref)
 
 
 class TruncPr(BinaryOperation):
-    pass
+    """Probabilistic Truncation operation."""
 
 
 class Not(UnaryOperation):
+    """Not (!) Operation"""
+
     def __init__(self, this: AllTypes, source_ref: SourceRef):
         super().__init__(inner=this, source_ref=source_ref)
