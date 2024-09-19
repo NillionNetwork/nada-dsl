@@ -14,3 +14,7 @@ nada_dsl/version.py
 
 *.log
 *.out
+
+# IntelliJ IDEA
+*.iml
+.idea
