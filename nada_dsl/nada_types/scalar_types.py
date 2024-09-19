@@ -6,6 +6,7 @@ from .. import SourceRef
 
 
 def new_constant(base_type: BaseType, value):
+    """Wrap a constant value in a literal type"""
     if base_type == BaseType.BOOLEAN:
         return Boolean(value=bool(value))
     elif base_type == BaseType.INTEGER:
@@ -15,6 +16,7 @@ def new_constant(base_type: BaseType, value):
 
 
 def new_public(base_type: BaseType, operation):
+    """Wrap an operation in a public type"""
     if base_type == BaseType.BOOLEAN:
         return PublicBoolean(inner=operation)
     elif base_type == BaseType.INTEGER:
@@ -24,6 +26,7 @@ def new_public(base_type: BaseType, operation):
 
 
 def new_secret(base_type: BaseType, operation):
+    """Wrap an operation in a secret type"""
     if base_type == BaseType.BOOLEAN:
         return SecretBoolean(inner=operation)
     elif base_type == BaseType.INTEGER:
@@ -33,6 +36,12 @@ def new_secret(base_type: BaseType, operation):
 
 
 class ScalarType(NadaType):
+    """This abstraction represents all scalar types:
+        - Boolean, PublicBoolean, SecretBoolean
+        - Integer, PublicInteger, SecretInteger
+        - UnsignedInteger, PublicUnsignedInteger, SecretUnsignedInteger
+        It is used to overload the common operation for all specific types are mentioned above.
+     """
 
     def __eq__(self, other):
         return equals_operation("Equals", "==", self, other, lambda lhs, rhs: lhs == rhs)
@@ -41,7 +50,28 @@ class ScalarType(NadaType):
         return equals_operation("NotEquals", "!=", self, other, lambda lhs, rhs: lhs != rhs)
 
 
+def equals_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
+    """This function is an abstraction for the equality operations"""
+    base_type = left.to_base_type()
+    if base_type != right.to_base_type():
+        raise TypeError(f"Invalid operation: {left} {operator} {right}")
+    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
+    if mode == Mode.CONSTANT:
+        return Boolean(value=bool(f(left.value, right.value)))
+    elif mode == Mode.PUBLIC:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return PublicBoolean(inner=operation)
+    else:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return SecretBoolean(inner=operation)
+
+
 class NumericType(ScalarType):
+    """This abstraction represents all numeric types:
+        - Integer, PublicInteger, SecretInteger
+        - UnsignedInteger, PublicUnsignedInteger, SecretUnsignedInteger
+        It is used to overload the common operation for all specific types are mentioned above.
+     """
 
     def __add__(self, other):
         return binary_arithmetic_operation("Addition", "+", self, other, lambda lhs, rhs: lhs + rhs)
@@ -91,7 +121,80 @@ class NumericType(ScalarType):
         return binary_relational_operation("GreaterOrEqualThan", ">=", self, other, lambda lhs, rhs: lhs >= rhs)
 
 
+def binary_arithmetic_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
+    """This function is an abstraction for the binary arithmetic operations"""
+    base_type = left.to_base_type()
+    if (base_type != right.to_base_type() or
+            not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
+        raise TypeError(f"Invalid operation: {left} {operator} {right}")
+    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
+    if mode == Mode.CONSTANT:
+        return new_constant(base_type, f(left.value, right.value))
+    elif mode == Mode.PUBLIC:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return new_public(base_type, operation)
+    else:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return new_secret(base_type, operation)
+
+
+def shift_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
+    """This function is an abstraction for the shift operations"""
+    base_type = left.to_base_type()
+    right_base_type = right.to_base_type()
+    if (not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)
+            or not right_base_type == BaseType.UNSIGNED_INTEGER):
+        raise TypeError(f"Invalid operation: {left} {operator} {right}")
+    right_mode = right.to_mode()
+    if not (right_mode == Mode.CONSTANT or right_mode == Mode.PUBLIC):
+        raise TypeError(f"Invalid operation: {left} {operator} {right}")
+    mode = Mode(max([left.to_mode().value, right_mode.value]))
+    if mode == Mode.CONSTANT:
+        return new_constant(base_type, f(left.value, right.value))
+    elif mode == Mode.PUBLIC:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return new_public(base_type, operation)
+    else:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return new_secret(base_type, operation)
+
+
+def binary_relational_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
+    """This function is an abstraction for the binary relational operations"""
+    base_type = left.to_base_type()
+    if (base_type != right.to_base_type() or
+            not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
+        raise TypeError(f"Invalid operation: {left} {operator} {right}")
+    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
+    if mode == Mode.CONSTANT:
+        return Boolean(value=bool(f(left.value, right.value)))
+    elif mode == Mode.PUBLIC:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return PublicBoolean(inner=operation)
+    else:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return SecretBoolean(inner=operation)
+
+
+# Public equals can not be called by a literal, for this reason, it's not implemented by NumericType
+def public_equals_operation(left: ScalarType, right: ScalarType) -> ScalarType:
+    """This function is an abstraction for the public_equals."""
+    base_type = left.to_base_type()
+    if (base_type != right.to_base_type() or
+            not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
+        raise TypeError(f"Invalid operation: {left}.public_equals({right})")
+    if left.to_mode() == Mode.CONSTANT or right.to_mode() == Mode.CONSTANT:
+        raise TypeError(f"Invalid operation: {left}.public_equals({right})")
+    else:
+        operation = PublicOutputEquality(left=left, right=right, source_ref=SourceRef.back_frame())
+        return PublicBoolean(inner=operation)
+
+
 class BooleanType(ScalarType):
+    """This abstraction represents all boolean types:
+        - Boolean, PublicBoolean, SecretBoolean
+        It is used to overload the common operation for all specific types are mentioned above.
+     """
 
     def __and__(self, other):
         return binary_logical_operation("BooleanAnd", "&", self, other, lambda lhs, rhs: lhs & rhs)
@@ -103,6 +206,7 @@ class BooleanType(ScalarType):
         return binary_logical_operation("BooleanXor", "^", self, other, lambda lhs, rhs: lhs ^ rhs)
 
     def if_else(self, arg_0: ScalarType, arg_1: ScalarType) -> ScalarType:
+        """This function implements the function 'if_else' for every class that extends 'BooleanType'."""
         base_type = arg_0.to_base_type()
         if base_type != arg_1.to_base_type() or base_type == BaseType.BOOLEAN or self.to_mode() == Mode.CONSTANT:
             raise TypeError(f"Invalid operation: {self}.IfElse({arg_0}, {arg_1})")
@@ -112,6 +216,22 @@ class BooleanType(ScalarType):
             return new_public(base_type, operation)
         else:
             return new_secret(base_type, operation)
+
+
+def binary_logical_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
+    """This function is an abstraction for the logical operations."""
+    base_type = left.to_base_type()
+    if base_type != right.to_base_type() or not base_type == BaseType.BOOLEAN:
+        raise TypeError(f"Invalid operation: {left} {operator} {right}")
+    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
+    if mode == Mode.CONSTANT:
+        return Boolean(value=bool(f(left.value, right.value)))
+    elif mode == Mode.PUBLIC:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return PublicBoolean(inner=operation)
+    else:
+        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
+        return SecretBoolean(inner=operation)
 
 
 @dataclass
@@ -336,96 +456,3 @@ class SecretBoolean(BooleanType):
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
         return PublicBoolean(inner=operation)
 
-
-def binary_arithmetic_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
-    base_type = left.to_base_type()
-    if (base_type != right.to_base_type() or
-            not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
-        raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
-    if mode == Mode.CONSTANT:
-        return new_constant(base_type, f(left.value, right.value))
-    elif mode == Mode.PUBLIC:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return new_public(base_type, operation)
-    else:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return new_secret(base_type, operation)
-
-
-def shift_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
-    base_type = left.to_base_type()
-    right_base_type = right.to_base_type()
-    if (not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)
-            or not right_base_type == BaseType.UNSIGNED_INTEGER):
-        raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    right_mode = right.to_mode()
-    if not (right_mode == Mode.CONSTANT or right_mode == Mode.PUBLIC):
-        raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right_mode.value]))
-    if mode == Mode.CONSTANT:
-        return new_constant(base_type, f(left.value, right.value))
-    elif mode == Mode.PUBLIC:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return new_public(base_type, operation)
-    else:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return new_secret(base_type, operation)
-
-
-def binary_relational_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
-    base_type = left.to_base_type()
-    if (base_type != right.to_base_type() or
-            not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
-        raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
-    if mode == Mode.CONSTANT:
-        return Boolean(value=bool(f(left.value, right.value)))
-    elif mode == Mode.PUBLIC:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return PublicBoolean(inner=operation)
-    else:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return SecretBoolean(inner=operation)
-
-
-def equals_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
-    base_type = left.to_base_type()
-    if base_type != right.to_base_type():
-        raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
-    if mode == Mode.CONSTANT:
-        return Boolean(value=bool(f(left.value, right.value)))
-    elif mode == Mode.PUBLIC:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return PublicBoolean(inner=operation)
-    else:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return SecretBoolean(inner=operation)
-
-
-def public_equals_operation(left: ScalarType, right: ScalarType) -> ScalarType:
-    base_type = left.to_base_type()
-    if (base_type != right.to_base_type() or
-            not (base_type == BaseType.INTEGER or base_type == BaseType.UNSIGNED_INTEGER)):
-        raise TypeError(f"Invalid operation: {left}.public_equals({right})")
-    if left.to_mode() == Mode.CONSTANT or right.to_mode() == Mode.CONSTANT:
-        raise TypeError(f"Invalid operation: {left}.public_equals({right})")
-    else:
-        operation = PublicOutputEquality(left=left, right=right, source_ref=SourceRef.back_frame())
-        return PublicBoolean(inner=operation)
-
-
-def binary_logical_operation(operation, operator, left: ScalarType, right: ScalarType, f) -> ScalarType:
-    base_type = left.to_base_type()
-    if base_type != right.to_base_type() or not base_type == BaseType.BOOLEAN:
-        raise TypeError(f"Invalid operation: {left} {operator} {right}")
-    mode = Mode(max([left.to_mode().value, right.to_mode().value]))
-    if mode == Mode.CONSTANT:
-        return Boolean(value=bool(f(left.value, right.value)))
-    elif mode == Mode.PUBLIC:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return PublicBoolean(inner=operation)
-    else:
-        operation = globals()[operation](left=left, right=right, source_ref=SourceRef.back_frame())
-        return SecretBoolean(inner=operation)
