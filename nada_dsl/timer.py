@@ -19,12 +19,13 @@ class Clock:
     """NOP implementation of a Clock"""
 
     def start(self, timer_name: str):
-        pass
+        """Start the timer"""
 
     def stop(self, timer_name: str):
-        pass
+        """Stop the timer"""
 
     def report(self) -> Dict[str, float]:
+        """Report"""
         return {}
 
 
@@ -91,6 +92,7 @@ class Timer:
         self.clock.stop(timer_name)
 
     def report(self):
+        """Returns the report provided by the clock implementation."""
         return self.clock.report()
 
 

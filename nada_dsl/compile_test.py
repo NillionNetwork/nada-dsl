@@ -7,8 +7,9 @@ import os
 import json
 import pytest
 from nada_dsl.ast_util import AST_OPERATIONS
-from nada_dsl.compile import compile, compile_string
+from nada_dsl.compile import compile_script, compile_string
 from nada_dsl.compiler_frontend import FUNCTIONS, INPUTS, PARTIES
+
 
 @pytest.fixture(autouse=True)
 def clean_inputs():
@@ -18,14 +19,17 @@ def clean_inputs():
     AST_OPERATIONS.clear()
     yield
 
+
 def get_test_programs_folder():
     file_path = os.path.realpath(__file__)
     this_directory = os.path.dirname(file_path)
+    if not this_directory.endswith("/"):
+        this_directory = this_directory + "/"
     return this_directory + "../test-programs/"
 
 
 def test_compile_nada_fn_simple():
-    mir_str = compile(f"{get_test_programs_folder()}/nada_fn_simple.py").mir
+    mir_str = compile_script(f"{get_test_programs_folder()}/nada_fn_simple.py").mir
     assert mir_str != ""
     mir = json.loads(mir_str)
     mir_functions = mir["functions"]

@@ -1,6 +1,6 @@
 """function.py
 
-Nada functions and utilities.
+Nada function definitions and utilities.
 """
 
 import inspect
@@ -16,9 +16,12 @@ from nada_dsl.ast_util import (
 )
 from nada_dsl.nada_types.generics import T, R
 from nada_dsl.nada_types import NadaType
+from nada_dsl.nada_types.scalar_types import ScalarType
 
 
 class NadaFunctionArg(Generic[T]):
+    """Represents a Nada function argument."""
+
     function_id: int
     name: str
     type: T
@@ -33,6 +36,7 @@ class NadaFunctionArg(Generic[T]):
         self.store_in_ast(arg_type.to_type())
 
     def store_in_ast(self, ty):
+        """Store object in AST."""
         AST_OPERATIONS[self.id] = NadaFunctionArgASTOperation(
             id=self.id,
             name=self.name,
@@ -43,6 +47,14 @@ class NadaFunctionArg(Generic[T]):
 
 
 class NadaFunction(Generic[T, R]):
+    """Nada Function.
+
+    Represents a Nada Function. Nada functions are special types of functions that are used
+    in map / reduce operations.
+
+    They are decorated using the `@nada_fn` decorator.
+    """
+
     id: int
     args: List[NadaFunctionArg]
     function: Callable[[T], R]
@@ -67,6 +79,7 @@ class NadaFunction(Generic[T, R]):
         self.store_in_ast()
 
     def store_in_ast(self):
+        """Store this Nada Function in AST."""
         AST_OPERATIONS[self.id] = NadaFunctionASTOperation(
             name=self.function.__name__,
             args=[arg.id for arg in self.args],
@@ -77,7 +90,9 @@ class NadaFunction(Generic[T, R]):
         )
 
     def __call__(self, *args, **kwargs) -> R:
-        return self.return_type(inner=NadaFunctionCall(self, args, source_ref=SourceRef.back_frame()))  # type: ignore
+        return self.return_type(
+            inner=NadaFunctionCall(self, args, source_ref=SourceRef.back_frame())
+        )
 
 
 @dataclass
@@ -96,6 +111,7 @@ class NadaFunctionCall(Generic[R]):
         self.store_in_ast(nada_function.return_type.class_to_type())
 
     def store_in_ast(self, ty):
+        """Store this function call in the AST."""
         AST_OPERATIONS[self.id] = NadaFunctionCallASTOperation(
             id=self.id,
             args=[arg.inner.id for arg in self.args],
@@ -106,22 +122,25 @@ class NadaFunctionCall(Generic[R]):
 
 
 def inner_type(ty):
-    from nada_dsl import Vector, Array
+    """Utility function that calculates the inner type for a function argument."""
 
     origin_ty = getattr(ty, "__origin__", ty)
-    if origin_ty == Array or origin_ty == Vector:
+    if not issubclass(origin_ty, ScalarType):
         inner_ty = getattr(ty, "__args__", None)
         inner_ty = inner_type(inner_ty[0]) if inner_ty else T
         return origin_ty.init_as_template_type(inner_ty)
-    else:
-        return origin_ty(inner=None)
+
+    return origin_ty(inner=None)
 
 
 def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
     """
     Can be used also for lambdas
     ```python
-    array.map(nada_fn(lambda x: x.cast(SecretInteger), args_ty={'x': SecretInteger}, return_ty=SecretInteger))
+    array.map(
+        nada_fn(
+            lambda x: x.cast(SecretInteger),
+            args_ty={'x': SecretInteger}, return_ty=SecretInteger))
     ```
     """
 

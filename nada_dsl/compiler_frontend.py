@@ -30,7 +30,7 @@ from nada_dsl.ast_util import (
 )
 from nada_dsl.timer import timer
 from nada_dsl.source_ref import SourceRef
-from nada_dsl.circuit_io import Output
+from nada_dsl.program_io import Output
 
 INPUTS = SortedDict()
 PARTIES = SortedDict()
@@ -206,8 +206,8 @@ def add_input_to_map(operation: InputASTOperation):
         and INPUTS[party_name][operation.name][0].id != operation.id
     ):
         raise CompilerException(f"Input is duplicated: {operation.name}")
-    else:
-        INPUTS[party_name][operation.name] = (operation, operation.ty)
+
+    INPUTS[party_name][operation.name] = (operation, operation.ty)
     return operation.to_mir()
 
 
@@ -285,7 +285,7 @@ def process_operation(
 
     It ignores nada function arguments as they should not be present in the MIR.
     """
-
+    processed_operation = None
     if isinstance(
         operation,
         (
@@ -298,15 +298,15 @@ def process_operation(
             NadaFunctionArgASTOperation,
         ),
     ):
-        return ProcessOperationOutput(operation.to_mir(), None)
+        processed_operation = ProcessOperationOutput(operation.to_mir(), None)
 
     elif isinstance(operation, InputASTOperation):
         add_input_to_map(operation)
-        return ProcessOperationOutput(operation.to_mir(), None)
+        processed_operation = ProcessOperationOutput(operation.to_mir(), None)
     elif isinstance(operation, LiteralASTOperation):
 
         LITERALS[operation.literal_name] = (str(operation.value), operation.ty)
-        return ProcessOperationOutput(operation.to_mir(), None)
+        processed_operation = ProcessOperationOutput(operation.to_mir(), None)
     elif isinstance(
         operation, (MapASTOperation, ReduceASTOperation, NadaFunctionCallASTOperation)
     ):
@@ -314,13 +314,14 @@ def process_operation(
         if operation.fn not in functions:
             extra_fn = AST_OPERATIONS[operation.fn]
 
-        return ProcessOperationOutput(operation.to_mir(), extra_fn)  # type: ignore
+        processed_operation = ProcessOperationOutput(operation.to_mir(), extra_fn)  # type: ignore
     elif isinstance(operation, NadaFunctionASTOperation):
         extra_fn = None
         if operation.id not in functions:
             extra_fn = AST_OPERATIONS[operation.id]
-        return ProcessOperationOutput({}, extra_fn)  # type: ignore
+        processed_operation = ProcessOperationOutput({}, extra_fn)  # type: ignore
     else:
         raise CompilerException(
             f"Compilation of Operation {operation} is not supported"
         )
+    return processed_operation

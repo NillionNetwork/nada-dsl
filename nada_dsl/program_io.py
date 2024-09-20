@@ -1,7 +1,14 @@
+"""Program Input Output utilities. 
+
+Define the types used for inputs and outputs in Nada programs. 
+
+"""
+
 from dataclasses import dataclass
 from typing import Any
 
 from nada_dsl.ast_util import AST_OPERATIONS, InputASTOperation, LiteralASTOperation
+from nada_dsl.errors import InvalidTypeError
 from nada_dsl.nada_types import AllTypes, Party
 from nada_dsl.nada_types import NadaType
 from nada_dsl.source_ref import SourceRef
@@ -29,8 +36,10 @@ class Input(NadaType):
         self.doc = doc
         self.inner = None
         self.source_ref = SourceRef.back_frame()
+        super().__init__(self.inner)
 
     def store_in_ast(self, ty: object):
+        """Store object in AST"""
         AST_OPERATIONS[self.id] = InputASTOperation(
             id=self.id,
             name=self.name,
@@ -57,8 +66,10 @@ class Literal(NadaType):
         self.value = value
         self.source_ref = source_ref
         self.inner = None
+        super().__init__(self.inner)
 
     def store_in_ast(self, ty: object):
+        """Store object in AST"""
         AST_OPERATIONS[self.id] = LiteralASTOperation(
             operation_id=self.id,
             name=self.__class__.__name__,
@@ -87,7 +98,7 @@ class Output:
     def __init__(self, inner, name, party):
         self.source_ref = SourceRef.back_frame()
         if not issubclass(type(inner), NadaType):
-            raise Exception(
+            raise InvalidTypeError(
                 f"{self.source_ref.file}:{self.source_ref.lineno}: Output value "
                 f"{inner} of type {type(inner)} is not "
                 f"a Nada type so it isn't a valid output"

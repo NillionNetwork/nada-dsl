@@ -1,9 +1,9 @@
 """ AST utilities."""
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
 import hashlib
-from typing import Callable, Dict, List
+from typing import Dict, List
 from sortedcontainers import SortedDict
 from nada_dsl.nada_types import NadaTypeRepr, Party
 from nada_dsl.source_ref import SourceRef
@@ -179,6 +179,7 @@ class LiteralASTOperation(ASTOperation):
         self.literal_name = hashlib.md5(
             (str(self.value) + str(self.ty)).encode("UTF-8")
         ).hexdigest()
+        super().__init__(id=self.id, source_ref=self.source_ref, ty=self.ty)
 
     def to_mir(self):
         return {
@@ -337,7 +338,7 @@ class NadaFunctionASTOperation(ASTOperation):
         return self.id
 
 
-# TODO This is partially implemented
+# Partially implemented
 @dataclass
 class CastASTOperation(ASTOperation):
     """AST Representation of a Cast operation."""

@@ -52,12 +52,12 @@ ignore=CVS
 # ignore-list. The regex matches against paths and can be in Posix or Windows
 # format. Because '\\' represents the directory delimiter on Windows systems,
 # it can't be used as an escape character.
-ignore-paths=
+ignore-paths=nada_dsl/version.py
 
 # Files or directories matching the regular expression patterns are skipped.
 # The regex matches against base names, not paths. The default value ignores
 # Emacs file locks
-ignore-patterns=^\.#
+ignore-patterns=(.)*_test\.py,^\.#
 
 # List of module names for which member attributes should not be checked
 # (useful for modules/projects where namespaces are manipulated during runtime
@@ -337,7 +337,7 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=120
 
 # Maximum number of lines in a module.
 max-module-lines=1000
@@ -430,7 +430,7 @@ disable=raw-checker-failed,
         deprecated-pragma,
         use-symbolic-message-instead,
         use-implicit-booleaness-not-comparison-to-string,
-        use-implicit-booleaness-not-comparison-to-zero
+        use-implicit-booleaness-not-comparison-to-zero,W0223,W0718,R0903,R0913,R0801,R0401,W0231
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
