@@ -10,7 +10,8 @@ on:
     branches: "**"
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   build:
@@ -18,6 +19,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
       - name: Set up Python 3.10
         uses: actions/setup-python@v3
         with:
@@ -33,3 +37,30 @@ jobs:
       - name: Test with pytest
         run: |
           pytest
+
+      - name: Coverage Badge
+        uses: tj-actions/coverage-badge-py@v2
+        if: ${{ github.event_name == 'push' }}
+
+      - name: Verify Changed files
+        uses: tj-actions/verify-changed-files@v16
+        if: ${{ github.event_name == 'push' }}
+        id: verify-changed-files
+        with:
+          files: coverage.svg
+
+      - name: Commit files
+        if: steps.verify-changed-files.outputs.files_changed == 'true' && github.event_name == 'push'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add coverage.svg
+          git commit -m "Updated coverage.svg"
+
+      - name: Push changes
+        if: steps.verify-changed-files.outputs.files_changed == 'true' && github.event_name == 'push'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.head_ref }}
+          force: true
