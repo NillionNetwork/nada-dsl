@@ -1,6 +1,6 @@
 [![Documentation Status](https://readthedocs.org/projects/nada-dsl/badge/?version=latest)](https://nada-dsl.readthedocs.io/en/latest/?badge=latest)
 ![Build Status](https://github.com/NillionNetwork/nada-dsl/actions/workflows/build.yml/badge.svg)
-![PyPI - Version](https://img.shields.io/pypi/v/:packageName)
+![PyPI - Version](https://img.shields.io/pypi/v/nada-dsl)
 
 # nada-dsl
 
