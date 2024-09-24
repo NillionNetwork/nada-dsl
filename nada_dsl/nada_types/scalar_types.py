@@ -161,6 +161,16 @@ class NumericType(ScalarType):
             "GreaterOrEqualThan", ">=", self, other, lambda lhs, rhs: lhs >= rhs
         )
 
+    def __radd__(self, other):
+        """This adds support for builtin `sum` operation for numeric types."""
+        if isinstance(other, int):
+            other_type = new_scalar_type(mode=Mode.CONSTANT, base_type=self.base_type)(
+                other
+            )
+            return self.__add__(other_type)
+
+        return self.__add__(other)
+
 
 def binary_arithmetic_operation(
     operation, operator, left: ScalarType, right: ScalarType, f
