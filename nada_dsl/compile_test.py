@@ -9,6 +9,7 @@ import pytest
 from nada_dsl.ast_util import AST_OPERATIONS
 from nada_dsl.compile import compile_script, compile_string
 from nada_dsl.compiler_frontend import FUNCTIONS, INPUTS, PARTIES
+from nada_dsl.errors import NotAllowedException
 
 
 @pytest.fixture(autouse=True)
@@ -123,3 +124,8 @@ def nada_main():
 
     with pytest.raises(NameError):
         compile_string(encoded_program_str)
+
+
+def test_compile_nada_fn_literals():
+    with pytest.raises(NotAllowedException):
+        mir_str = compile_script(f"{get_test_programs_folder()}/nada_fn_literal.py").mir
