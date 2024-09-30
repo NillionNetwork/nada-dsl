@@ -72,6 +72,8 @@ def register_scalar_type(mode: Mode, base_type: BaseType):
 
     def decorator(scalar_type: ScalarType):
         SCALAR_TYPES[(mode, base_type)] = scalar_type
+        scalar_type.mode = mode
+        scalar_type.base_type = base_type
         return scalar_type
 
     return decorator
@@ -308,7 +310,6 @@ def binary_logical_operation(
     return SecretBoolean(inner=operation)
 
 
-@dataclass
 @register_scalar_type(Mode.CONSTANT, BaseType.INTEGER)
 class Integer(NumericType):
     """The Nada Integer type.

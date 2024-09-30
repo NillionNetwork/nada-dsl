@@ -15,8 +15,9 @@ from nada_dsl.ast_util import (
     NadaFunctionCallASTOperation,
 )
 from nada_dsl.nada_types.generics import T, R
-from nada_dsl.nada_types import NadaType
+from nada_dsl.nada_types import Mode, NadaType
 from nada_dsl.nada_types.scalar_types import ScalarType
+from nada_dsl.errors import NotAllowedException
 
 
 class NadaFunctionArg(Generic[T]):
@@ -70,10 +71,25 @@ class NadaFunction(Generic[T, R]):
         source_ref: SourceRef,
         inner: NadaType,
     ):
+        if issubclass(return_type, ScalarType) and return_type.mode == Mode.CONSTANT:
+            raise NotAllowedException(
+                "Nada functions with literal return types are not allowed"
+            )
+        # Nada functions with literal argument types are not supported.
+        # This is because the compiler consolidates operations between literals.
+        if all(
+            issubclass(arg.type.__class__, ScalarType)
+            and arg.type.mode == Mode.CONSTANT
+            for arg in args
+        ):
+            raise NotAllowedException(
+                "Nada functions with literal argument types are not allowed"
+            )
         self.inner = inner
         self.id = function_id
         self.args = args
         self.function = function
+
         self.return_type = return_type
         self.source_ref = source_ref
         self.store_in_ast()
@@ -129,7 +145,8 @@ def inner_type(ty):
         inner_ty = getattr(ty, "__args__", None)
         inner_ty = inner_type(inner_ty[0]) if inner_ty else T
         return origin_ty.init_as_template_type(inner_ty)
-
+    if origin_ty.mode == Mode.CONSTANT:
+        return origin_ty(value=0)
     return origin_ty(inner=None)
 
 
