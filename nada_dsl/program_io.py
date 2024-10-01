@@ -7,7 +7,12 @@ Define the types used for inputs and outputs in Nada programs.
 from dataclasses import dataclass
 from typing import Any
 
-from nada_dsl.ast_util import AST_OPERATIONS, InputASTOperation, LiteralASTOperation
+from nada_dsl.ast_util import (
+    AST_OPERATIONS,
+    InputASTOperation,
+    LiteralASTOperation,
+    next_operation_id,
+)
 from nada_dsl.errors import InvalidTypeError
 from nada_dsl.nada_types import AllTypes, Party
 from nada_dsl.nada_types import NadaType
@@ -30,7 +35,7 @@ class Input(NadaType):
     source_ref: SourceRef
 
     def __init__(self, name, party, doc=""):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.name = name
         self.party = party
         self.doc = doc
@@ -62,7 +67,7 @@ class Literal(NadaType):
     source_ref: SourceRef
 
     def __init__(self, value, source_ref):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.value = value
         self.source_ref = source_ref
         self.inner = None

@@ -102,7 +102,7 @@ class Map(Generic[T, R]):
         fn: NadaFunction[T, R],
         source_ref: SourceRef,
     ):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.inner = inner
         self.fn = fn
         self.source_ref = source_ref
@@ -134,7 +134,7 @@ class Reduce(Generic[T, R]):
         initial: R,
         source_ref: SourceRef,
     ):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.inner = inner
         self.fn = fn
         self.initial = initial
@@ -213,7 +213,7 @@ class Zip:
     """The Zip operation."""
 
     def __init__(self, left: AllTypes, right: AllTypes, source_ref: SourceRef):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.left = left
         self.right = right
         self.source_ref = source_ref
@@ -234,7 +234,7 @@ class Unzip:
     """The Unzip operation."""
 
     def __init__(self, inner: AllTypes, source_ref: SourceRef):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.inner = inner
         self.source_ref = source_ref
 
@@ -253,7 +253,7 @@ class InnerProduct:
     """Inner product of two arrays."""
 
     def __init__(self, left: AllTypes, right: AllTypes, source_ref: SourceRef):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.left = left
         self.right = right
         self.source_ref = source_ref
@@ -498,7 +498,7 @@ class TupleNew(Generic[T, U]):
     def __init__(
         self, inner_type: NadaType, inner: typing.Tuple[T, U], source_ref: SourceRef
     ):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.inner = inner
         self.source_ref = source_ref
         self.inner_type = inner_type
@@ -536,7 +536,7 @@ class ArrayNew(Generic[T]):
     source_ref: SourceRef
 
     def __init__(self, inner_type: NadaType, inner: List[T], source_ref: SourceRef):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.inner = inner
         self.source_ref = source_ref
         self.inner_type = inner_type

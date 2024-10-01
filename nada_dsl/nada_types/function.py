@@ -13,6 +13,8 @@ from nada_dsl.ast_util import (
     NadaFunctionASTOperation,
     NadaFunctionArgASTOperation,
     NadaFunctionCallASTOperation,
+    next_function_id,
+    next_operation_id,
 )
 from nada_dsl.nada_types.generics import T, R
 from nada_dsl.nada_types import NadaType
@@ -28,7 +30,7 @@ class NadaFunctionArg(Generic[T]):
     source_ref: SourceRef
 
     def __init__(self, function_id: int, name: str, arg_type: T, source_ref: SourceRef):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.function_id = function_id
         self.name = name
         self.type = arg_type
@@ -104,7 +106,7 @@ class NadaFunctionCall(Generic[R]):
     source_ref: SourceRef
 
     def __init__(self, nada_function, args, source_ref):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.args = args
         self.fn = nada_function
         self.source_ref = source_ref
@@ -146,12 +148,13 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
 
     args = inspect.getfullargspec(fn)
     nada_args = []
+    function_id = next_function_id()
     for arg in args.args:
         arg_type = args_ty[arg] if args_ty else args.annotations[arg]
         arg_type = inner_type(arg_type)
         # We'll get the function source ref for now
         nada_arg = NadaFunctionArg(
-            function_id=id(fn),
+            function_id,
             name=arg,
             arg_type=arg_type,
             source_ref=SourceRef.back_frame(),
@@ -169,7 +172,7 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
 
     return_type = return_ty if return_ty else args.annotations["return"]
     return NadaFunction(
-        function_id=id(fn),
+        function_id,
         function=fn,
         args=nada_args,
         inner=inner,
