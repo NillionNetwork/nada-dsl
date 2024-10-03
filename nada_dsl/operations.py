@@ -10,6 +10,7 @@ from nada_dsl.ast_util import (
     IfElseASTOperation,
     RandomASTOperation,
     UnaryASTOperation,
+    next_operation_id,
 )
 from nada_dsl.nada_types import AllTypes
 
@@ -18,7 +19,7 @@ class BinaryOperation:
     """Superclass of all the binary operations."""
 
     def __init__(self, left: AllTypes, right: AllTypes, source_ref: SourceRef):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.left = left
         self.right = right
         self.source_ref = source_ref
@@ -39,7 +40,7 @@ class UnaryOperation:
     """Superclass of all the unary operations."""
 
     def __init__(self, inner: AllTypes, source_ref: SourceRef):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.inner = inner
         self.source_ref = source_ref
 
@@ -132,7 +133,7 @@ class Random:
     source_ref: SourceRef
 
     def __init__(self, source_ref):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.source_ref = source_ref
 
     def store_in_ast(self, ty):
@@ -156,7 +157,7 @@ class IfElse:
     def __init__(
         self, this: AllTypes, arg_0: AllTypes, arg_1: AllTypes, source_ref: SourceRef
     ):
-        self.id = id(self)
+        self.id = next_operation_id()
         self.this = this
         self.arg_0 = arg_0
         self.arg_1 = arg_1
