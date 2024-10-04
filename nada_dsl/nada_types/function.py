@@ -13,7 +13,6 @@ from nada_dsl.ast_util import (
     NadaFunctionASTOperation,
     NadaFunctionArgASTOperation,
     NadaFunctionCallASTOperation,
-    next_function_id,
     next_operation_id,
 )
 from nada_dsl.nada_types.generics import T, R
@@ -165,7 +164,7 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
 
     args = inspect.getfullargspec(fn)
     nada_args = []
-    function_id = next_function_id()
+    function_id = next_operation_id()
     for arg in args.args:
         arg_type = args_ty[arg] if args_ty else args.annotations[arg]
         arg_type = inner_type(arg_type)
