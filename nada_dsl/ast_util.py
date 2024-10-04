@@ -9,21 +9,12 @@ from nada_dsl.nada_types import NadaTypeRepr, Party
 from nada_dsl.source_ref import SourceRef
 
 OPERATION_ID_COUNTER = 0
-FUNCTION_ID_COUNTER = 0
-
 
 def next_operation_id() -> int:
     """Returns the next value of the operation id counter."""
     global OPERATION_ID_COUNTER
     OPERATION_ID_COUNTER += 1
     return OPERATION_ID_COUNTER
-
-
-def next_function_id() -> int:
-    """Returns the next value of the function id counter."""
-    global FUNCTION_ID_COUNTER
-    FUNCTION_ID_COUNTER += 1
-    return FUNCTION_ID_COUNTER
 
 
 @dataclass
