@@ -1,6 +1,6 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
+# This workflow builds and tests the project.
+# It runs for every pull request.
+# For testing currently uses the tests in Nillion repo.
 name: Build
 
 on:
@@ -33,3 +33,14 @@ jobs:
       - name: Test with pytest
         run: |
           pytest
+  # Test that the compiled programs can run with the Nillion backend.
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout tools repo
+        uses: actions/checkout@v4
+        with:
+          repository: NillionNetwork/nillion
+          path: nillion
