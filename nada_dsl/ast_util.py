@@ -55,6 +55,9 @@ class ASTOperation(ABC):
 # The key is the operation identifier, the value the operation
 AST_OPERATIONS: Dict[int, ASTOperation] = SortedDict()
 
+# Map of literal hashes to index
+LITERALS: Dict[str, int] = {}
+
 
 @dataclass
 class BinaryASTOperation(ASTOperation):
@@ -184,9 +187,16 @@ class LiteralASTOperation(ASTOperation):
         self.source_ref = source_ref
         # Generate a unique name depending on the value and type
         # to prevent duplicating literals in the bytecode.
-        self.literal_name = hashlib.md5(
+        literal_name = hashlib.md5(
             (str(self.value) + str(self.ty)).encode("UTF-8")
         ).hexdigest()
+
+        # Replace the literal name by an index so it is shorter
+        if literal_name not in LITERALS:
+            LITERALS[literal_name] = len(LITERALS)
+
+        self.literal_name = str(LITERALS[literal_name])
+
         super().__init__(id=self.id, source_ref=self.source_ref, ty=self.ty)
 
     def to_mir(self):

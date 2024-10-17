@@ -577,7 +577,6 @@ def test_binary_operator_integer_publicinteger(operator, name, ty):
     right_ast = AST_OPERATIONS[inner["right"]]
     assert isinstance(left_ast, LiteralASTOperation)
     assert left_ast.value == -3
-    assert len(left_ast.literal_name) == 32
     assert isinstance(right_ast, InputASTOperation)
     assert right_ast.name == "right"
     assert inner["type"] == to_type(ty)
