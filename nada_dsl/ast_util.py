@@ -10,6 +10,7 @@ from nada_dsl.source_ref import SourceRef
 
 OPERATION_ID_COUNTER = 0
 
+
 def next_operation_id() -> int:
     """Returns the next value of the operation id counter."""
     global OPERATION_ID_COUNTER
@@ -54,6 +55,9 @@ class ASTOperation(ABC):
 # Map of operations identified by the Python compiler
 # The key is the operation identifier, the value the operation
 AST_OPERATIONS: Dict[int, ASTOperation] = SortedDict()
+
+# Map of literal hashes to index
+LITERALS: Dict[str, int] = {}
 
 
 @dataclass
@@ -167,7 +171,7 @@ class LiteralASTOperation(ASTOperation):
 
     name: str
     value: object
-    literal_name: str
+    literal_index: str
 
     def __init__(
         self,
@@ -184,16 +188,23 @@ class LiteralASTOperation(ASTOperation):
         self.source_ref = source_ref
         # Generate a unique name depending on the value and type
         # to prevent duplicating literals in the bytecode.
-        self.literal_name = hashlib.md5(
+        literal_name = hashlib.md5(
             (str(self.value) + str(self.ty)).encode("UTF-8")
         ).hexdigest()
+
+        # Replace the literal name by an index so it is shorter
+        if literal_name not in LITERALS:
+            LITERALS[literal_name] = len(LITERALS)
+
+        self.literal_index = str(LITERALS[literal_name])
+
         super().__init__(id=self.id, source_ref=self.source_ref, ty=self.ty)
 
     def to_mir(self):
         return {
             "LiteralReference": {
                 "id": self.id,
-                "refers_to": self.literal_name,
+                "refers_to": self.literal_index,
                 "type": self.ty,
                 "source_ref_index": self.source_ref.to_index(),
             }

@@ -305,7 +305,7 @@ def process_operation(
         processed_operation = ProcessOperationOutput(operation.to_mir(), None)
     elif isinstance(operation, LiteralASTOperation):
 
-        LITERALS[operation.literal_name] = (str(operation.value), operation.ty)
+        LITERALS[operation.literal_index] = (str(operation.value), operation.ty)
         processed_operation = ProcessOperationOutput(operation.to_mir(), None)
     elif isinstance(
         operation, (MapASTOperation, ReduceASTOperation, NadaFunctionCallASTOperation)
