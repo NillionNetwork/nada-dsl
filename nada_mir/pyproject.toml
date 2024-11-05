@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nada-mir-proto"
+version = "0.1.0"
+description = "The protocol buffers representation of the Nada MIR."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = ["grpcio-tools==1.62.3", "betterproto==2.0.0b7"]
+
+[project.optional-dependencies]
+dev = ["betterproto[compiler]==2.0.0b7"]

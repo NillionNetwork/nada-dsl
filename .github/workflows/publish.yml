@@ -20,6 +20,7 @@ jobs:
       local_version_is_higher: ${{ steps.versioncheck.outputs.local_version_is_higher }}
       local_version: ${{ steps.versioncheck.outputs.local_version }}
       remote_version: ${{ steps.versioncheck.outputs.public_version }}
+      local_nada_mir_version_is_higher: ${{ steps.versioncheck_nada_mir.outputs.local_version_is_higher }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,13 +28,20 @@ jobs:
         uses: maybe-hello-world/pyproject-check-version@v4
         id: versioncheck
         with:
-          pyproject-path: "./pyproject.toml" # default value
+          pyproject-path: "./pyproject.toml"
+
+      - name: Check pypi versions
+        uses: maybe-hello-world/pyproject-check-version@v4
+        id: versioncheck_nada_mir
+        with:
+          pyproject-path: "nada_mir/pyproject.toml"
 
       - name: check output
         run: |
           echo "Output: ${{ steps.versioncheck.outputs.local_version_is_higher }}"  # 'true' or 'false
           echo "Local version: ${{ steps.versioncheck.outputs.local_version }}"     # e.g., 0.1.1
           echo "Public version: ${{ steps.versioncheck.outputs.public_version }}"   # e.g., 0.1.0
+          echo "nada_mir Output: ${{ steps.versioncheck.outputs.local_version_is_higher }}"  # 'true' or 'false"
 
   # Build distribution files
   build-distribution:
@@ -61,6 +69,30 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
+  build-nada-mir-distribution:
+    needs: checkversion
+    if: needs.checkversion.outputs.local_nada_mir_version_is_higher == 'true'
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "^3.10"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.24"
+      - name: Install pypa/build
+        run: >-
+          uv build --package nada-mir-proto -o nada_mir/dist
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nada-mir-python-package-distributions
+          path: nada_mir/dist/
 
   # Generates a Github release with the version taken from the one in pyproject.toml
   github-release:
@@ -124,3 +156,26 @@ jobs:
       - name: Publish distribution 📦 to PyPI
         # Publishes using trusted publishers
         uses: pypa/gh-action-pypi-publish@release/v1
+  publish-to-pypi-nada-mir:
+    needs: [checkversion, build-distribution]
+    if: needs.checkversion.outputs.local_nada_mir_version_is_higher == 'true'
+    name: >-
+      Publish nada-mir-proto Python 🐍 distribution 📦 to PyPI
+      if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/nada-mir-proto/
+    permissions:
+      id-token: write # IMPORTANT: mandatory for trusted publishing
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: nada-mir-python-package-distributions
+          path: nada_mir/dist/
+      - name: Publish distribution 📦 to PyPI
+        # Publishes using trusted publishers
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: nada_mir/dist/

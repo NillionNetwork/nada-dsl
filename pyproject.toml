@@ -4,16 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nada_dsl"
-version = "0.6.4"
+version = "0.7.0"
 description = "Nillion Nada DSL to create Nillion MPC programs."
 requires-python = ">=3.10"
 readme = "README.pyproject.md"
-dependencies = [
-    "asttokens~=2.4",
-    "richreports~=0.2",
-    "parsial~=0.1",
-    "sortedcontainers~=2.4",
-]
+dependencies = ["asttokens~=2.4", "richreports~=0.2", "parsial~=0.1", "sortedcontainers~=2.4"]
 classifiers = ["License :: OSI Approved :: Apache Software License"]
 license = { file = "LICENSE" }
 
@@ -23,12 +18,24 @@ test = ["pytest>=7.4,<9.0", "pytest-cov>=4,<6"]
 lint = ["pylint>=2.17,<3.4"]
 
 [tool.setuptools]
-packages = [
-    "nada_dsl",
-    "nada_dsl.audit",
-    "nada_dsl.future",
-    "nada_dsl.nada_types",
-]
+packages = ["nada_dsl", "nada_dsl.audit", "nada_dsl.future", "nada_dsl.nada_types"]
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --ignore=docs --cov=nada_dsl --cov-report term-missing"
+
+[tool.uv]
+dev-dependencies = [
+    "toml~=0.10.2",
+    "sphinx>=5,<9",
+    "sphinx-rtd-theme>=1.0,<3.1",
+    "pytest>=7.4,<9.0",
+    "pytest-cov>=4,<6",
+    "pylint>=2.17,<3.4",
+    "nada-mir-proto[dev]",
+]
+
+[tool.uv.sources]
+nada-mir-proto = { workspace = true }
+
+[tool.uv.workspace]
+members = ["nada_mir"]
