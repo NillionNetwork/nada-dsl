@@ -3,7 +3,7 @@
 from abc import ABC
 from dataclasses import dataclass
 import hashlib
-from typing import Dict, List
+from typing import Dict, List, Optional
 from sortedcontainers import SortedDict
 from nada_dsl.nada_types import NadaTypeRepr, Party
 from nada_dsl.source_ref import SourceRef

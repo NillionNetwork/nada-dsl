@@ -28,6 +28,7 @@ from nada_dsl.ast_util import (
     ReduceASTOperation,
     UnaryASTOperation,
 )
+from nada_dsl.nada_types.collections import ObjectASTOperation, ObjectPropertyASTOperation
 from nada_dsl.timer import timer
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.program_io import Output
@@ -103,7 +104,6 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
         )
     # Now we go through all the discovered functions and see if they are
     # invoking other functions, which we will need to process and add to the FUNCTIONS dictionary
-
     return {
         "functions": to_mir_function_list(FUNCTIONS),
         "parties": to_party_list(PARTIES),
@@ -206,7 +206,7 @@ def add_input_to_map(operation: InputASTOperation):
         and INPUTS[party_name][operation.name][0].id != operation.id
     ):
         raise CompilerException(f"Input is duplicated: {operation.name}")
-
+    
     INPUTS[party_name][operation.name] = (operation, operation.ty)
     return operation.to_mir()
 
@@ -248,6 +248,10 @@ def traverse_and_process_operations(
     while len(stack) > 0:
         operation_id = stack.pop()
         if operation_id not in operations:
+            if operation_id not in AST_OPERATIONS:
+                raise CompilerException(
+                    f"Operation id {operation_id} not found in AST_OPERATIONS"
+                )
             operation = AST_OPERATIONS[operation_id]
             wrapped_operation = process_operation(operation, functions)
             operations[operation_id] = wrapped_operation.mir
@@ -320,6 +324,10 @@ def process_operation(
         if operation.id not in functions:
             extra_fn = AST_OPERATIONS[operation.id]
         processed_operation = ProcessOperationOutput({}, extra_fn)  # type: ignore
+    elif isinstance(operation, ObjectASTOperation):
+        processed_operation = ProcessOperationOutput(operation.to_mir(), None)
+    elif isinstance(operation, ObjectPropertyASTOperation):
+        processed_operation = ProcessOperationOutput(operation.to_mir(), None)
     else:
         raise CompilerException(
             f"Compilation of Operation {operation} is not supported"

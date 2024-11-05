@@ -161,3 +161,36 @@ def test_compile_map_simple():
                 raise Exception(f"Unexpected operation: {name}")
     assert map_inner > 0 and array_input_id > 0 and map_inner == array_input_id
     assert function_op_id > 0 and output_id == function_op_id
+
+
+def test_compile_document():
+    mir_str = compile_script(f"{get_test_programs_folder()}/document.py").mir
+    assert mir_str != ""
+    print(f"MIR: {mir_str}")
+    mir = json.loads(mir_str)
+    # assert len(mir["operations"]) == 2
+    # assert len(mir["functions"]) == 1
+    # function_id = mir["functions"][0]["id"]
+    # operations_found = 0
+    # array_input_id = 0
+    # map_inner = 0
+    # output_id = mir["outputs"][0]["operation_id"]
+    # function_op_id = 0
+    # for operation in mir["operations"].values():
+    #     for name, op in operation.items():
+    #         op_id = op["id"]
+    #         if name == "InputReference":
+    #             array_input_id = op_id
+    #             assert op["type"] == {
+    #                 "Array": {"inner_type": "SecretInteger", "size": 3}
+    #             }
+    #             operations_found += 1
+    #         elif name == "Map":
+    #             assert op["fn"] == function_id
+    #             map_inner = op["inner"]
+    #             function_op_id = op["id"]
+    #             operations_found += 1
+    #         else:
+    #             raise Exception(f"Unexpected operation: {name}")
+    # assert map_inner > 0 and array_input_id > 0 and map_inner == array_input_id
+    # assert function_op_id > 0 and output_id == function_op_id

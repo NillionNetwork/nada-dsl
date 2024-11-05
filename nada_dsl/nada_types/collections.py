@@ -3,7 +3,9 @@
 import copy
 from dataclasses import dataclass
 import inspect
-from typing import Generic, List, Optional
+import json
+import traceback
+from typing import Any, Generic, List, Optional
 import typing
 from typing import TypeVar
 
@@ -14,6 +16,7 @@ from nada_dsl.ast_util import (
     NewASTOperation,
     ReduceASTOperation,
     UnaryASTOperation,
+    ASTOperation,
 )
 from nada_dsl.nada_types import NadaType
 
@@ -200,6 +203,163 @@ class Tuple(Generic[T, U], Collection):
     def generic_type(cls, left_type: U, right_type: T) -> TupleType:
         """Returns the generic type for this Tuple"""
         return TupleType(left_type=left_type, right_type=right_type)
+
+@dataclass
+class ObjectProperty(NadaType):
+    parent_object_id: int
+    source_ref: SourceRef
+    id: int
+
+    def __init__(
+        self,
+        parent_object_id: int,
+        source_ref: SourceRef,
+    ):
+        self.id = next_operation_id()
+        self.parent_object_id = parent_object_id
+        self.source_ref = source_ref
+        self.store_in_ast(self)
+
+    def store_in_ast(self, ty):
+        """Store a reduce object in AST"""
+        AST_OPERATIONS[self.id] = ObjectPropertyASTOperation(
+            id=self.id,
+            parent_object_id=self.parent_object_id,
+            source_ref=self.source_ref,
+            ty=ty,
+        )
+
+@dataclass
+class ObjectPropertyASTOperation(ASTOperation):
+    """AST Representation of a Reduce operation."""
+
+    parent_object_id: int
+
+    def inner_operations(self):
+        return [self.parent_object_id]
+
+    def to_mir(self):
+        return {
+            "ObjectProperty": {
+                "id": self.id,
+                "parent_object_id": self.parent_object_id,
+                "type": self.ty,
+                "source_ref_index": self.source_ref.to_index(),
+            }
+        }
+    
+def types_from_json(value: dict, is_public: bool):
+    if not isinstance(value, dict):
+        raise ValueError(
+            "Expected root type of a document to be a dictionary"
+        ) 
+
+    result = {}
+    for name, value in value.items():
+        result[name] = _types_from_json(value, is_public)
+    return result
+
+def _types_from_json(value: Any, is_public: bool):
+    result = {}
+    if isinstance(value, bool):
+        result = "SecretBoolean" if not is_public else "Boolean"
+    elif isinstance(value, int):
+        result = "SecretInteger" if not is_public else "Integer"
+    elif isinstance(value, list):
+        types = [_types_from_json(v, is_public) for v in value]
+        
+        # Check if all types in the list are the same
+        unique_types = set(types)
+        if len(unique_types) == 1:
+            # Use "Array" instead of "NTuple" if all types are the same
+            result = { "Array": { "inner_type": types[0], "size": len(types) } }
+        else:
+            result = { "NTuple": { "types": types } }
+    elif isinstance(value, dict):
+        types = {k: _types_from_json(v, is_public) for k, v in value.items()}
+        result = { "Object": { "types": types } }
+    return result
+
+class TreeDict:
+    def __init__(self, tree):
+        self._tree = tree
+
+    def __getattr__(self, item):
+        return self.lookup(self._tree, item)
+
+    @staticmethod
+    def lookup(value, item):
+        if item in value:
+            result = value[item]
+            if isinstance(result, dict):
+                # Wrap the nested dictionary in another TreeDict
+                return TreeDict(result)
+            return result
+        raise AttributeError(f"Item '{item}' not found")
+
+class _Object(NadaType):
+    tree_dict: TreeDict
+
+    def __init__(self, inner: OperationType, source_file: str, is_public: bool) -> None:
+        self.id = next_operation_id()
+        self.inner = inner
+        with open(source_file) as f:
+            content = f.read()
+        source = json.loads(content)
+        self.tree_dict = types_from_json(source, is_public)
+        self.store_in_ast(self)
+        super().__init__(inner)
+
+    def __getattr__(self, item):
+        result = TreeDict.lookup(self.tree_dict, item)
+        print(f"result = {result}")
+        #scalar = new_scalar_type(Mode.PUBLIC, BaseType.INTEGER)(ObjectProperty(parent_object_id=self.id, source_ref=SourceRef.back_frame()))
+        #return scalar # TODO
+      
+    def to_type(self):
+        return {"Object": {"types": 
+            self.tree_dict
+        }}
+    
+    def store_in_ast(self, ty):
+        """Store a reduce object in AST"""
+        AST_OPERATIONS[self.id] = ObjectASTOperation(
+            id=self.id,
+            inner=self.inner.id,
+            source_ref=SourceRef.back_frame(),
+            ty=ty,
+        )
+
+
+@dataclass
+class ObjectASTOperation(ASTOperation):
+    """AST Representation of a Reduce operation."""
+
+    inner: int
+
+    def inner_operations(self):
+        return [self.inner]
+
+    def to_mir(self):
+        return {
+            "Object": {
+                "id": self.id,
+                "inner": self.inner,
+                #"type": self.ty,
+                "source_ref_index": 0, #TMP self.source_ref.to_index(),
+            }
+        }
+    
+
+
+class PublicDocument(_Object):
+    def __init__(self, inner: OperationType,  source_file: str) -> None:
+        super().__init__(inner, source_file, True)
+
+
+class PrivateDocument(_Object):
+    def __init__(self, inner: OperationType,  source_file: str) -> None:
+        super().__init__(inner, source_file, False)
 
 
 def get_inner_type(inner_type):

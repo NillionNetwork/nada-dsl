@@ -1,0 +1,19 @@
+{
+    "foo": 41,
+    "bar": 1,
+    "baz": true,
+    "arr": [
+        4,
+        8,
+        9
+    ],
+    "obj": {
+        "first": true,
+        "second": 42
+    },
+    "tup": [
+        true,
+        true,
+        42
+    ]
+}
