@@ -23,25 +23,28 @@ jobs:
       local_nada_mir_version_is_higher: ${{ steps.versioncheck_nada_mir.outputs.local_version_is_higher }}
     steps:
       - uses: actions/checkout@v4
-
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.24"
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
       - name: Check pypi versions
-        uses: maybe-hello-world/pyproject-check-version@v4
         id: versioncheck
-        with:
-          pyproject-path: "./pyproject.toml"
+        run: >-
+          python scripts/version_checker.py "./pyproject.toml"
 
       - name: Check pypi versions
-        uses: maybe-hello-world/pyproject-check-version@v4
         id: versioncheck_nada_mir
-        with:
-          pyproject-path: "nada_mir/pyproject.toml"
+        run: >-
+          python scripts/version_checker.py "nada_mir/pyproject.toml"
 
       - name: check output
         run: |
           echo "Output: ${{ steps.versioncheck.outputs.local_version_is_higher }}"  # 'true' or 'false
           echo "Local version: ${{ steps.versioncheck.outputs.local_version }}"     # e.g., 0.1.1
           echo "Public version: ${{ steps.versioncheck.outputs.public_version }}"   # e.g., 0.1.0
-          echo "nada_mir Output: ${{ steps.versioncheck.outputs.local_version_is_higher }}"  # 'true' or 'false"
+          echo "nada_mir Output: ${{ steps.versioncheck_nada_mir.outputs.local_version_is_higher }}"  # 'true' or 'false"
 
   # Build distribution files
   build-distribution:
@@ -85,7 +88,7 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           version: "0.4.24"
-      - name: Install pypa/build
+      - name: Build package
         run: >-
           uv build --package nada-mir-proto -o nada_mir/dist
       - name: Store the distribution packages

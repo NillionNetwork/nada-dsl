@@ -32,6 +32,8 @@ dev-dependencies = [
     "pytest-cov>=4,<6",
     "pylint>=2.17,<3.4",
     "nada-mir-proto[dev]",
+    "tomli",
+    "requests",
 ]
 
 [tool.uv.sources]
