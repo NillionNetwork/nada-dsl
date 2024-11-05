@@ -30,7 +30,7 @@ from nada_dsl.compiler_frontend import (
     traverse_and_process_operations,
 )
 from nada_dsl.nada_types import AllTypes, Party
-from nada_dsl.nada_types.collections import Array, Vector, Tuple, NTuple, unzip
+from nada_dsl.nada_types.collections import Array, Vector, Tuple, NTuple, Object, unzip
 from nada_dsl.nada_types.function import NadaFunctionArg, NadaFunctionCall, nada_fn
 
 
@@ -542,6 +542,31 @@ def test_n_tuple_new():
     print(f"inner = {inner}")
     assert inner["type"]["NTuple"] == {
         "types": ["SecretInteger", "Integer", "SecretInteger"],
+    }
+
+
+def test_object_new():
+    first_input = create_input(SecretInteger, "first", "party", **{})
+    second_input = create_input(PublicInteger, "second", "party", **{})
+    third_input = create_input(SecretInteger, "third", "party", **{})
+    object = Object.new({"a": first_input, "b": second_input, "c": third_input})
+    array_ast = AST_OPERATIONS[object.inner.id]
+
+    op = process_operation(array_ast, {}).mir
+
+    assert list(op.keys()) == ["New"]
+
+    inner = op["New"]
+
+    first_ast = AST_OPERATIONS[inner["elements"][0]]
+    second_ast = AST_OPERATIONS[inner["elements"][1]]
+    third_ast = AST_OPERATIONS[inner["elements"][2]]
+    assert first_ast.name == "first"
+    assert second_ast.name == "second"
+    assert third_ast.name == "third"
+    print(f"inner = {inner}")
+    assert inner["type"]["Object"] == {
+        "types": {"a": "SecretInteger", "b": "Integer", "c": "SecretInteger"},
     }
 
 
