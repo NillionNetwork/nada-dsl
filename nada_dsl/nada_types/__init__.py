@@ -36,6 +36,7 @@ AllTypes = Union[
     "Array",
     "Vector",
     "Tuple",
+    "NTuple",
 ]
 AllTypesType = Union[
     Type["Integer"],
@@ -51,6 +52,7 @@ AllTypesType = Union[
     Type["ArrayType"],
     Type["Vector"],
     Type["Tuple"],
+    Type["NTuple"],
 ]
 OperationType = Union[
     "Addition",

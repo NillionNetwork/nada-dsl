@@ -202,6 +202,58 @@ class Tuple(Generic[T, U], Collection):
         return TupleType(left_type=left_type, right_type=right_type)
 
 
+@dataclass
+class NTupleType:
+    """Marker type for NTuples."""
+
+    types: List[NadaType]
+
+    def to_type(self):
+        """Convert a n tuple object into a Nada type."""
+        return {
+            "NTuple": {
+                "types": [ty.to_type() for ty in self.types],
+            }
+        }
+
+
+class NTuple(NadaType):
+    """The NTuple type"""
+
+    types: List[NadaType]
+
+    def __init__(self, inner, types: List[NadaType]):
+        self.types = types
+        self.inner = inner
+        super().__init__(self.inner)
+
+    @classmethod
+    def new(cls, types: List[NadaType]) -> "NTuple":
+        """Constructs a new NTuple."""
+        return NTuple(
+            types=types,
+            inner=NTupleNew(
+                inner=types,
+                source_ref=SourceRef.back_frame(),
+                inner_type=NTuple(
+                    types=types, inner=None
+                ),
+            ),
+        )
+
+    @classmethod
+    def generic_type(cls, types: List[NadaType]) -> NTupleType:
+        """Returns the generic type for this NTuple"""
+        return NTupleType(types=types)
+
+    def to_type(self):
+        """Convert operation wrapper to a dictionary representing its type."""
+        return {
+            "NTuple": {
+                "types": [ty.to_type() for ty in self.types]
+            }
+        }
+
 def get_inner_type(inner_type):
     """Utility that returns the inner type for a composite type."""
     inner_type = copy.copy(inner_type)
@@ -505,6 +557,36 @@ class TupleNew(Generic[T, U]):
 
     def store_in_ast(self, ty: object):
         """Store this TupleNew in the AST."""
+        AST_OPERATIONS[self.id] = NewASTOperation(
+            id=self.id,
+            name=self.__class__.__name__,
+            elements=[element.inner.id for element in self.inner],
+            source_ref=self.source_ref,
+            ty=ty,
+            inner_type=self.inner_type,
+        )
+
+
+class NTupleNew:
+    """MIR NTuple new operation.
+
+    Represents the creation of a new Tuple.
+    """
+
+    inner_types: List[NadaType]
+    inner: typing.Tuple
+    source_ref: SourceRef
+
+    def __init__(
+        self, inner_type: NadaType, inner: typing.Tuple, source_ref: SourceRef
+    ):
+        self.id = next_operation_id()
+        self.inner = inner
+        self.source_ref = source_ref
+        self.inner_type = inner_type
+
+    def store_in_ast(self, ty: object):
+        """Store this NTupleNew in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,
             name=self.__class__.__name__,
