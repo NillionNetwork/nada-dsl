@@ -30,7 +30,7 @@ from nada_dsl.compiler_frontend import (
     traverse_and_process_operations,
 )
 from nada_dsl.nada_types import AllTypes, Party
-from nada_dsl.nada_types.collections import Array, Vector, Tuple, unzip
+from nada_dsl.nada_types.collections import Array, Vector, Tuple, NTuple, unzip
 from nada_dsl.nada_types.function import NadaFunctionArg, NadaFunctionCall, nada_fn
 
 
@@ -492,8 +492,8 @@ def test_array_new_same_type():
 def test_tuple_new():
     first_input = create_input(SecretInteger, "first", "party", **{})
     second_input = create_input(PublicInteger, "second", "party", **{})
-    array = Tuple.new(first_input, second_input)
-    array_ast = AST_OPERATIONS[array.inner.id]
+    tuple = Tuple.new(first_input, second_input)
+    array_ast = AST_OPERATIONS[tuple.inner.id]
 
     op = process_operation(array_ast, {}).mir
 
@@ -518,6 +518,31 @@ def test_tuple_new_empty():
         str(e.value)
         == "Tuple.new() missing 2 required positional arguments: 'left_type' and 'right_type'"
     )
+
+
+def test_n_tuple_new():
+    first_input = create_input(SecretInteger, "first", "party", **{})
+    second_input = create_input(PublicInteger, "second", "party", **{})
+    third_input = create_input(SecretInteger, "third", "party", **{})
+    tuple = NTuple.new([first_input, second_input, third_input])
+    array_ast = AST_OPERATIONS[tuple.inner.id]
+
+    op = process_operation(array_ast, {}).mir
+
+    assert list(op.keys()) == ["New"]
+
+    inner = op["New"]
+
+    first_ast = AST_OPERATIONS[inner["elements"][0]]
+    second_ast = AST_OPERATIONS[inner["elements"][1]]
+    third_ast = AST_OPERATIONS[inner["elements"][2]]
+    assert first_ast.name == "first"
+    assert second_ast.name == "second"
+    assert third_ast.name == "third"
+    print(f"inner = {inner}")
+    assert inner["type"]["NTuple"] == {
+        "types": ["SecretInteger", "Integer", "SecretInteger"],
+    }
 
 
 @pytest.mark.parametrize(
