@@ -3,7 +3,7 @@
 import copy
 from dataclasses import dataclass
 import inspect
-from typing import Generic, List, Optional
+from typing import Dict, Generic, List, Optional
 import typing
 from typing import TypeVar
 
@@ -251,6 +251,59 @@ class NTuple(NadaType):
         return {
             "NTuple": {
                 "types": [ty.to_type() for ty in self.types]
+            }
+        }
+
+
+@dataclass
+class ObjectType:
+    """Marker type for Objects."""
+
+    types: Dict[str, NadaType]
+
+    def to_type(self):
+        """Convert an object into a Nada type."""
+        return {
+            "Object": {
+                "types": {name: ty.to_type() for name, ty in self.types.items()},
+            }
+        }
+
+
+class Object(NadaType):
+    """The Object type"""
+
+    types: Dict[str, NadaType]
+
+    def __init__(self, inner, types: Dict[str, NadaType]):
+        self.types = types
+        self.inner = inner
+        super().__init__(self.inner)
+
+    @classmethod
+    def new(cls, types: Dict[str, NadaType]) -> "Object":
+        """Constructs a new Object."""
+        return Object(
+            types=types,
+            inner=ObjectNew(
+                inner=types,
+                source_ref=SourceRef.back_frame(),
+                inner_type=Object(
+                    types=types, inner=None
+                ),
+            ),
+        )
+
+    @classmethod
+    def generic_type(cls, types: Dict[str, NadaType]) -> ObjectType:
+        """Returns the generic type for this Object"""
+        return ObjectType(types=types)
+
+    def to_type(self):
+        """Convert operation wrapper to a dictionary representing its type."""
+        return {
+            "Object": {
+                "types": {name: ty.to_type() for name, ty in self.types.items()},
             }
         }
 
@@ -591,6 +644,36 @@ class NTupleNew:
             id=self.id,
             name=self.__class__.__name__,
             elements=[element.inner.id for element in self.inner],
+            source_ref=self.source_ref,
+            ty=ty,
+            inner_type=self.inner_type,
+        )
+
+
+class ObjectNew:
+    """MIR Object new operation.
+
+    Represents the creation of a new Object.
+    """
+
+    inner_types: Dict[str, NadaType]
+    inner: typing.Dict
+    source_ref: SourceRef
+
+    def __init__(
+        self, inner_type: NadaType, inner: typing.Dict, source_ref: SourceRef
+    ):
+        self.id = next_operation_id()
+        self.inner = inner
+        self.source_ref = source_ref
+        self.inner_type = inner_type
+
+    def store_in_ast(self, ty: object):
+        """Store this Object in the AST."""
+        AST_OPERATIONS[self.id] = NewASTOperation(
+            id=self.id,
+            name=self.__class__.__name__,
+            elements=[element.inner.id for element in self.inner.values()],
             source_ref=self.source_ref,
             ty=ty,
             inner_type=self.inner_type,
