@@ -21,3 +21,19 @@ python -m pip install '.[docs]'
 cd docs
 sphinx-build . _build
 ```
+
+# Developing
+
+This tool uses [uv](https://docs.astral.sh/uv/) to manage itself. Make sure to have it installed for your platform.
+
+You can install dependencies running (at the root folder of the project):
+
+```
+uv sync
+```
+
+Then activate the virtual environment:
+
+```
+source .venv/bin/activate
+```
