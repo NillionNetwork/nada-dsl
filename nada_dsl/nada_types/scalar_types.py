@@ -552,3 +552,8 @@ class SecretBoolean(BooleanType):
         """Convert this secret into a public variable."""
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
         return PublicBoolean(inner=operation)
+
+    @classmethod
+    def random(cls) -> "SecretBoolean":
+        """Generate a random secret boolean."""
+        return SecretBoolean(inner=Random(source_ref=SourceRef.back_frame()))
