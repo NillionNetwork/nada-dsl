@@ -23,7 +23,7 @@ def get_public_version(project_name: str, is_test=False) -> Version:
 
 if __name__ == "__main__":
     pyproject_toml_path = sys.argv[1]
-    test_regex = sys.argv[2]
+    test_regex = sys.argv[2] if len(sys.argv) > 2 else None
     with open(pyproject_toml_path, "rb") as f:
         project = tomli.load(f)
 
