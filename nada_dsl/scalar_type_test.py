@@ -255,7 +255,7 @@ def test_trunc_pr(left, right):
 
 
 # Allowed types that can generate a random value.
-random_operands = secret_integers + secret_unsigned_integers
+random_operands = secret_integers + secret_unsigned_integers + secret_booleans
 
 
 @pytest.mark.parametrize("operand", random_operands)
@@ -433,8 +433,8 @@ def test_not_allowed_trunc_pr(left, right):
     assert invalid_operation.type == TypeError or invalid_operation.type == AttributeError
 
 
-# List of types that can not generate a random value
-random_operands = booleans + public_integers + public_unsigned_integers
+# List of types that cannot generate a random value
+random_operands = public_booleans + public_integers + public_unsigned_integers
 
 
 @pytest.mark.parametrize("operand", random_operands)
@@ -444,7 +444,7 @@ def test_not_allowed_random(operand):
     assert invalid_operation.type == AttributeError
 
 
-# List of types that can not invoke the function to_public()
+# List of types that cannot invoke the function to_public()
 to_public_operands = public_booleans + public_integers + public_unsigned_integers
 
 
