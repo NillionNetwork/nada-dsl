@@ -2,7 +2,7 @@
 """The Nada Scalar type definitions."""
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Any, Self, Union, TypeVar
 from nada_dsl.operations import *
 from nada_dsl.program_io import Literal
 from nada_dsl import SourceRef
@@ -11,8 +11,11 @@ from . import NadaType, Mode, BaseType, OperationType
 # Constant dictionary that stores all the Nada types and is use to
 # convert from the (mode, base_type) representation to the concrete Nada type
 # (Integer, SecretBoolean,...)
-SCALAR_TYPES = {}
+_AnyScalarType = TypeVar("_AnyScalarType", 'Integer', 'UnsignedInteger', 'Boolean', 'PublicInteger', 'PublicUnsignedInteger', 'PublicBoolean', 'SecretInteger', 'SecretUnsignedInteger', 'SecretBoolean')
+AnyScalarType = Union['Integer', 'UnsignedInteger', 'Boolean', 'PublicInteger', 'PublicUnsignedInteger', 'PublicBoolean', 'SecretInteger', 'SecretUnsignedInteger', 'SecretBoolean']
+SCALAR_TYPES: dict[tuple[Mode, BaseType], type[AnyScalarType]] = {}
 
+AnyBoolean = Union['Boolean', 'PublicBoolean', 'SecretBoolean']
 
 class ScalarType(NadaType):
     """The Nada Scalar type.
@@ -27,26 +30,30 @@ class ScalarType(NadaType):
 
     base_type: BaseType
     mode: Mode
+    value: Any
 
     def __init__(self, inner: OperationType, base_type: BaseType, mode: Mode):
         super().__init__(inner=inner)
         self.base_type = base_type
         self.mode = mode
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean: # type: ignore
         return equals_operation(
             "Equals", "==", self, other, lambda lhs, rhs: lhs == rhs
         )
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> AnyBoolean: # type: ignore
         return equals_operation(
             "NotEquals", "!=", self, other, lambda lhs, rhs: lhs != rhs
         )
 
+    def to_public(self) -> Self:
+        """Convert this scalar type into a public variable."""
+        return self
 
 def equals_operation(
     operation, operator, left: ScalarType, right: ScalarType, f
-) -> ScalarType:
+) -> AnyBoolean:
     """This function is an abstraction for the equality operations"""
     base_type = left.base_type
     if base_type != right.base_type:
@@ -66,11 +73,10 @@ def equals_operation(
             )
             return SecretBoolean(inner=operation)
 
-
 def register_scalar_type(mode: Mode, base_type: BaseType):
     """Decorator used to register a new scalar type in the `SCALAR_TYPES` dictionary."""
 
-    def decorator(scalar_type: ScalarType):
+    def decorator(scalar_type: type[_AnyScalarType]) -> type[_AnyScalarType]:
         SCALAR_TYPES[(mode, base_type)] = scalar_type
         scalar_type.mode = mode
         scalar_type.base_type = base_type
@@ -79,9 +85,10 @@ def register_scalar_type(mode: Mode, base_type: BaseType):
     return decorator
 
 
-def new_scalar_type(mode: Mode, base_type: BaseType) -> ScalarType:
+def new_scalar_type(mode: Mode, base_type: BaseType) -> type[AnyScalarType]:
     """Returns the corresponding MIR Nada Type"""
-    return SCALAR_TYPES.get((mode, base_type))
+    global SCALAR_TYPES
+    return SCALAR_TYPES[(mode, base_type)]
 
 
 class NumericType(ScalarType):
@@ -143,22 +150,22 @@ class NumericType(ScalarType):
             "RightShift", ">>", self, other, lambda lhs, rhs: lhs >> rhs
         )
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> AnyBoolean:
         return binary_relational_operation(
             "LessThan", "<", self, other, lambda lhs, rhs: lhs < rhs
         )
 
-    def __gt__(self, other):
+    def __gt__(self, other) -> AnyBoolean:
         return binary_relational_operation(
             "GreaterThan", ">", self, other, lambda lhs, rhs: lhs > rhs
         )
 
-    def __le__(self, other):
+    def __le__(self, other) -> AnyBoolean:
         return binary_relational_operation(
             "LessOrEqualThan", "<=", self, other, lambda lhs, rhs: lhs <= rhs
         )
 
-    def __ge__(self, other):
+    def __ge__(self, other) -> AnyBoolean:
         return binary_relational_operation(
             "GreaterOrEqualThan", ">=", self, other, lambda lhs, rhs: lhs >= rhs
         )
@@ -218,7 +225,7 @@ def shift_operation(
 
 def binary_relational_operation(
     operation, operator, left: ScalarType, right: ScalarType, f
-) -> ScalarType:
+) -> AnyBoolean:
     """This function is an abstraction for the binary relational operations"""
     base_type = left.base_type
     if base_type != right.base_type or not base_type.is_numeric():
@@ -226,15 +233,15 @@ def binary_relational_operation(
     mode = Mode(max([left.mode.value, right.mode.value]))
     match mode:
         case Mode.CONSTANT:
-            return new_scalar_type(mode, BaseType.BOOLEAN)(f(left.value, right.value))
+            return new_scalar_type(mode, BaseType.BOOLEAN)(f(left.value, right.value)) # type: ignore
         case Mode.PUBLIC | Mode.SECRET:
-            inner = globals()[operation](
+            inner = globals()[operation]( # TODO: Should we use globals() here?
                 left=left, right=right, source_ref=SourceRef.back_frame()
             )
-            return new_scalar_type(mode, BaseType.BOOLEAN)(inner)
+            return new_scalar_type(mode, BaseType.BOOLEAN)(inner) # type: ignore
 
 
-def public_equals_operation(left: ScalarType, right: ScalarType) -> ScalarType:
+def public_equals_operation(left: ScalarType, right: ScalarType) -> "PublicBoolean":
     """This function is an abstraction for the public_equals operation for all types."""
     base_type = left.base_type
     if base_type != right.base_type:
@@ -245,7 +252,7 @@ def public_equals_operation(left: ScalarType, right: ScalarType) -> ScalarType:
     return PublicBoolean(
         inner=PublicOutputEquality(
             left=left, right=right, source_ref=SourceRef.back_frame()
-        )
+        ) # type: ignore
     )
 
 
@@ -270,7 +277,7 @@ class BooleanType(ScalarType):
             "BooleanXor", "^", self, other, lambda lhs, rhs: lhs ^ rhs
         )
 
-    def if_else(self, arg_0: ScalarType, arg_1: ScalarType) -> ScalarType:
+    def if_else(self, arg_0: _AnyScalarType, arg_1: _AnyScalarType) -> _AnyScalarType:
         """This function implements the function 'if_else' for every class that extends 'BooleanType'."""
         base_type = arg_0.base_type
         if (
@@ -325,7 +332,7 @@ class Integer(NumericType):
         )
         self.value = value
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
 
@@ -336,6 +343,8 @@ class UnsignedInteger(NumericType):
 
     Represents a constant (literal) unsigned integer."""
 
+    value: int
+
     def __init__(self, value):
         value = int(value)
         super().__init__(
@@ -345,7 +354,7 @@ class UnsignedInteger(NumericType):
         )
         self.value = value
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
 
@@ -369,7 +378,7 @@ class Boolean(BooleanType):
     def __bool__(self) -> bool:
         return self.value
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
     def __invert__(self: "Boolean") -> "Boolean":
@@ -386,7 +395,7 @@ class PublicInteger(NumericType):
     def __init__(self, inner: NadaType):
         super().__init__(inner, BaseType.INTEGER, Mode.PUBLIC)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
     def public_equals(
@@ -406,7 +415,7 @@ class PublicUnsignedInteger(NumericType):
     def __init__(self, inner: NadaType):
         super().__init__(inner, BaseType.UNSIGNED_INTEGER, Mode.PUBLIC)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
     def public_equals(
@@ -427,7 +436,7 @@ class PublicBoolean(BooleanType):
     def __init__(self, inner: NadaType):
         super().__init__(inner, BaseType.BOOLEAN, Mode.PUBLIC)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
     def __invert__(self: "PublicBoolean") -> "PublicBoolean":
@@ -449,7 +458,7 @@ class SecretInteger(NumericType):
     def __init__(self, inner: NadaType):
         super().__init__(inner, BaseType.INTEGER, Mode.SECRET)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
     def public_equals(
@@ -494,7 +503,7 @@ class SecretUnsignedInteger(NumericType):
     def __init__(self, inner: NadaType):
         super().__init__(inner, BaseType.UNSIGNED_INTEGER, Mode.SECRET)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
     def public_equals(
@@ -541,7 +550,7 @@ class SecretBoolean(BooleanType):
     def __init__(self, inner: NadaType):
         super().__init__(inner, BaseType.BOOLEAN, Mode.SECRET)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
     def __invert__(self: "SecretBoolean") -> "SecretBoolean":

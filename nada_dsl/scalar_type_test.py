@@ -9,6 +9,9 @@ from nada_dsl.nada_types import BaseType, Mode
 from nada_dsl.nada_types.scalar_types import Integer, PublicInteger, SecretInteger, Boolean, PublicBoolean, \
     SecretBoolean, UnsignedInteger, PublicUnsignedInteger, SecretUnsignedInteger, ScalarType, BooleanType
 
+def test2_if_else(int1: SecretInteger, int2: SecretInteger) -> PublicInteger:
+    condition = (int1 > int2)
+    return condition.if_else(int1, int2).to_public()
 
 def combine_lists(list1, list2):
     """This returns all combinations for the items of two lists"""
