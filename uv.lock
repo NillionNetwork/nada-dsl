@@ -648,9 +648,11 @@ dev = [
     { name = "pylint" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "requests" },
     { name = "sphinx" },
     { name = "sphinx-rtd-theme" },
     { name = "toml" },
+    { name = "tomli" },
 ]
 
 [package.metadata]
@@ -673,9 +675,11 @@ dev = [
     { name = "pylint", specifier = ">=2.17,<3.4" },
     { name = "pytest", specifier = ">=7.4,<9.0" },
     { name = "pytest-cov", specifier = ">=4,<6" },
+    { name = "requests" },
     { name = "sphinx", specifier = ">=5,<9" },
     { name = "sphinx-rtd-theme", specifier = ">=1.0,<3.1" },
     { name = "toml", specifier = "~=0.10.2" },
+    { name = "tomli" },
 ]
 
 [[package]]
