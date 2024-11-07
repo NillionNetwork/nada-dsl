@@ -38,6 +38,9 @@ AllTypes = Union[
     "Tuple",
     "NTuple",
     "Object",
+    "EcdsaPrivateKey",
+    "EcdsaDigestMessage",
+    "EcdsaSignature",
 ]
 AllTypesType = Union[
     Type["Integer"],
@@ -55,6 +58,9 @@ AllTypesType = Union[
     Type["Tuple"],
     Type["NTuple"],
     Type["Object"],
+    Type["EcdsaPrivateKey"],
+    Type["EcdsaDigestMessage"],
+    Type["EcdsaSignature"],
 ]
 OperationType = Union[
     "Addition",

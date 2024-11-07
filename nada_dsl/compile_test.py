@@ -7,7 +7,7 @@ import os
 import json
 import pytest
 from nada_dsl.ast_util import AST_OPERATIONS
-from nada_dsl.compile import compile_script, compile_string
+from nada_dsl.compile import compile_script, compile_string, print_output
 from nada_dsl.compiler_frontend import FUNCTIONS, INPUTS, PARTIES
 from nada_dsl.errors import NotAllowedException
 
@@ -161,3 +161,19 @@ def test_compile_map_simple():
                 raise Exception(f"Unexpected operation: {name}")
     assert map_inner > 0 and array_input_id > 0 and map_inner == array_input_id
     assert function_op_id > 0 and output_id == function_op_id
+
+def test_compile_ecdsa_program():
+    program_str = """
+from nada_dsl import *
+
+def nada_main():
+    party1 = Party(name="Party1")
+    private_key = EcdsaPrivateKey(Input(name="private_key", party=party1))
+    digest = EcdsaDigestMessage(Input(name="digest", party=party1))
+
+    new_int = private_key.ecdsa_sign(digest)
+    return [Output(new_int, "my_output", party1)]
+"""
+    encoded_program_str = base64.b64encode(bytes(program_str, "utf-8")).decode("utf_8")
+    output = compile_string(encoded_program_str)
+    print_output(output)
