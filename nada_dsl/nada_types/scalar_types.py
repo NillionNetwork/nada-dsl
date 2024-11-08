@@ -38,7 +38,6 @@ AnyScalarType = Union['Integer',
 
 # pylint: disable=global-variable-not-assigned
 SCALAR_TYPES: dict[tuple[Mode, BaseType], type[AnyScalarType]] = {}
-# pylint: enable=global-variable-not-assigned
 
 AnyBoolean = Union['Boolean', 'PublicBoolean', 'SecretBoolean']
 
