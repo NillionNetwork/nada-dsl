@@ -191,3 +191,6 @@ class Not(UnaryOperation):
 
     def __init__(self, this: AllTypes, source_ref: SourceRef):
         super().__init__(inner=this, source_ref=source_ref)
+
+class EcdsaSign(BinaryOperation):
+    """Ecdsa signing operation."""
