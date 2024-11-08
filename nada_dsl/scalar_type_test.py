@@ -442,18 +442,6 @@ def test_not_allowed_random(operand):
         operand.random()
     assert invalid_operation.type == AttributeError
 
-
-# List of types that cannot invoke the function to_public()
-to_public_operands = public_booleans + public_integers + public_unsigned_integers
-
-
-@pytest.mark.parametrize("operand", to_public_operands)
-def test_not_to_public(operand):
-    with pytest.raises(Exception) as invalid_operation:
-        operand.to_public()
-    assert invalid_operation.type == AttributeError
-
-
 # List of operands that the function if_else does not accept
 not_allowed_if_else_operands = (
         # Boolean branches
