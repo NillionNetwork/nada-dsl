@@ -2,7 +2,8 @@
 """The Nada Scalar type definitions."""
 
 from dataclasses import dataclass
-from typing import Any, Self, Union, TypeVar
+from typing import Any, Union, TypeVar
+from typing_extensions import Self
 from nada_dsl.operations import *
 from nada_dsl.program_io import Literal
 from nada_dsl import SourceRef
