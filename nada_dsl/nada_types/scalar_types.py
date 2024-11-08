@@ -12,9 +12,33 @@ from . import NadaType, Mode, BaseType, OperationType
 # Constant dictionary that stores all the Nada types and is use to
 # convert from the (mode, base_type) representation to the concrete Nada type
 # (Integer, SecretBoolean,...)
-_AnyScalarType = TypeVar("_AnyScalarType", 'Integer', 'UnsignedInteger', 'Boolean', 'PublicInteger', 'PublicUnsignedInteger', 'PublicBoolean', 'SecretInteger', 'SecretUnsignedInteger', 'SecretBoolean')
-AnyScalarType = Union['Integer', 'UnsignedInteger', 'Boolean', 'PublicInteger', 'PublicUnsignedInteger', 'PublicBoolean', 'SecretInteger', 'SecretUnsignedInteger', 'SecretBoolean']
+
+# pylint: disable=invalid-name
+_AnyScalarType = TypeVar("_AnyScalarType",
+                        'Integer',
+                        'UnsignedInteger',
+                        'Boolean',
+                        'PublicInteger',
+                        'PublicUnsignedInteger',
+                        'PublicBoolean',
+                        'SecretInteger',
+                        'SecretUnsignedInteger',
+                        'SecretBoolean')
+# pylint: enable=invalid-name
+
+AnyScalarType = Union['Integer',
+                    'UnsignedInteger',
+                    'Boolean',
+                    'PublicInteger',
+                    'PublicUnsignedInteger',
+                    'PublicBoolean',
+                    'SecretInteger',
+                    'SecretUnsignedInteger',
+                    'SecretBoolean']
+
+# pylint: disable=global-variable-not-assigned
 SCALAR_TYPES: dict[tuple[Mode, BaseType], type[AnyScalarType]] = {}
+# pylint: enable=global-variable-not-assigned
 
 AnyBoolean = Union['Boolean', 'PublicBoolean', 'SecretBoolean']
 
@@ -236,7 +260,7 @@ def binary_relational_operation(
         case Mode.CONSTANT:
             return new_scalar_type(mode, BaseType.BOOLEAN)(f(left.value, right.value)) # type: ignore
         case Mode.PUBLIC | Mode.SECRET:
-            inner = globals()[operation]( # TODO: Should we use globals() here?
+            inner = globals()[operation](
                 left=left, right=right, source_ref=SourceRef.back_frame()
             )
             return new_scalar_type(mode, BaseType.BOOLEAN)(inner) # type: ignore
