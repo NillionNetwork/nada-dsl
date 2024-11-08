@@ -8,7 +8,7 @@ version = "0.7.0"
 description = "Nillion Nada DSL to create Nillion MPC programs."
 requires-python = ">=3.10"
 readme = "README.pyproject.md"
-dependencies = ["asttokens~=2.4", "richreports~=0.2", "parsial~=0.1", "sortedcontainers~=2.4"]
+dependencies = ["asttokens~=2.4", "richreports~=0.2", "parsial~=0.1", "sortedcontainers~=2.4", "typing_extensions~=4.12.2"]
 classifiers = ["License :: OSI Approved :: Apache Software License"]
 license = { file = "LICENSE" }
 
