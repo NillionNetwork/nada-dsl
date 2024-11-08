@@ -646,6 +646,7 @@ test = [
 dev = [
     { name = "nada-mir-proto", extra = ["dev"] },
     { name = "pylint" },
+    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "requests" },
@@ -673,13 +674,14 @@ requires-dist = [
 dev = [
     { name = "nada-mir-proto", extras = ["dev"], editable = "nada_mir" },
     { name = "pylint", specifier = ">=2.17,<3.4" },
+    { name = "pyright", specifier = "~=1.1" },
     { name = "pytest", specifier = ">=7.4,<9.0" },
     { name = "pytest-cov", specifier = ">=4,<6" },
-    { name = "requests" },
+    { name = "requests", specifier = "~=2.32" },
     { name = "sphinx", specifier = ">=5,<9" },
     { name = "sphinx-rtd-theme", specifier = ">=1.0,<3.1" },
     { name = "toml", specifier = "~=0.10.2" },
-    { name = "tomli" },
+    { name = "tomli", specifier = "~=2.0" },
 ]
 
 [[package]]
@@ -701,6 +703,15 @@ requires-dist = [
     { name = "betterproto", specifier = "==2.0.0b7" },
     { name = "betterproto", extras = ["compiler"], marker = "extra == 'dev'", specifier = "==2.0.0b7" },
     { name = "grpcio-tools", specifier = "==1.62.3" },
+]
+
+[[package]]
+name = "nodeenv"
+version = "1.9.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/43/16/fc88b08840de0e0a72a2f9d8c6bae36be573e475a6326ae854bcc549fc45/nodeenv-1.9.1.tar.gz", hash = "sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f", size = 47437 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d2/1d/1b658dbd2b9fa9c4c9f32accbfc0205d532c8c6194dc0f2a4c0428e7128a/nodeenv-1.9.1-py2.py3-none-any.whl", hash = "sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9", size = 22314 },
 ]
 
 [[package]]
@@ -788,6 +799,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/63/3a/13e90e29777e695d90f422cf4fadb81c999e4755a9089838561bd0590cac/pylint-3.3.1.tar.gz", hash = "sha256:9f3dcc87b1203e612b78d91a896407787e708b3f189b5fa0b307712d49ff0c6e", size = 1516703 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4d/11/4a3f814eee14593f3cfcf7046bc765bf1646d5c88132c08c45310fc7d85f/pylint-3.3.1-py3-none-any.whl", hash = "sha256:2f846a466dd023513240bc140ad2dd73bfc080a5d85a710afdb728c420a5a2b9", size = 521768 },
+]
+
+[[package]]
+name = "pyright"
+version = "1.1.388"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nodeenv" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9c/83/e9867538a794638d2d20ac3ab3106a31aca1d9cfea530c9b2921809dae03/pyright-1.1.388.tar.gz", hash = "sha256:0166d19b716b77fd2d9055de29f71d844874dbc6b9d3472ccd22df91db3dfa34", size = 21939 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/03/57/7fb00363b7f267a398c5bdf4f55f3e64f7c2076b2e7d2901b3373d52b6ff/pyright-1.1.388-py3-none-any.whl", hash = "sha256:c7068e9f2c23539c6ac35fc9efac6c6c1b9aa5a0ce97a9a8a6cf0090d7cbf84c", size = 18579 },
 ]
 
 [[package]]

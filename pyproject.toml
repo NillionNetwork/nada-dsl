@@ -8,7 +8,13 @@ version = "0.7.0"
 description = "Nillion Nada DSL to create Nillion MPC programs."
 requires-python = ">=3.10"
 readme = "README.pyproject.md"
-dependencies = ["asttokens~=2.4", "richreports~=0.2", "parsial~=0.1", "sortedcontainers~=2.4"]
+dependencies = [
+    "asttokens~=2.4",
+    "richreports~=0.2",
+    "parsial~=0.1",
+    "sortedcontainers~=2.4",
+    "typing_extensions~=4.12",
+]
 classifiers = ["License :: OSI Approved :: Apache Software License"]
 license = { file = "LICENSE" }
 
@@ -32,8 +38,10 @@ dev-dependencies = [
     "pytest-cov>=4,<6",
     "pylint>=2.17,<3.4",
     "nada-mir-proto[dev]",
-    "tomli",
-    "requests",
+    "tomli~=2.0",
+    "requests~=2.32",
+    "pyright~=1.1",
+    "typing_extensions~=4.12",
 ]
 
 [tool.uv.sources]
@@ -41,3 +49,8 @@ nada-mir-proto = { workspace = true }
 
 [tool.uv.workspace]
 members = ["nada_mir"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+exclude = ["**/__pycache__", "dist/", "test-programs", "**/build", ".venv/", "nada_dsl/*_test.py"]
