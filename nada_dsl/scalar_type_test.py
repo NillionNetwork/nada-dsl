@@ -9,7 +9,6 @@ from nada_dsl.nada_types import BaseType, Mode
 from nada_dsl.nada_types.scalar_types import Integer, PublicInteger, SecretInteger, Boolean, PublicBoolean, \
     SecretBoolean, UnsignedInteger, PublicUnsignedInteger, SecretUnsignedInteger, ScalarType, BooleanType
 
-
 def combine_lists(list1, list2):
     """This returns all combinations for the items of two lists"""
     result = []
@@ -266,7 +265,7 @@ def test_random(operand):
 
 
 # Allowed types that can invoke the to_public() function.
-to_public_operands = secret_integers + secret_unsigned_integers + secret_booleans
+to_public_operands = integers + unsigned_integers + booleans
 
 
 @pytest.mark.parametrize("operand", to_public_operands)
@@ -442,18 +441,6 @@ def test_not_allowed_random(operand):
     with pytest.raises(Exception) as invalid_operation:
         operand.random()
     assert invalid_operation.type == AttributeError
-
-
-# List of types that cannot invoke the function to_public()
-to_public_operands = public_booleans + public_integers + public_unsigned_integers
-
-
-@pytest.mark.parametrize("operand", to_public_operands)
-def test_not_to_public(operand):
-    with pytest.raises(Exception) as invalid_operation:
-        operand.to_public()
-    assert invalid_operation.type == AttributeError
-
 
 # List of operands that the function if_else does not accept
 not_allowed_if_else_operands = (
