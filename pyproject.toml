@@ -34,6 +34,7 @@ dev-dependencies = [
     "nada-mir-proto[dev]",
     "tomli",
     "requests",
+    "typing_extensions~=4.12.2",
 ]
 
 [tool.uv.sources]
