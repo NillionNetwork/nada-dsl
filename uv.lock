@@ -619,13 +619,14 @@ wheels = [
 
 [[package]]
 name = "nada-dsl"
-version = "0.7.0"
+version = "0.7.1"
 source = { editable = "." }
 dependencies = [
     { name = "asttokens" },
     { name = "parsial" },
     { name = "richreports" },
     { name = "sortedcontainers" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -653,6 +654,7 @@ dev = [
     { name = "sphinx-rtd-theme" },
     { name = "toml" },
     { name = "tomli" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata]
@@ -667,6 +669,7 @@ requires-dist = [
     { name = "sphinx", marker = "extra == 'docs'", specifier = ">=5,<9" },
     { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=1.0,<3.1" },
     { name = "toml", marker = "extra == 'docs'", specifier = "~=0.10.2" },
+    { name = "typing-extensions", specifier = "~=4.12.2" },
 ]
 
 [package.metadata.requires-dev]
@@ -680,6 +683,7 @@ dev = [
     { name = "sphinx-rtd-theme", specifier = ">=1.0,<3.1" },
     { name = "toml", specifier = "~=0.10.2" },
     { name = "tomli" },
+    { name = "typing-extensions", specifier = "~=4.12.2" },
 ]
 
 [[package]]
