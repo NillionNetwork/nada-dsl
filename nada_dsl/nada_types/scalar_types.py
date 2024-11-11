@@ -590,3 +590,35 @@ class SecretBoolean(BooleanType):
     def random(cls) -> "SecretBoolean":
         """Generate a random secret boolean."""
         return SecretBoolean(inner=Random(source_ref=SourceRef.back_frame()))
+
+
+@dataclass
+class EcdsaSignature(NadaType):
+    """The EcdsaSignature Nada MIR type."""
+
+    def __init__(self, inner: OperationType):
+        super().__init__(inner=inner)
+
+
+@dataclass
+class EcdsaDigestMessage(NadaType):
+    """The EcdsaDigestMessage Nada MIR type."""
+
+    def __init__(self, inner: OperationType):
+        super().__init__(inner=inner)
+
+
+@dataclass
+class EcdsaPrivateKey(NadaType):
+    """The EcdsaPrivateKey Nada MIR type."""
+
+    def __init__(self, inner: OperationType):
+        super().__init__(inner=inner)
+
+    def ecdsa_sign(self, digest: "EcdsaDigestMessage") -> "EcdsaSignature":
+        """Random operation for Secret integers."""
+        return EcdsaSignature(
+                inner=EcdsaSign(
+                        left=self, right=digest, source_ref=SourceRef.back_frame()
+                )
+        )
