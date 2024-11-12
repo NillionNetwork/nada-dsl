@@ -14,7 +14,7 @@ license = { file = "LICENSE" }
 
 [project.optional-dependencies]
 docs = ["toml~=0.10.2", "sphinx>=5,<9", "sphinx-rtd-theme>=1.0,<3.1"]
-test = ["pytest>=7.4,<9.0", "pytest-cov>=4,<6"]
+test = ["pytest>=7.4,<9.0", "pytest-cov>=4,<7"]
 lint = ["pylint>=2.17,<3.4"]
 
 [tool.setuptools]
@@ -29,7 +29,7 @@ dev-dependencies = [
     "sphinx>=5,<9",
     "sphinx-rtd-theme>=1.0,<3.1",
     "pytest>=7.4,<9.0",
-    "pytest-cov>=4,<6",
+    "pytest-cov>=4,<7",
     "pylint>=2.17,<3.4",
     "nada-mir-proto[dev]",
     "tomli",
