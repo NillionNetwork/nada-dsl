@@ -8,12 +8,18 @@ version = "0.7.1"
 description = "Nillion Nada DSL to create Nillion MPC programs."
 requires-python = ">=3.10"
 readme = "README.pyproject.md"
-dependencies = ["asttokens~=2.4", "richreports~=0.2", "parsial~=0.1", "sortedcontainers~=2.4", "typing_extensions~=4.12.2"]
+dependencies = [
+    "asttokens~=2.4",
+    "richreports~=0.2",
+    "parsial~=0.1",
+    "sortedcontainers~=2.4",
+    "typing_extensions~=4.12.2",
+]
 classifiers = ["License :: OSI Approved :: Apache Software License"]
 license = { file = "LICENSE" }
 
 [project.optional-dependencies]
-docs = ["toml~=0.10.2", "sphinx>=5,<9", "sphinx-rtd-theme>=1.0,<3.1"]
+docs = ["toml~=0.10.2", "sphinx>=5,<9", "sphinx-rtd-theme>=1.0,<3.1", "sphinx-autoapi~=3.3.2"]
 test = ["pytest>=7.4,<9.0", "pytest-cov>=4,<7"]
 lint = ["pylint>=2.17,<3.4"]
 
@@ -28,6 +34,7 @@ dev-dependencies = [
     "toml~=0.10.2",
     "sphinx>=5,<9",
     "sphinx-rtd-theme>=1.0,<3.1",
+    "sphinx-autoapi~=3.3.2",
     "pytest>=7.4,<9.0",
     "pytest-cov>=4,<7",
     "pylint>=2.17,<3.4",
