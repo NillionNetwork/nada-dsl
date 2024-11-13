@@ -42,6 +42,12 @@ class ScalarType(NadaType):
         return equals_operation(
             "NotEquals", "!=", self, other, lambda lhs, rhs: lhs != rhs
         )
+    
+    def is_scalar(self):
+        return True
+
+    def is_literal(self):
+        return self.mode == Mode.CONSTANT
 
 
 def equals_operation(

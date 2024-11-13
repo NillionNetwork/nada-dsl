@@ -27,6 +27,7 @@ from nada_dsl.ast_util import (
     RandomASTOperation,
     ReduceASTOperation,
     UnaryASTOperation,
+    NTupleAccessorASTOperation,
 )
 from nada_dsl.timer import timer
 from nada_dsl.source_ref import SourceRef
@@ -296,6 +297,7 @@ def process_operation(
             NewASTOperation,
             RandomASTOperation,
             NadaFunctionArgASTOperation,
+            NTupleAccessorASTOperation,
         ),
     ):
         processed_operation = ProcessOperationOutput(operation.to_mir(), None)

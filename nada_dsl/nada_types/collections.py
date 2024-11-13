@@ -3,7 +3,7 @@
 import copy
 from dataclasses import dataclass
 import inspect
-from typing import Dict, Generic, List, Optional
+from typing import Dict, Generic, List, Optional, Type, cast
 import typing
 from typing import TypeVar
 
@@ -14,6 +14,7 @@ from nada_dsl.ast_util import (
     NewASTOperation,
     ReduceASTOperation,
     UnaryASTOperation,
+    NTupleAccessorASTOperation,
 )
 from nada_dsl.nada_types import NadaType
 
@@ -66,14 +67,34 @@ class Collection(NadaType):
                 "Tuple": {
                     "left_type": (
                         self.left_type.to_type()
-                        if isinstance(self.left_type, (NadaType, ArrayType, TupleType))
+                        if isinstance(
+                            self.left_type, (NadaType, ArrayType, TupleType, NTupleType)
+                        )
                         else self.left_type.class_to_type()
                     ),
                     "right_type": (
                         self.right_type.to_type()
-                        if isinstance(self.right_type, (NadaType, ArrayType, TupleType))
+                        if isinstance(
+                            self.right_type,
+                            (NadaType, ArrayType, TupleType, NTupleType),
+                        )
                         else self.right_type.class_to_type()
                     ),
+                }
+            }
+        if isinstance(self, (NTuple, NTupleType)):
+            return {
+                "NTuple": {
+                    "types": [
+                        (
+                            ty.to_type()
+                            if isinstance(
+                                ty, (NadaType, ArrayType, TupleType, NTupleType)
+                            )
+                            else ty.class_to_type()
+                        )
+                        for ty in self.types
+                    ]
                 }
             }
         raise InvalidTypeError(
@@ -169,6 +190,76 @@ class TupleType:
         }
 
 
+@dataclass
+class NTupleAccessor:
+    """MIR Tuple new operation.
+
+    Represents the creation of a new Tuple.
+    """
+
+    inner_type: NadaType
+    inner: typing.Tuple
+    index: int
+    source_ref: SourceRef
+
+    def __init__(
+        self,
+        inner_type: NadaType,
+        inner: typing.Tuple,
+        index: int,
+        source_ref: SourceRef,
+    ):
+        self.id = next_operation_id()
+        self.inner = inner
+        self.index = index
+        self.source_ref = source_ref
+        self.inner_type = inner_type
+
+    def store_in_ast(self, ty: object):
+        """Store this TupleNew in the AST."""
+        AST_OPERATIONS[self.id] = NTupleAccessorASTOperation(
+            id=self.id,
+            source=self.inner.inner.id,
+            index=self.index,
+            # name=self.__class__.__name__,
+            # elements=[element.inner.id for element in self.inner],
+            source_ref=self.source_ref,
+            ty=ty,
+            # inner_type=self.inner_type,
+        )
+
+
+# @dataclass
+# class NTupleAccessor:
+#     """The n tuple accessor operation"""
+
+#     id: int
+#     index: int
+#     inner: "NTuple"
+#     source_ref: SourceRef
+
+#     def __init__(
+#         self,
+#         index: int,
+#         inner: "NTuple",
+#         source_ref: SourceRef,
+#     ):
+#         self.id = next_operation_id()
+#         self.index = index
+#         self.inner = inner
+#         self.source_ref = source_ref
+
+#     def store_in_ast(self, ty):
+#         """Store tuple accessor in AST"""
+#         AST_OPERATIONS[self.id] = NTupleAccessorASTOperation(
+#             id=self.id,
+#             index=self.index,
+#             source=self.inner.inner.id,
+#             source_ref=self.source_ref,
+#             ty=ty,
+#         )
+
+
 class Tuple(Generic[T, U], Collection):
     """The Tuple type"""
 
@@ -217,7 +308,7 @@ class NTupleType:
         }
 
 
-class NTuple(NadaType):
+class NTuple(Collection):
     """The NTuple type"""
 
     types: List[NadaType]
@@ -235,24 +326,70 @@ class NTuple(NadaType):
             inner=NTupleNew(
                 inner=types,
                 source_ref=SourceRef.back_frame(),
-                inner_type=NTuple(
-                    types=types, inner=None
-                ),
+                inner_type=NTuple(types=types, inner=None),
             ),
         )
 
+    def __getitem__(self, index: int) -> NadaType:
+        if index >= len(self.types):
+            raise IndexError(f"Invalid index {index} for NTuple.")
+
+        item_type = self.types[index]
+
+        if item_type.is_scalar():
+            if item_type.is_literal():
+                raise TypeError(f"Literal access in tuple is not supported.")
+            return type(item_type)(
+                inner=NTupleAccessor(
+                    index=index,
+                    inner=self,
+                    inner_type=NTuple(types=self.types, inner=None),
+                    source_ref=SourceRef.back_frame(),
+                )
+            )
+        else:
+            # print(f"[[[[ {self.types[0]}")
+            # inner_type = self.types[index].inner_type
+            # print(f"#### inner_type: {inner_type}")
+            inner_type = (
+                item_type if inspect.isclass(item_type) else item_type.__class__
+            )
+            return NTupleAccessor(
+                index=index,
+                inner=self,
+                inner_type=item_type,
+                source_ref=SourceRef.back_frame(),
+            )
+
+        # if is_primitive_integer(self.types[index].retrieve_inner_type()):
+        #     inner_type = (
+        #         self.inner_type
+        #         if inspect.isclass(self.inner_type)
+        #         else self.inner_type.__class__
+        #     )
+        #     return inner_type(
+        #         inner=InnerProduct(
+        #             left=self, right=other, source_ref=SourceRef.back_frame()
+        #         )
+        #     )  # type: ignore
+
+        # if self.types[index].is_scalar():
+        #     if self.types[index].is_literal():
+        #         raise TypeError(f"Literal access in tuple is not supported.")
+        #     return type(self.types[index])(
+        #         inner=NTupleAccessor(
+        #             index=index,
+        #             inner=self,
+        #             source_ref=SourceRef.back_frame(),
+        #         )
+        #     )
+        # # This is another collection: what to do here?
+        raise TypeError(f"Literal access in tuple is not supported.")
+
     @classmethod
     def generic_type(cls, types: List[NadaType]) -> NTupleType:
-        """Returns the generic type for this NTuple"""
-        return NTupleType(types=types)
-
-    def to_type(self):
-        """Convert operation wrapper to a dictionary representing its type."""
-        return {
-            "NTuple": {
-                "types": [ty.to_type() for ty in self.types]
-            }
-        }
+        """Returns the generic type for this Tuple"""
+        return TupleType(types=types)
 
 
 @dataclass
@@ -288,16 +425,14 @@ class Object(NadaType):
             inner=ObjectNew(
                 inner=types,
                 source_ref=SourceRef.back_frame(),
-                inner_type=Object(
-                    types=types, inner=None
-                ),
+                inner_type=Object(types=types, inner=None),
             ),
         )
 
-    @classmethod
-    def generic_type(cls, types: Dict[str, NadaType]) -> ObjectType:
-        """Returns the generic type for this Object"""
-        return ObjectType(types=types)
+    def __getitem__(self, key: str) -> NadaType:
+        if key not in self.types:
+            raise KeyError(f"No element with name '{key}' found in Object.")
+        return self.types[key]
 
     def to_type(self):
         """Convert operation wrapper to a dictionary representing its type."""
@@ -306,6 +441,7 @@ class Object(NadaType):
                 "types": {name: ty.to_type() for name, ty in self.types.items()},
             }
         }
+
 
 def get_inner_type(inner_type):
     """Utility that returns the inner type for a composite type."""
@@ -590,6 +726,7 @@ class Vector(Generic[T], Collection):
         return Vector(inner=None, inner_type=inner_type, size=None)
 
 
+@dataclass
 class TupleNew(Generic[T, U]):
     """MIR Tuple new operation.
 
@@ -620,13 +757,14 @@ class TupleNew(Generic[T, U]):
         )
 
 
+@dataclass
 class NTupleNew:
-    """MIR NTuple new operation.
+    """MIR Tuple new operation.
 
     Represents the creation of a new Tuple.
     """
 
-    inner_types: List[NadaType]
+    inner_type: NadaType
     inner: typing.Tuple
     source_ref: SourceRef
 
@@ -639,7 +777,7 @@ class NTupleNew:
         self.inner_type = inner_type
 
     def store_in_ast(self, ty: object):
-        """Store this NTupleNew in the AST."""
+        """Store this TupleNew in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,
             name=self.__class__.__name__,
@@ -660,9 +798,7 @@ class ObjectNew:
     inner: typing.Dict
     source_ref: SourceRef
 
-    def __init__(
-        self, inner_type: NadaType, inner: typing.Dict, source_ref: SourceRef
-    ):
+    def __init__(self, inner_type: NadaType, inner: typing.Dict, source_ref: SourceRef):
         self.id = next_operation_id()
         self.inner = inner
         self.source_ref = source_ref

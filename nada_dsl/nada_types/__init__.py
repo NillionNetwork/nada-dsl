@@ -157,3 +157,9 @@ class NadaType:
 
     def __bool__(self):
         raise NotImplementedError
+    
+    def is_scalar(self):
+        return False
+
+    def is_literal(self):
+        return False
