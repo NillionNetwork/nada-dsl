@@ -43,8 +43,8 @@ class ASTOperation(ABC):
     source_ref: SourceRef
     ty: NadaTypeRepr
 
-    def inner_operations(self) -> List[int]:
-        """Returns the list of identifiers of all the inner operations of this operation."""
+    def child_operations(self) -> List[int]:
+        """Returns the list of identifiers of all the child operations of this operation."""
         return []
 
     def to_mir(self):
@@ -68,7 +68,7 @@ class BinaryASTOperation(ASTOperation):
     left: int
     right: int
 
-    def inner_operations(self) -> List[int]:
+    def child_operations(self) -> List[int]:
         return [self.left, self.right]
 
     def to_mir(self):
@@ -88,17 +88,17 @@ class UnaryASTOperation(ASTOperation):
     """Superclass of all the unary operations in AST representation"""
 
     name: str
-    inner: int
+    child: int
 
-    def inner_operations(self):
-        return [self.inner]
+    def child_operations(self):
+        return [self.child]
 
     def to_mir(self):
 
         return {
             self.name: {
                 "id": self.id,
-                "this": self.inner,
+                "this": self.child,
                 "type": self.ty,
                 "source_ref_index": self.source_ref.to_index(),
             }
@@ -109,20 +109,20 @@ class UnaryASTOperation(ASTOperation):
 class IfElseASTOperation(ASTOperation):
     """AST Representation of an IfElse operation."""
 
-    this: int
-    arg_0: int
-    arg_1: int
+    condition: int
+    true_branch_child: int
+    false_branch_child: int
 
-    def inner_operations(self):
-        return [self.this, self.arg_0, self.arg_1]
+    def child_operations(self):
+        return [self.condition, self.true_branch_child, self.false_branch_child]
 
     def to_mir(self):
         return {
             "IfElse": {
                 "id": self.id,
-                "this": self.this,
-                "arg_0": self.arg_0,
-                "arg_1": self.arg_1,
+                "this": self.condition,
+                "arg_0": self.true_branch_child,
+                "arg_1": self.false_branch_child,
                 "type": self.ty,
                 "source_ref_index": self.source_ref.to_index(),
             }
@@ -133,7 +133,7 @@ class IfElseASTOperation(ASTOperation):
 class RandomASTOperation(ASTOperation):
     """AST Representation of a Random operation."""
 
-    def inner_operations(self):
+    def child_operations(self):
         return []
 
     def to_mir(self):
@@ -215,19 +215,19 @@ class LiteralASTOperation(ASTOperation):
 class ReduceASTOperation(ASTOperation):
     """AST Representation of a Reduce operation."""
 
-    inner: int
+    child: int
     fn: int
     initial: int
 
-    def inner_operations(self):
-        return [self.inner, self.initial]
+    def child_operations(self):
+        return [self.child, self.initial]
 
     def to_mir(self):
         return {
             "Reduce": {
                 "id": self.id,
                 "fn": self.fn,
-                "inner": self.inner,
+                "inner": self.child,
                 "initial": self.initial,
                 "type": self.ty,
                 "source_ref_index": self.source_ref.to_index(),
@@ -239,18 +239,18 @@ class ReduceASTOperation(ASTOperation):
 class MapASTOperation(ASTOperation):
     """AST representation of a Map operation."""
 
-    inner: int
+    child: int
     fn: int
 
-    def inner_operations(self):
-        return [self.inner]
+    def child_operations(self):
+        return [self.child]
 
     def to_mir(self):
         return {
             "Map": {
                 "id": self.id,
                 "fn": self.fn,
-                "inner": self.inner,
+                "inner": self.child,
                 "type": self.ty,
                 "source_ref_index": self.source_ref.to_index(),
             }
@@ -263,9 +263,8 @@ class NewASTOperation(ASTOperation):
 
     name: str
     elements: List[int]
-    inner_type: object
 
-    def inner_operations(self):
+    def child_operations(self):
         return self.elements
 
     def to_mir(self):
@@ -286,7 +285,7 @@ class NadaFunctionCallASTOperation(ASTOperation):
     args: List[int]
     fn: int
 
-    def inner_operations(self):
+    def child_operations(self):
         return self.args
 
     def to_mir(self):
@@ -327,7 +326,7 @@ class NadaFunctionASTOperation(ASTOperation):
 
     name: str
     args: List[int]
-    inner: int
+    child: int
 
     # pylint: disable=arguments-differ
     def to_mir(self, operations):
@@ -347,7 +346,7 @@ class NadaFunctionASTOperation(ASTOperation):
                 for arg in arg_operations
             ],
             "function": self.name,
-            "return_operation_id": self.inner,
+            "return_operation_id": self.child,
             "operations": operations,
             "return_type": self.ty,
             "source_ref_index": self.source_ref.to_index(),
@@ -364,7 +363,7 @@ class CastASTOperation(ASTOperation):
 
     target: int
 
-    def inner_operations(self):
+    def child_operations(self):
         return [self.target]
 
     def to_mir(self):

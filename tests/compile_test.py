@@ -162,6 +162,7 @@ def test_compile_map_simple():
     assert map_inner > 0 and array_input_id > 0 and map_inner == array_input_id
     assert function_op_id > 0 and output_id == function_op_id
 
+
 def test_compile_ecdsa_program():
     program_str = """
 from nada_dsl import *

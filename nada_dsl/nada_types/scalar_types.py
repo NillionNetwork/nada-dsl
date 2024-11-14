@@ -2,7 +2,7 @@
 """The Nada Scalar type definitions."""
 
 from dataclasses import dataclass
-from typing import Any, Union, TypeVar
+from typing import Union, TypeVar
 from typing_extensions import Self
 from nada_dsl.operations import *
 from nada_dsl.program_io import Literal
@@ -14,32 +14,37 @@ from . import NadaType, Mode, BaseType, OperationType
 # (Integer, SecretBoolean,...)
 
 # pylint: disable=invalid-name
-_AnyScalarType = TypeVar("_AnyScalarType",
-                        'Integer',
-                        'UnsignedInteger',
-                        'Boolean',
-                        'PublicInteger',
-                        'PublicUnsignedInteger',
-                        'PublicBoolean',
-                        'SecretInteger',
-                        'SecretUnsignedInteger',
-                        'SecretBoolean')
+_AnyScalarType = TypeVar(
+    "_AnyScalarType",
+    "Integer",
+    "UnsignedInteger",
+    "Boolean",
+    "PublicInteger",
+    "PublicUnsignedInteger",
+    "PublicBoolean",
+    "SecretInteger",
+    "SecretUnsignedInteger",
+    "SecretBoolean",
+)
 # pylint: enable=invalid-name
 
-AnyScalarType = Union['Integer',
-                    'UnsignedInteger',
-                    'Boolean',
-                    'PublicInteger',
-                    'PublicUnsignedInteger',
-                    'PublicBoolean',
-                    'SecretInteger',
-                    'SecretUnsignedInteger',
-                    'SecretBoolean']
+AnyScalarType = Union[
+    "Integer",
+    "UnsignedInteger",
+    "Boolean",
+    "PublicInteger",
+    "PublicUnsignedInteger",
+    "PublicBoolean",
+    "SecretInteger",
+    "SecretUnsignedInteger",
+    "SecretBoolean",
+]
 
 # pylint: disable=global-variable-not-assigned
 SCALAR_TYPES: dict[tuple[Mode, BaseType], type[AnyScalarType]] = {}
 
-AnyBoolean = Union['Boolean', 'PublicBoolean', 'SecretBoolean']
+AnyBoolean = Union["Boolean", "PublicBoolean", "SecretBoolean"]
+
 
 class ScalarType(NadaType):
     """The Nada Scalar type.
@@ -52,21 +57,17 @@ class ScalarType(NadaType):
     based on the typing rules of the Nada model.
     """
 
-    base_type: BaseType
-    mode: Mode
-    value: Any
-
-    def __init__(self, inner: OperationType, base_type: BaseType, mode: Mode):
-        super().__init__(inner=inner)
+    def __init__(self, child: OperationType, base_type: BaseType, mode: Mode):
+        super().__init__(child=child)
         self.base_type = base_type
         self.mode = mode
 
-    def __eq__(self, other) -> AnyBoolean: # type: ignore
+    def __eq__(self, other) -> AnyBoolean:  # type: ignore
         return equals_operation(
             "Equals", "==", self, other, lambda lhs, rhs: lhs == rhs
         )
 
-    def __ne__(self, other) -> AnyBoolean: # type: ignore
+    def __ne__(self, other) -> AnyBoolean:  # type: ignore
         return equals_operation(
             "NotEquals", "!=", self, other, lambda lhs, rhs: lhs != rhs
         )
@@ -74,6 +75,11 @@ class ScalarType(NadaType):
     def to_public(self) -> Self:
         """Convert this scalar type into a public variable."""
         return self
+
+    @classmethod
+    def is_scalable(cls) -> bool:
+        return True
+
 
 def equals_operation(
     operation, operator, left: ScalarType, right: ScalarType, f
@@ -90,12 +96,13 @@ def equals_operation(
             operation = globals()[operation](
                 left=left, right=right, source_ref=SourceRef.back_frame()
             )
-            return PublicBoolean(inner=operation)
+            return PublicBoolean(child=operation)
         case Mode.SECRET:
             operation = globals()[operation](
                 left=left, right=right, source_ref=SourceRef.back_frame()
             )
-            return SecretBoolean(inner=operation)
+            return SecretBoolean(child=operation)
+
 
 def register_scalar_type(mode: Mode, base_type: BaseType):
     """Decorator used to register a new scalar type in the `SCALAR_TYPES` dictionary."""
@@ -160,8 +167,8 @@ class NumericType(ScalarType):
         if mode == Mode.CONSTANT:
             return new_scalar_type(mode, base_type)(self.value**other.value)
         if mode == Mode.PUBLIC:
-            inner = Power(left=self, right=other, source_ref=SourceRef.back_frame())
-            return new_scalar_type(mode, base_type)(inner)
+            child = Power(left=self, right=other, source_ref=SourceRef.back_frame())
+            return new_scalar_type(mode, base_type)(child)
         raise TypeError(f"Invalid operation: {self} ** {other}")
 
     def __lshift__(self, other):
@@ -219,10 +226,10 @@ def binary_arithmetic_operation(
         case Mode.CONSTANT:
             return new_scalar_type(mode, base_type)(f(left.value, right.value))
         case Mode.PUBLIC | Mode.SECRET:
-            inner = globals()[operation](
+            child = globals()[operation](
                 left=left, right=right, source_ref=SourceRef.back_frame()
             )
-            return new_scalar_type(mode, base_type)(inner)
+            return new_scalar_type(mode, base_type)(child)
 
 
 def shift_operation(
@@ -241,10 +248,10 @@ def shift_operation(
         case Mode.CONSTANT:
             return new_scalar_type(mode, base_type)(f(left.value, right.value))
         case Mode.PUBLIC | Mode.SECRET:
-            inner = globals()[operation](
+            child = globals()[operation](
                 left=left, right=right, source_ref=SourceRef.back_frame()
             )
-            return new_scalar_type(mode, base_type)(inner)
+            return new_scalar_type(mode, base_type)(child)
 
 
 def binary_relational_operation(
@@ -257,12 +264,12 @@ def binary_relational_operation(
     mode = Mode(max([left.mode.value, right.mode.value]))
     match mode:
         case Mode.CONSTANT:
-            return new_scalar_type(mode, BaseType.BOOLEAN)(f(left.value, right.value)) # type: ignore
+            return new_scalar_type(mode, BaseType.BOOLEAN)(f(left.value, right.value))  # type: ignore
         case Mode.PUBLIC | Mode.SECRET:
-            inner = globals()[operation](
+            child = globals()[operation](
                 left=left, right=right, source_ref=SourceRef.back_frame()
             )
-            return new_scalar_type(mode, BaseType.BOOLEAN)(inner) # type: ignore
+            return new_scalar_type(mode, BaseType.BOOLEAN)(child)  # type: ignore
 
 
 def public_equals_operation(left: ScalarType, right: ScalarType) -> "PublicBoolean":
@@ -274,9 +281,9 @@ def public_equals_operation(left: ScalarType, right: ScalarType) -> "PublicBoole
         raise TypeError(f"Invalid operation: {left}.public_equals({right})")
 
     return PublicBoolean(
-        inner=PublicOutputEquality(
+        child=PublicOutputEquality(
             left=left, right=right, source_ref=SourceRef.back_frame()
-        ) # type: ignore
+        )  # type: ignore
     )
 
 
@@ -311,12 +318,12 @@ class BooleanType(ScalarType):
         ):
             raise TypeError(f"Invalid operation: {self}.IfElse({arg_0}, {arg_1})")
         mode = Mode(max([self.mode.value, arg_0.mode.value, arg_1.mode.value]))
-        inner = IfElse(
+        child = IfElse(
             this=self, arg_0=arg_0, arg_1=arg_1, source_ref=SourceRef.back_frame()
         )
         if mode == Mode.CONSTANT:
             mode = Mode.PUBLIC
-        return new_scalar_type(mode, base_type)(inner)
+        return new_scalar_type(mode, base_type)(child)
 
 
 def binary_logical_operation(
@@ -333,12 +340,12 @@ def binary_logical_operation(
         operation = globals()[operation](
             left=left, right=right, source_ref=SourceRef.back_frame()
         )
-        return PublicBoolean(inner=operation)
+        return PublicBoolean(child=operation)
 
     operation = globals()[operation](
         left=left, right=right, source_ref=SourceRef.back_frame()
     )
-    return SecretBoolean(inner=operation)
+    return SecretBoolean(child=operation)
 
 
 @register_scalar_type(Mode.CONSTANT, BaseType.INTEGER)
@@ -358,6 +365,10 @@ class Integer(NumericType):
 
     def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
+
+    @classmethod
+    def is_literal(cls) -> bool:
+        return True
 
 
 @dataclass
@@ -380,6 +391,10 @@ class UnsignedInteger(NumericType):
 
     def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
+
+    @classmethod
+    def is_literal(cls) -> bool:
+        return True
 
 
 @register_scalar_type(Mode.CONSTANT, BaseType.BOOLEAN)
@@ -408,6 +423,10 @@ class Boolean(BooleanType):
     def __invert__(self: "Boolean") -> "Boolean":
         return Boolean(value=bool(not self.value))
 
+    @classmethod
+    def is_literal(cls) -> bool:
+        return True
+
 
 @register_scalar_type(Mode.PUBLIC, BaseType.INTEGER)
 class PublicInteger(NumericType):
@@ -416,8 +435,8 @@ class PublicInteger(NumericType):
     Represents a public unsigned integer in a program. This is a public variable
     evaluated at runtime."""
 
-    def __init__(self, inner: NadaType):
-        super().__init__(inner, BaseType.INTEGER, Mode.PUBLIC)
+    def __init__(self, child: NadaType):
+        super().__init__(child, BaseType.INTEGER, Mode.PUBLIC)
 
     def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
@@ -436,8 +455,8 @@ class PublicUnsignedInteger(NumericType):
     Represents a public integer in a program. This is a public variable
     evaluated at runtime."""
 
-    def __init__(self, inner: NadaType):
-        super().__init__(inner, BaseType.UNSIGNED_INTEGER, Mode.PUBLIC)
+    def __init__(self, child: NadaType):
+        super().__init__(child, BaseType.UNSIGNED_INTEGER, Mode.PUBLIC)
 
     def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
@@ -457,15 +476,15 @@ class PublicBoolean(BooleanType):
     Represents a public boolean in a program. This is a public variable
     evaluated at runtime."""
 
-    def __init__(self, inner: NadaType):
-        super().__init__(inner, BaseType.BOOLEAN, Mode.PUBLIC)
+    def __init__(self, child: NadaType):
+        super().__init__(child, BaseType.BOOLEAN, Mode.PUBLIC)
 
     def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
     def __invert__(self: "PublicBoolean") -> "PublicBoolean":
         operation = Not(this=self, source_ref=SourceRef.back_frame())
-        return PublicBoolean(inner=operation)
+        return PublicBoolean(child=operation)
 
     def public_equals(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger"]
@@ -479,8 +498,8 @@ class PublicBoolean(BooleanType):
 class SecretInteger(NumericType):
     """The Nada secret integer type."""
 
-    def __init__(self, inner: NadaType):
-        super().__init__(inner, BaseType.INTEGER, Mode.SECRET)
+    def __init__(self, child: NadaType):
+        super().__init__(child, BaseType.INTEGER, Mode.SECRET)
 
     def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
@@ -499,24 +518,24 @@ class SecretInteger(NumericType):
             operation = TruncPr(
                 left=self, right=other, source_ref=SourceRef.back_frame()
             )
-            return SecretInteger(inner=operation)
+            return SecretInteger(child=operation)
         if isinstance(other, PublicUnsignedInteger):
             operation = TruncPr(
                 left=self, right=other, source_ref=SourceRef.back_frame()
             )
-            return SecretInteger(inner=operation)
+            return SecretInteger(child=operation)
 
         raise TypeError(f"Invalid operation: {self}.trunc_pr({other})")
 
     @classmethod
     def random(cls) -> "SecretInteger":
         """Random operation for Secret integers."""
-        return SecretInteger(inner=Random(source_ref=SourceRef.back_frame()))
+        return SecretInteger(child=Random(source_ref=SourceRef.back_frame()))
 
     def to_public(self: "SecretInteger") -> "PublicInteger":
         """Convert this secret integer into a public variable."""
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
-        return PublicInteger(inner=operation)
+        return PublicInteger(child=operation)
 
 
 @dataclass
@@ -524,8 +543,8 @@ class SecretInteger(NumericType):
 class SecretUnsignedInteger(NumericType):
     """The Nada Secret Unsigned integer type."""
 
-    def __init__(self, inner: NadaType):
-        super().__init__(inner, BaseType.UNSIGNED_INTEGER, Mode.SECRET)
+    def __init__(self, child: NadaType):
+        super().__init__(child, BaseType.UNSIGNED_INTEGER, Mode.SECRET)
 
     def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
@@ -544,26 +563,26 @@ class SecretUnsignedInteger(NumericType):
             operation = TruncPr(
                 left=self, right=other, source_ref=SourceRef.back_frame()
             )
-            return SecretUnsignedInteger(inner=operation)
+            return SecretUnsignedInteger(child=operation)
         if isinstance(other, PublicUnsignedInteger):
             operation = TruncPr(
                 left=self, right=other, source_ref=SourceRef.back_frame()
             )
-            return SecretUnsignedInteger(inner=operation)
+            return SecretUnsignedInteger(child=operation)
 
         raise TypeError(f"Invalid operation: {self}.trunc_pr({other})")
 
     @classmethod
     def random(cls) -> "SecretUnsignedInteger":
         """Generate a random secret unsigned integer."""
-        return SecretUnsignedInteger(inner=Random(source_ref=SourceRef.back_frame()))
+        return SecretUnsignedInteger(child=Random(source_ref=SourceRef.back_frame()))
 
     def to_public(
         self: "SecretUnsignedInteger",
     ) -> "PublicUnsignedInteger":
         """Convert this secret into a public variable."""
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
-        return PublicUnsignedInteger(inner=operation)
+        return PublicUnsignedInteger(child=operation)
 
 
 @dataclass
@@ -571,54 +590,52 @@ class SecretUnsignedInteger(NumericType):
 class SecretBoolean(BooleanType):
     """The SecretBoolean Nada MIR type."""
 
-    def __init__(self, inner: NadaType):
-        super().__init__(inner, BaseType.BOOLEAN, Mode.SECRET)
+    def __init__(self, child: NadaType):
+        super().__init__(child, BaseType.BOOLEAN, Mode.SECRET)
 
     def __eq__(self, other) -> AnyBoolean:
         return ScalarType.__eq__(self, other)
 
     def __invert__(self: "SecretBoolean") -> "SecretBoolean":
         operation = Not(this=self, source_ref=SourceRef.back_frame())
-        return SecretBoolean(inner=operation)
+        return SecretBoolean(child=operation)
 
     def to_public(self: "SecretBoolean") -> "PublicBoolean":
         """Convert this secret into a public variable."""
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
-        return PublicBoolean(inner=operation)
+        return PublicBoolean(child=operation)
 
     @classmethod
     def random(cls) -> "SecretBoolean":
         """Generate a random secret boolean."""
-        return SecretBoolean(inner=Random(source_ref=SourceRef.back_frame()))
+        return SecretBoolean(child=Random(source_ref=SourceRef.back_frame()))
 
 
 @dataclass
 class EcdsaSignature(NadaType):
     """The EcdsaSignature Nada MIR type."""
 
-    def __init__(self, inner: OperationType):
-        super().__init__(inner=inner)
+    def __init__(self, child: OperationType):
+        super().__init__(child=child)
 
 
 @dataclass
 class EcdsaDigestMessage(NadaType):
     """The EcdsaDigestMessage Nada MIR type."""
 
-    def __init__(self, inner: OperationType):
-        super().__init__(inner=inner)
+    def __init__(self, child: OperationType):
+        super().__init__(child=child)
 
 
 @dataclass
 class EcdsaPrivateKey(NadaType):
     """The EcdsaPrivateKey Nada MIR type."""
 
-    def __init__(self, inner: OperationType):
-        super().__init__(inner=inner)
+    def __init__(self, child: OperationType):
+        super().__init__(child=child)
 
     def ecdsa_sign(self, digest: "EcdsaDigestMessage") -> "EcdsaSignature":
         """Random operation for Secret integers."""
         return EcdsaSignature(
-                inner=EcdsaSign(
-                        left=self, right=digest, source_ref=SourceRef.back_frame()
-                )
+            child=EcdsaSign(left=self, right=digest, source_ref=SourceRef.back_frame())
         )

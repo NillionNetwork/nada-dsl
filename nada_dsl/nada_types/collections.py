@@ -50,27 +50,27 @@ class Collection(NadaType):
 
     left_type: AllTypesType
     right_type: AllTypesType
-    inner_type: AllTypesType
+    contained_type: AllTypesType
 
-    def to_type(self):
+    def to_mir(self):
         """Convert operation wrapper to a dictionary representing its type."""
         if isinstance(self, (Array, ArrayType)):
             size = {"size": self.size} if self.size else {}
-            inner_type = self.retrieve_inner_type()
-            return {"Array": {"inner_type": inner_type, **size}}
+            contained_type = self.retrieve_inner_type()
+            return {"Array": {"inner_type": contained_type, **size}}
         if isinstance(self, (Vector, VectorType)):
-            inner_type = self.retrieve_inner_type()
-            return {"Vector": {"inner_type": inner_type}}
+            contained_type = self.retrieve_inner_type()
+            return {"Vector": {"inner_type": contained_type}}
         if isinstance(self, (Tuple, TupleType)):
             return {
                 "Tuple": {
                     "left_type": (
-                        self.left_type.to_type()
+                        self.left_type.to_mir()
                         if isinstance(self.left_type, (NadaType, ArrayType, TupleType))
                         else self.left_type.class_to_type()
                     ),
                     "right_type": (
-                        self.right_type.to_type()
+                        self.right_type.to_mir()
                         if isinstance(self.right_type, (NadaType, ArrayType, TupleType))
                         else self.right_type.class_to_type()
                     ),
@@ -81,29 +81,29 @@ class Collection(NadaType):
         )
 
     def retrieve_inner_type(self):
-        """Retrieves the inner type of this collection"""
-        if isinstance(self.inner_type, TypeVar):
+        """Retrieves the child type of this collection"""
+        if isinstance(self.contained_type, TypeVar):
             return "T"
-        if inspect.isclass(self.inner_type):
-            return self.inner_type.class_to_type()
-        return self.inner_type.to_type()
+        if inspect.isclass(self.contained_type):
+            return self.contained_type.class_to_type()
+        return self.contained_type.to_mir()
 
 
 class Map(Generic[T, R]):
     """The Map operation"""
 
-    inner: OperationType
+    child: OperationType
     fn: NadaFunction[T, R]
     source_ref: SourceRef
 
     def __init__(
         self,
-        inner: OperationType,
+        child: OperationType,
         fn: NadaFunction[T, R],
         source_ref: SourceRef,
     ):
         self.id = next_operation_id()
-        self.inner = inner
+        self.child = child
         self.fn = fn
         self.source_ref = source_ref
 
@@ -111,7 +111,7 @@ class Map(Generic[T, R]):
         """Store MP in AST"""
         AST_OPERATIONS[self.id] = MapASTOperation(
             id=self.id,
-            inner=self.inner.inner.id,
+            child=self.child.child.id,
             fn=self.fn.id,
             source_ref=self.source_ref,
             ty=ty,
@@ -122,20 +122,20 @@ class Map(Generic[T, R]):
 class Reduce(Generic[T, R]):
     """The Nada Reduce operation."""
 
-    inner: OperationType
+    child: OperationType
     fn: NadaFunction[T, R]
     initial: R
     source_ref: SourceRef
 
     def __init__(
         self,
-        inner: OperationType,
+        child: OperationType,
         fn: NadaFunction[T, R],
         initial: R,
         source_ref: SourceRef,
     ):
         self.id = next_operation_id()
-        self.inner = inner
+        self.child = child
         self.fn = fn
         self.initial = initial
         self.source_ref = source_ref
@@ -144,9 +144,9 @@ class Reduce(Generic[T, R]):
         """Store a reduce object in AST"""
         AST_OPERATIONS[self.id] = ReduceASTOperation(
             id=self.id,
-            inner=self.inner.inner.id,
+            child=self.child.child.id,
             fn=self.fn.id,
-            initial=self.initial.inner.id,
+            initial=self.initial.child.id,
             source_ref=self.source_ref,
             ty=ty,
         )
@@ -159,12 +159,12 @@ class TupleType:
     left_type: NadaType
     right_type: NadaType
 
-    def to_type(self):
+    def to_mir(self):
         """Convert a tuple object into a Nada type."""
         return {
             "Tuple": {
-                "left_type": self.left_type.to_type(),
-                "right_type": self.right_type.to_type(),
+                "left_type": self.left_type.to_mir(),
+                "right_type": self.right_type.to_mir(),
             }
         }
 
@@ -175,11 +175,11 @@ class Tuple(Generic[T, U], Collection):
     left_type: T
     right_type: U
 
-    def __init__(self, inner, left_type: T, right_type: U):
+    def __init__(self, child, left_type: T, right_type: U):
         self.left_type = left_type
         self.right_type = right_type
-        self.inner = inner
-        super().__init__(self.inner)
+        self.child = child
+        super().__init__(self.child)
 
     @classmethod
     def new(cls, left_type: T, right_type: U) -> "Tuple[T, U]":
@@ -187,12 +187,9 @@ class Tuple(Generic[T, U], Collection):
         return Tuple(
             left_type=left_type,
             right_type=right_type,
-            inner=TupleNew(
-                inner=(left_type, right_type),
+            child=TupleNew(
+                child=(left_type, right_type),
                 source_ref=SourceRef.back_frame(),
-                inner_type=Tuple(
-                    left_type=left_type, right_type=right_type, inner=None
-                ),
             ),
         )
 
@@ -208,11 +205,11 @@ class NTupleType:
 
     types: List[NadaType]
 
-    def to_type(self):
+    def to_mir(self):
         """Convert a n tuple object into a Nada type."""
         return {
             "NTuple": {
-                "types": [ty.to_type() for ty in self.types],
+                "types": [ty.to_mir() for ty in self.types],
             }
         }
 
@@ -222,22 +219,19 @@ class NTuple(NadaType):
 
     types: List[NadaType]
 
-    def __init__(self, inner, types: List[NadaType]):
+    def __init__(self, child, types: List[NadaType]):
         self.types = types
-        self.inner = inner
-        super().__init__(self.inner)
+        self.child = child
+        super().__init__(self.child)
 
     @classmethod
     def new(cls, types: List[NadaType]) -> "NTuple":
         """Constructs a new NTuple."""
         return NTuple(
             types=types,
-            inner=NTupleNew(
-                inner=types,
+            child=NTupleNew(
+                child=types,
                 source_ref=SourceRef.back_frame(),
-                inner_type=NTuple(
-                    types=types, inner=None
-                ),
             ),
         )
 
@@ -246,13 +240,9 @@ class NTuple(NadaType):
         """Returns the generic type for this NTuple"""
         return NTupleType(types=types)
 
-    def to_type(self):
+    def to_mir(self):
         """Convert operation wrapper to a dictionary representing its type."""
-        return {
-            "NTuple": {
-                "types": [ty.to_type() for ty in self.types]
-            }
-        }
+        return {"NTuple": {"types": [ty.to_mir() for ty in self.types]}}
 
 
 @dataclass
@@ -261,11 +251,11 @@ class ObjectType:
 
     types: Dict[str, NadaType]
 
-    def to_type(self):
+    def to_mir(self):
         """Convert an object into a Nada type."""
         return {
             "Object": {
-                "types": {name: ty.to_type() for name, ty in self.types.items()},
+                "types": {name: ty.to_mir() for name, ty in self.types.items()},
             }
         }
 
@@ -275,22 +265,19 @@ class Object(NadaType):
 
     types: Dict[str, NadaType]
 
-    def __init__(self, inner, types: Dict[str, NadaType]):
+    def __init__(self, child, types: Dict[str, NadaType]):
         self.types = types
-        self.inner = inner
-        super().__init__(self.inner)
+        self.child = child
+        super().__init__(self.child)
 
     @classmethod
     def new(cls, types: Dict[str, NadaType]) -> "Object":
         """Constructs a new Object."""
         return Object(
             types=types,
-            inner=ObjectNew(
-                inner=types,
+            child=ObjectNew(
+                child=types,
                 source_ref=SourceRef.back_frame(),
-                inner_type=Object(
-                    types=types, inner=None
-                ),
             ),
         )
 
@@ -299,14 +286,17 @@ class Object(NadaType):
         """Returns the generic type for this Object"""
         return ObjectType(types=types)
 
-    def to_type(self):
+    def to_mir(self):
         """Convert operation wrapper to a dictionary representing its type."""
         return {
             "Object": {
-                "types": {name: ty.to_type() for name, ty in self.types.items()},
+                "types": {name: ty.to_mir() for name, ty in self.types.items()},
             }
         }
 
+
+# pylint: disable=W0511
+# TODO: remove this
 def get_inner_type(inner_type):
     """Utility that returns the inner type for a composite type."""
     inner_type = copy.copy(inner_type)
@@ -328,8 +318,8 @@ class Zip:
         AST_OPERATIONS[self.id] = BinaryASTOperation(
             id=self.id,
             name="Zip",
-            left=self.left.inner.id,
-            right=self.right.inner.id,
+            left=self.left.child.id,
+            right=self.right.child.id,
             source_ref=self.source_ref,
             ty=ty,
         )
@@ -338,9 +328,9 @@ class Zip:
 class Unzip:
     """The Unzip operation."""
 
-    def __init__(self, inner: AllTypes, source_ref: SourceRef):
+    def __init__(self, child: AllTypes, source_ref: SourceRef):
         self.id = next_operation_id()
-        self.inner = inner
+        self.child = child
         self.source_ref = source_ref
 
     def store_in_ast(self, ty: NadaTypeRepr):
@@ -348,7 +338,7 @@ class Unzip:
         AST_OPERATIONS[self.id] = UnaryASTOperation(
             id=self.id,
             name="Unzip",
-            inner=self.inner.inner.id,
+            child=self.child.child.id,
             source_ref=self.source_ref,
             ty=ty,
         )
@@ -368,8 +358,8 @@ class InnerProduct:
         AST_OPERATIONS[self.id] = BinaryASTOperation(
             id=self.id,
             name="InnerProduct",
-            left=self.left.inner.id,
-            right=self.right.inner.id,
+            left=self.left.child.id,
+            right=self.right.child.id,
             source_ref=self.source_ref,
             ty=ty,
         )
@@ -379,12 +369,17 @@ class InnerProduct:
 class ArrayType:
     """Marker type for arrays."""
 
-    inner_type: AllTypesType
+    contained_type: AllTypesType
     size: int
 
-    def to_type(self):
+    def to_mir(self):
         """Convert this generic type into a MIR Nada type."""
-        return {"Array": {"inner_type": self.inner_type.to_type(), "size": self.size}}
+        return {
+            "Array": {
+                "inner_type": self.contained_type.to_mir(),
+                "size": self.size,
+            }
+        }
 
 
 class Array(Generic[T], Collection):
@@ -395,27 +390,29 @@ class Array(Generic[T], Collection):
 
     Attributes
     ----------
-    inner_type: T
+    contained_type: T
         The type of the array
-    inner:
-        The optional inner operation
+    child:
+        The optional child operation
     size: int
         The size of the array
     """
 
-    inner_type: T
+    contained_type: T
     size: int
 
-    def __init__(self, inner, size: int, inner_type: T = None):
-        self.inner_type = (
-            inner_type
-            if (inner is None or inner_type is not None)
-            else get_inner_type(inner)
+    def __init__(self, child, size: int, contained_type: T = None):
+        self.contained_type = (
+            contained_type
+            if (child is None or contained_type is not None)
+            else get_inner_type(child)
         )
         self.size = size
-        self.inner = inner if inner_type is not None else getattr(inner, "inner", None)
-        if self.inner is not None:
-            self.inner.store_in_ast(self.to_type())
+        self.child = (
+            child if contained_type is not None else getattr(child, "child", None)
+        )
+        if self.child is not None:
+            self.child.store_in_ast(self.to_mir())
 
     def __iter__(self):
         raise NotAllowedException(
@@ -429,8 +426,8 @@ class Array(Generic[T], Collection):
             nada_function = nada_fn(function)
         return Array(
             size=self.size,
-            inner_type=nada_function.return_type,
-            inner=Map(inner=self, fn=nada_function, source_ref=SourceRef.back_frame()),
+            contained_type=nada_function.return_type,
+            child=Map(child=self, fn=nada_function, source_ref=SourceRef.back_frame()),
         )
 
     def reduce(self: "Array[T]", function, initial: R) -> R:
@@ -439,7 +436,7 @@ class Array(Generic[T], Collection):
             function = nada_fn(function)
         return function.return_type(
             Reduce(
-                inner=self,
+                child=self,
                 fn=function,
                 initial=initial,
                 source_ref=SourceRef.back_frame(),
@@ -452,29 +449,31 @@ class Array(Generic[T], Collection):
             raise IncompatibleTypesError("Cannot zip arrays of different size")
         return Array(
             size=self.size,
-            inner_type=Tuple(
-                left_type=self.inner_type, right_type=other.inner_type, inner=None
+            contained_type=Tuple(
+                left_type=self.contained_type,
+                right_type=other.contained_type,
+                child=None,
             ),
-            inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
+            child=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
 
     def inner_product(self: "Array[T]", other: "Array[T]") -> T:
-        """The inner product operation for arrays"""
+        """The child product operation for arrays"""
         if self.size != other.size:
             raise IncompatibleTypesError(
-                "Cannot do inner product of arrays of different size"
+                "Cannot do child product of arrays of different size"
             )
 
         if is_primitive_integer(self.retrieve_inner_type()) and is_primitive_integer(
             other.retrieve_inner_type()
         ):
-            inner_type = (
-                self.inner_type
-                if inspect.isclass(self.inner_type)
-                else self.inner_type.__class__
+            contained_type = (
+                self.contained_type
+                if inspect.isclass(self.contained_type)
+                else self.contained_type.__class__
             )
-            return inner_type(
-                inner=InnerProduct(
+            return contained_type(
+                child=InnerProduct(
                     left=self, right=other, source_ref=SourceRef.back_frame()
                 )
             )  # type: ignore
@@ -494,31 +493,30 @@ class Array(Generic[T], Collection):
             raise TypeError("All arguments must be of the same type")
 
         return Array(
-            inner_type=first_arg,
+            contained_type=first_arg,
             size=len(args),
-            inner=ArrayNew(
-                inner=args,
+            child=ArrayNew(
+                child=args,
                 source_ref=SourceRef.back_frame(),
-                inner_type=ArrayType(inner_type=first_arg, size=len(args)),
             ),
         )
 
     @classmethod
-    def generic_type(cls, inner_type: T, size: int) -> ArrayType:
+    def generic_type(cls, contained_type: T, size: int) -> ArrayType:
         """Return the generic type of the Array."""
-        return ArrayType(inner_type=inner_type, size=size)
+        return ArrayType(contained_type=contained_type, size=size)
 
     @classmethod
-    def init_as_template_type(cls, inner_type) -> "Array[T]":
-        """Construct an empty template array with the given inner type."""
-        return Array(inner=None, inner_type=inner_type, size=None)
+    def init_as_template_type(cls, contained_type) -> "Array[T]":
+        """Construct an empty template array with the given child type."""
+        return Array(child=None, contained_type=contained_type, size=None)
 
 
 @dataclass
 class VectorType(Collection):
     """The generic type for Vectors."""
 
-    inner_type: AllTypesType
+    contained_type: AllTypesType
 
 
 @dataclass
@@ -531,18 +529,18 @@ class Vector(Generic[T], Collection):
     its size may change at runtime.
     """
 
-    inner_type: T
+    contained_type: T
     size: int
 
-    def __init__(self, inner, size, inner_type=None):
-        self.inner_type = (
-            inner_type
-            if (inner is None or inner_type is not None)
-            else get_inner_type(inner)
+    def __init__(self, child, size, contained_type=None):
+        self.contained_type = (
+            contained_type
+            if (child is None or contained_type is not None)
+            else get_inner_type(child)
         )
         self.size = size
-        self.inner = inner if inner_type else getattr(inner, "inner", None)
-        self.inner.store_in_ast(self.to_type())
+        self.child = child if contained_type else getattr(child, "child", None)
+        self.child.store_in_ast(self.to_mir())
 
     def __iter__(self):
         raise NotAllowedException(
@@ -554,16 +552,18 @@ class Vector(Generic[T], Collection):
         """The map operation for Nada Vectors."""
         return Vector(
             size=self.size,
-            inner_type=function.return_type,
-            inner=(Map(inner=self, fn=function, source_ref=SourceRef.back_frame())),
+            contained_type=function.return_type,
+            child=(Map(child=self, fn=function, source_ref=SourceRef.back_frame())),
         )
 
     def zip(self: "Vector[T]", other: "Vector[R]") -> "Vector[Tuple[T, R]]":
         """The Zip operation for Nada Vectors."""
         return Vector(
             size=self.size,
-            inner_type=Tuple.generic_type(self.inner_type, other.inner_type),
-            inner=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
+            contained_type=Tuple.generic_type(
+                self.contained_type, other.contained_type
+            ),
+            child=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
 
     def reduce(
@@ -572,7 +572,7 @@ class Vector(Generic[T], Collection):
         """The reduce operation for Nada Vectors."""
         return function.return_type(
             Reduce(
-                inner=self,
+                child=self,
                 fn=function,
                 initial=initial,
                 source_ref=SourceRef.back_frame(),
@@ -580,14 +580,14 @@ class Vector(Generic[T], Collection):
         )  # type: ignore
 
     @classmethod
-    def generic_type(cls, inner_type: T) -> VectorType:
-        """Returns the generic type for a Vector with the given inner type."""
-        return VectorType(inner=None, inner_type=inner_type)
+    def generic_type(cls, contained_type: T) -> VectorType:
+        """Returns the generic type for a Vector with the given child type."""
+        return VectorType(child=None, contained_type=contained_type)
 
     @classmethod
-    def init_as_template_type(cls, inner_type) -> "Vector[T]":
-        """Construct an empty Vector with the given inner type."""
-        return Vector(inner=None, inner_type=inner_type, size=None)
+    def init_as_template_type(cls, contained_type) -> "Vector[T]":
+        """Construct an empty Vector with the given child type."""
+        return Vector(child=None, contained_type=contained_type, size=None)
 
 
 class TupleNew(Generic[T, U]):
@@ -596,27 +596,22 @@ class TupleNew(Generic[T, U]):
     Represents the creation of a new Tuple.
     """
 
-    inner_type: NadaType
-    inner: typing.Tuple[T, U]
+    child: typing.Tuple[T, U]
     source_ref: SourceRef
 
-    def __init__(
-        self, inner_type: NadaType, inner: typing.Tuple[T, U], source_ref: SourceRef
-    ):
+    def __init__(self, child: typing.Tuple[T, U], source_ref: SourceRef):
         self.id = next_operation_id()
-        self.inner = inner
+        self.child = child
         self.source_ref = source_ref
-        self.inner_type = inner_type
 
     def store_in_ast(self, ty: object):
         """Store this TupleNew in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,
             name=self.__class__.__name__,
-            elements=[element.inner.id for element in self.inner],
+            elements=[element.child.id for element in self.child],
             source_ref=self.source_ref,
             ty=ty,
-            inner_type=self.inner_type,
         )
 
 
@@ -626,27 +621,22 @@ class NTupleNew:
     Represents the creation of a new Tuple.
     """
 
-    inner_types: List[NadaType]
-    inner: typing.Tuple
+    child: typing.Tuple
     source_ref: SourceRef
 
-    def __init__(
-        self, inner_type: NadaType, inner: typing.Tuple, source_ref: SourceRef
-    ):
+    def __init__(self, child: typing.Tuple, source_ref: SourceRef):
         self.id = next_operation_id()
-        self.inner = inner
+        self.child = child
         self.source_ref = source_ref
-        self.inner_type = inner_type
 
     def store_in_ast(self, ty: object):
         """Store this NTupleNew in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,
             name=self.__class__.__name__,
-            elements=[element.inner.id for element in self.inner],
+            elements=[element.child.id for element in self.child],
             source_ref=self.source_ref,
             ty=ty,
-            inner_type=self.inner_type,
         )
 
 
@@ -656,39 +646,38 @@ class ObjectNew:
     Represents the creation of a new Object.
     """
 
-    inner_types: Dict[str, NadaType]
-    inner: typing.Dict
+    child: typing.Dict
     source_ref: SourceRef
 
-    def __init__(
-        self, inner_type: NadaType, inner: typing.Dict, source_ref: SourceRef
-    ):
+    def __init__(self, child: typing.Dict, source_ref: SourceRef):
         self.id = next_operation_id()
-        self.inner = inner
+        self.child = child
         self.source_ref = source_ref
-        self.inner_type = inner_type
 
     def store_in_ast(self, ty: object):
         """Store this Object in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,
             name=self.__class__.__name__,
-            elements=[element.inner.id for element in self.inner.values()],
+            elements=[element.child.id for element in self.child.values()],
             source_ref=self.source_ref,
             ty=ty,
-            inner_type=self.inner_type,
         )
 
 
 def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
     """The Unzip operation for Arrays."""
-    right_type = ArrayType(inner_type=array.inner_type.right_type, size=array.size)
-    left_type = ArrayType(inner_type=array.inner_type.left_type, size=array.size)
+    right_type = ArrayType(
+        contained_type=array.contained_type.right_type, size=array.size
+    )
+    left_type = ArrayType(
+        contained_type=array.contained_type.left_type, size=array.size
+    )
 
     return Tuple(
         right_type=right_type,
         left_type=left_type,
-        inner=Unzip(inner=array, source_ref=SourceRef.back_frame()),
+        child=Unzip(child=array, source_ref=SourceRef.back_frame()),
     )
 
 
@@ -696,23 +685,20 @@ def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
 class ArrayNew(Generic[T]):
     """MIR Array new operation"""
 
-    inner_type: NadaType
-    inner: List[T]
+    child: List[T]
     source_ref: SourceRef
 
-    def __init__(self, inner_type: NadaType, inner: List[T], source_ref: SourceRef):
+    def __init__(self, child: List[T], source_ref: SourceRef):
         self.id = next_operation_id()
-        self.inner = inner
+        self.child = child
         self.source_ref = source_ref
-        self.inner_type = inner_type
 
     def store_in_ast(self, ty: NadaType):
         """Store this ArrayNew object in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,
             name=self.__class__.__name__,
-            elements=[element.inner.id for element in self.inner],
+            elements=[element.child.id for element in self.child],
             source_ref=self.source_ref,
             ty=ty,
-            inner_type=self.inner_type,
         )
