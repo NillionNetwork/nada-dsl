@@ -39,9 +39,9 @@ class Input(NadaType):
         self.name = name
         self.party = party
         self.doc = doc
-        self.inner = None
+        self.child = None
         self.source_ref = SourceRef.back_frame()
-        super().__init__(self.inner)
+        super().__init__(self.child)
 
     def store_in_ast(self, ty: object):
         """Store object in AST"""
@@ -70,8 +70,8 @@ class Literal(NadaType):
         self.id = next_operation_id()
         self.value = value
         self.source_ref = source_ref
-        self.inner = None
-        super().__init__(self.inner)
+        self.child = None
+        super().__init__(self.child)
 
     def store_in_ast(self, ty: object):
         """Store object in AST"""
@@ -90,24 +90,24 @@ class Output:
     Represents an output from the computation.
 
     Attributes:
-        inner (AllTypes): The type of the output.
+        child (AllTypes): The type of the output.
         party (Party): The party receiving the output.
         name (str): The name of the output.
     """
 
-    inner: AllTypes
+    child: AllTypes
     party: Party
     name: str
     source_ref: SourceRef
 
-    def __init__(self, inner, name, party):
+    def __init__(self, child, name, party):
         self.source_ref = SourceRef.back_frame()
-        if not issubclass(type(inner), NadaType):
+        if not issubclass(type(child), NadaType):
             raise InvalidTypeError(
                 f"{self.source_ref.file}:{self.source_ref.lineno}: Output value "
-                f"{inner} of type {type(inner)} is not "
+                f"{child} of type {type(child)} is not "
                 f"a Nada type so it isn't a valid output"
             )
-        self.inner = inner
+        self.child = child
         self.name = name
         self.party = party

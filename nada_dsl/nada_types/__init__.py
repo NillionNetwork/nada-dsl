@@ -90,7 +90,7 @@ NadaTypeRepr: TypeAlias = str | Dict[str, Dict]
 """Type alias for the NadaType representation. 
 
 This representation can be either a string ("SecretInteger") 
-or a dictionary (Array{inner_type=SecretInteger, size=3}).
+or a dictionary (Array{contained_types=SecretInteger, size=3}).
 """
 
 
@@ -121,7 +121,7 @@ class NadaType:
     This is the parent class of all nada types.
 
     In Nada, all the types wrap Operations. For instance, an addition between two integers
-    is represented like this SecretInteger(inner=Addition(...)).
+    is represented like this SecretInteger(child=Addition(...)).
 
     In MIR, the representation is based around operations. A MIR operation points to other
     operations and has a return type.
@@ -130,25 +130,25 @@ class NadaType:
     MIR-friendly format, as subclasses of ASTOperation.
 
     Whenever the Python interpreter constructs an instance of NadaType, it will also store
-    in memory the corresponding inner operation. In order to do so, the ASTOperation will
+    in memory the corresponding child operation. In order to do so, the ASTOperation will
     need the type in MIR format. Which is why all instances of `NadaType` provide an implementation
-    of `to_type()`.
+    of `to_mir()`.
 
     """
 
-    inner: OperationType
+    child: OperationType
 
-    def __init__(self, inner: OperationType):
+    def __init__(self, child: OperationType):
         """NadaType default constructor
 
         Args:
-            inner (OperationType): The inner operation of this Data type
+            child (OperationType): The child operation of this Data type
         """
-        self.inner = inner
-        if self.inner is not None:
-            self.inner.store_in_ast(self.to_type())
+        self.child = child
+        if self.child is not None:
+            self.child.store_in_ast(self.to_mir())
 
-    def to_type(self):
+    def to_mir(self):
         """Default implementation for the Conversion of a type into MIR representation."""
         return self.__class__.class_to_type()
 
@@ -163,3 +163,13 @@ class NadaType:
 
     def __bool__(self):
         raise NotImplementedError
+
+    @classmethod
+    def is_scalable(cls) -> bool:
+        """Returns True if the type is a scalable."""
+        return False
+
+    @classmethod
+    def is_literal(cls) -> bool:
+        """Returns True if the type is a literal."""
+        return False

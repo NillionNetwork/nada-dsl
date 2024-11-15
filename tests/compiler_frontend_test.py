@@ -67,7 +67,7 @@ def create_output(root: AllTypes, name: str, party: str) -> Output:
     return Output(root, name, Party(party))
 
 
-def to_type(name: str):
+def to_mir(name: str):
     # Rename public variables so they are considered as the same as literals.
     if name.startswith("Public"):
         name = name[len("Public") :].lstrip()
@@ -127,7 +127,7 @@ def test_duplicated_inputs_checks():
 def test_array_type_conversion(input_type, type_name, size):
     inner_input = create_input(SecretInteger, "name", "party", **{})
     collection = create_collection(input_type, inner_input, size, **{})
-    converted_input = collection.to_type()
+    converted_input = collection.to_mir()
     assert list(converted_input.keys()) == [type_name]
 
 
@@ -145,7 +145,7 @@ def test_zip(input_type, input_name):
     right = create_collection(input_type, inner_input, 10, **{})
     zipped = left.zip(right)
     assert isinstance(zipped, Array)
-    zip_ast = AST_OPERATIONS[zipped.inner.id]
+    zip_ast = AST_OPERATIONS[zipped.child.id]
     op = process_operation(zip_ast, {}).mir
     assert list(op.keys()) == ["Zip"]
 
@@ -174,14 +174,14 @@ def test_unzip(input_type: type[Array]):
     right = create_collection(input_type, inner_input, 10, **{})
     unzipped = unzip(left.zip(right))
     assert isinstance(unzipped, Tuple)
-    unzip_ast = AST_OPERATIONS[unzipped.inner.id]
+    unzip_ast = AST_OPERATIONS[unzipped.child.id]
     assert isinstance(unzip_ast, UnaryASTOperation)
     assert unzip_ast.name == "Unzip"
 
-    op = process_operation(AST_OPERATIONS[unzipped.inner.id], {}).mir
+    op = process_operation(AST_OPERATIONS[unzipped.child.id], {}).mir
 
     unzip_mir = op["Unzip"]
-    # Check that the inner operation points to a Zip
+    # Check that the child operation points to a Zip
     zip_ast = AST_OPERATIONS[unzip_mir["this"]]
     assert isinstance(zip_ast, BinaryASTOperation)
     assert zip_ast.name == "Zip"
@@ -204,21 +204,21 @@ def test_map(input_type, input_name):
     def nada_function(a: SecretInteger) -> SecretInteger:
         return a + a
 
-    inner_input = create_input(SecretInteger, "inner", "party", **{})
+    inner_input = create_input(SecretInteger, "child", "party", **{})
 
     left = create_collection(input_type, inner_input, 10, **{})
     map_operation = left.map(nada_function)
 
-    process_output = process_operation(AST_OPERATIONS[map_operation.inner.id], {})
+    process_output = process_operation(AST_OPERATIONS[map_operation.child.id], {})
     op = process_output.mir
     extra_fn = process_output.extra_function
     assert list(op.keys()) == ["Map"]
-    inner = op["Map"]
-    assert inner["fn"] == extra_fn.id
-    assert list(inner["type"].keys()) == [input_name]
-    inner_inner = AST_OPERATIONS[inner["inner"]]
-    assert inner_inner.name == "inner"
-    assert inner["type"][input_name]["inner_type"] == "SecretInteger"
+    child = op["Map"]
+    assert child["fn"] == extra_fn.id
+    assert list(child["type"].keys()) == [input_name]
+    inner_inner = AST_OPERATIONS[child["inner"]]
+    assert inner_inner.name == "child"
+    assert child["type"][input_name]["inner_type"] == "SecretInteger"
 
 
 @pytest.mark.parametrize(
@@ -234,23 +234,23 @@ def test_reduce(input_type: type[Array]):
     def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b
 
-    inner_input = create_input(SecretInteger, "inner", "party", **{})
+    inner_input = create_input(SecretInteger, "child", "party", **{})
     left = create_collection(input_type, inner_input, 10, **{})
 
     reduce_operation = left.reduce(nada_function, c)
 
-    reduce_ast = AST_OPERATIONS[reduce_operation.inner.id]
+    reduce_ast = AST_OPERATIONS[reduce_operation.child.id]
     assert isinstance(reduce_ast, ReduceASTOperation)
     process_output = process_operation(reduce_ast, {})
     op = process_output.mir
     extra_fn = process_output.extra_function
 
     assert list(op.keys()) == ["Reduce"]
-    inner = op["Reduce"]
-    assert inner["fn"] == extra_fn.id
-    assert inner["type"] == "SecretInteger"
-    inner_inner = AST_OPERATIONS[inner["inner"]]
-    assert inner_inner.name == "inner"
+    child = op["Reduce"]
+    assert child["fn"] == extra_fn.id
+    assert child["type"] == "SecretInteger"
+    inner_inner = AST_OPERATIONS[child["inner"]]
+    assert inner_inner.name == "child"
 
 
 def check_arg(arg: NadaFunctionArg, arg_name, arg_type):
@@ -269,7 +269,7 @@ def nada_function_to_mir(function_name: str):
     nada_function: NadaFunctionASTOperation = find_function_in_ast(function_name)
     assert isinstance(nada_function, NadaFunctionASTOperation)
     fn_ops = {}
-    traverse_and_process_operations(nada_function.inner, fn_ops, {})
+    traverse_and_process_operations(nada_function.child, fn_ops, {})
     return nada_function.to_mir(fn_ops)
 
 
@@ -346,7 +346,7 @@ def test_nada_function_call():
     nada_fn_call_return = nada_function(c, d)
     nada_fn_type = nada_function_to_mir("nada_function")
 
-    nada_function_call = nada_fn_call_return.inner
+    nada_function_call = nada_fn_call_return.child
     assert isinstance(nada_function_call, NadaFunctionCall)
     assert nada_function_call.fn.id == nada_fn_type["id"]
 
@@ -457,18 +457,18 @@ def test_array_new():
     second_input = create_input(SecretInteger, "second", "party", **{})
     array = Array.new(first_input, second_input)
 
-    op = process_operation(AST_OPERATIONS[array.inner.id], {}).mir
+    op = process_operation(AST_OPERATIONS[array.child.id], {}).mir
 
     assert list(op.keys()) == ["New"]
 
-    inner = op["New"]
+    child = op["New"]
 
-    first: InputASTOperation = AST_OPERATIONS[inner["elements"][0]]  # type: ignore
-    second: InputASTOperation = AST_OPERATIONS[inner["elements"][1]]  # type: ignore
+    first: InputASTOperation = AST_OPERATIONS[child["elements"][0]]  # type: ignore
+    second: InputASTOperation = AST_OPERATIONS[child["elements"][1]]  # type: ignore
 
     assert first.name == "first"
     assert second.name == "second"
-    assert inner["type"]["Array"] == {
+    assert child["type"]["Array"] == {
         "inner_type": "SecretInteger",
         "size": 2,
     }
@@ -493,19 +493,19 @@ def test_tuple_new():
     first_input = create_input(SecretInteger, "first", "party", **{})
     second_input = create_input(PublicInteger, "second", "party", **{})
     tuple = Tuple.new(first_input, second_input)
-    array_ast = AST_OPERATIONS[tuple.inner.id]
+    array_ast = AST_OPERATIONS[tuple.child.id]
 
     op = process_operation(array_ast, {}).mir
 
     assert list(op.keys()) == ["New"]
 
-    inner = op["New"]
+    child = op["New"]
 
-    left_ast = AST_OPERATIONS[inner["elements"][0]]
-    right_ast = AST_OPERATIONS[inner["elements"][1]]
+    left_ast = AST_OPERATIONS[child["elements"][0]]
+    right_ast = AST_OPERATIONS[child["elements"][1]]
     assert left_ast.name == "first"
     assert right_ast.name == "second"
-    assert inner["type"]["Tuple"] == {
+    assert child["type"]["Tuple"] == {
         "left_type": "SecretInteger",
         "right_type": "Integer",
     }
@@ -525,22 +525,22 @@ def test_n_tuple_new():
     second_input = create_input(PublicInteger, "second", "party", **{})
     third_input = create_input(SecretInteger, "third", "party", **{})
     tuple = NTuple.new([first_input, second_input, third_input])
-    array_ast = AST_OPERATIONS[tuple.inner.id]
+    array_ast = AST_OPERATIONS[tuple.child.id]
 
     op = process_operation(array_ast, {}).mir
 
     assert list(op.keys()) == ["New"]
 
-    inner = op["New"]
+    child = op["New"]
 
-    first_ast = AST_OPERATIONS[inner["elements"][0]]
-    second_ast = AST_OPERATIONS[inner["elements"][1]]
-    third_ast = AST_OPERATIONS[inner["elements"][2]]
+    first_ast = AST_OPERATIONS[child["elements"][0]]
+    second_ast = AST_OPERATIONS[child["elements"][1]]
+    third_ast = AST_OPERATIONS[child["elements"][2]]
     assert first_ast.name == "first"
     assert second_ast.name == "second"
     assert third_ast.name == "third"
-    print(f"inner = {inner}")
-    assert inner["type"]["NTuple"] == {
+    print(f"child = {child}")
+    assert child["type"]["NTuple"] == {
         "types": ["SecretInteger", "Integer", "SecretInteger"],
     }
 
@@ -550,22 +550,22 @@ def test_object_new():
     second_input = create_input(PublicInteger, "second", "party", **{})
     third_input = create_input(SecretInteger, "third", "party", **{})
     object = Object.new({"a": first_input, "b": second_input, "c": third_input})
-    array_ast = AST_OPERATIONS[object.inner.id]
+    array_ast = AST_OPERATIONS[object.child.id]
 
     op = process_operation(array_ast, {}).mir
 
     assert list(op.keys()) == ["New"]
 
-    inner = op["New"]
+    child = op["New"]
 
-    first_ast = AST_OPERATIONS[inner["elements"][0]]
-    second_ast = AST_OPERATIONS[inner["elements"][1]]
-    third_ast = AST_OPERATIONS[inner["elements"][2]]
+    first_ast = AST_OPERATIONS[child["elements"][0]]
+    second_ast = AST_OPERATIONS[child["elements"][1]]
+    third_ast = AST_OPERATIONS[child["elements"][2]]
     assert first_ast.name == "first"
     assert second_ast.name == "second"
     assert third_ast.name == "third"
-    print(f"inner = {inner}")
-    assert inner["type"]["Object"] == {
+    print(f"child = {child}")
+    assert child["type"]["Object"] == {
         "types": {"a": "SecretInteger", "b": "Integer", "c": "SecretInteger"},
     }
 
@@ -591,11 +591,11 @@ def test_binary_operator_integer_integer(binary_operator, name, ty):
     right = create_literal(Integer, -2)
     program_operation = binary_operator(left, right)
     # recover operation from AST
-    ast_operation = AST_OPERATIONS[program_operation.inner.id]
+    ast_operation = AST_OPERATIONS[program_operation.child.id]
     op = process_operation(ast_operation, {}).mir
     assert list(op.keys()) == [name]
-    inner = op[name]
-    assert inner["type"] == to_type(ty)
+    child = op[name]
+    assert child["type"] == to_mir(ty)
 
 
 @pytest.mark.parametrize(
@@ -619,17 +619,17 @@ def test_binary_operator_integer_publicinteger(operator, name, ty):
     right = create_input(PublicInteger, "right", "party")
     program_operation = operator(left, right)
     # recover operation from AST
-    ast_operation = AST_OPERATIONS[program_operation.inner.id]
+    ast_operation = AST_OPERATIONS[program_operation.child.id]
     op = process_operation(ast_operation, {}).mir
     assert list(op.keys()) == [name]
-    inner = op[name]
-    left_ast = AST_OPERATIONS[inner["left"]]
-    right_ast = AST_OPERATIONS[inner["right"]]
+    child = op[name]
+    left_ast = AST_OPERATIONS[child["left"]]
+    right_ast = AST_OPERATIONS[child["right"]]
     assert isinstance(left_ast, LiteralASTOperation)
     assert left_ast.value == -3
     assert isinstance(right_ast, InputASTOperation)
     assert right_ast.name == "right"
-    assert inner["type"] == to_type(ty)
+    assert child["type"] == to_mir(ty)
 
 
 def test_logical_operations():
@@ -643,6 +643,7 @@ def test_logical_operations():
     with pytest.raises(NotImplementedError):
         not int1
 
+
 def test_logical_operations_with_secret_boolean():
     party1 = Party(name="Party1")
     bool1 = SecretBoolean(Input(name="my_bool_1", party=party1))
@@ -654,17 +655,18 @@ def test_logical_operations_with_secret_boolean():
     with pytest.raises(NotImplementedError):
         not bool1
 
+
 def test_not():
     party1 = Party(name="Party1")
     bool1 = SecretBoolean(Input(name="my_bool_1", party=party1))
     operation = ~bool1
-    ast = AST_OPERATIONS[operation.inner.id]
+    ast = AST_OPERATIONS[operation.child.id]
     op = process_operation(ast, {}).mir
     assert list(op.keys()) == ["Not"]
 
     bool1 = PublicBoolean(Input(name="my_bool_1", party=party1))
     operation = ~bool1
-    ast = AST_OPERATIONS[operation.inner.id]
+    ast = AST_OPERATIONS[operation.child.id]
     op = process_operation(ast, {}).mir
     assert list(op.keys()) == ["Not"]
 

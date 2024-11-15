@@ -35,7 +35,7 @@ class NadaFunctionArg(Generic[T]):
         self.name = name
         self.type = arg_type
         self.source_ref = source_ref
-        self.store_in_ast(arg_type.to_type())
+        self.store_in_ast(arg_type.to_mir())
 
     def store_in_ast(self, ty):
         """Store object in AST."""
@@ -70,7 +70,7 @@ class NadaFunction(Generic[T, R]):
         function: Callable[[T], R],
         return_type: R,
         source_ref: SourceRef,
-        inner: NadaType,
+        child: NadaType,
     ):
         if issubclass(return_type, ScalarType) and return_type.mode == Mode.CONSTANT:
             raise NotAllowedException(
@@ -86,7 +86,7 @@ class NadaFunction(Generic[T, R]):
             raise NotAllowedException(
                 "Nada functions with literal argument types are not allowed"
             )
-        self.inner = inner
+        self.child = child
         self.id = function_id
         self.args = args
         self.function = function
@@ -103,12 +103,12 @@ class NadaFunction(Generic[T, R]):
             id=self.id,
             ty=self.return_type.class_to_type(),
             source_ref=self.source_ref,
-            inner=self.inner.inner.id,
+            child=self.child.child.id,
         )
 
     def __call__(self, *args, **kwargs) -> R:
         return self.return_type(
-            inner=NadaFunctionCall(self, args, source_ref=SourceRef.back_frame())
+            child=NadaFunctionCall(self, args, source_ref=SourceRef.back_frame())
         )
 
 
@@ -131,24 +131,24 @@ class NadaFunctionCall(Generic[R]):
         """Store this function call in the AST."""
         AST_OPERATIONS[self.id] = NadaFunctionCallASTOperation(
             id=self.id,
-            args=[arg.inner.id for arg in self.args],
+            args=[arg.child.id for arg in self.args],
             fn=self.fn.id,
             source_ref=self.source_ref,
             ty=ty,
         )
 
 
-def inner_type(ty):
-    """Utility function that calculates the inner type for a function argument."""
+def contained_types(ty):
+    """Utility function that calculates the child type for a function argument."""
 
     origin_ty = getattr(ty, "__origin__", ty)
     if not issubclass(origin_ty, ScalarType):
         inner_ty = getattr(ty, "__args__", None)
-        inner_ty = inner_type(inner_ty[0]) if inner_ty else T
+        inner_ty = contained_types(inner_ty[0]) if inner_ty else T
         return origin_ty.init_as_template_type(inner_ty)
     if origin_ty.mode == Mode.CONSTANT:
         return origin_ty(value=0)
-    return origin_ty(inner=None)
+    return origin_ty(child=None)
 
 
 def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
@@ -167,7 +167,7 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
     function_id = next_operation_id()
     for arg in args.args:
         arg_type = args_ty[arg] if args_ty else args.annotations[arg]
-        arg_type = inner_type(arg_type)
+        arg_type = contained_types(arg_type)
         # We'll get the function source ref for now
         nada_arg = NadaFunctionArg(
             function_id,
@@ -181,17 +181,17 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
 
     for arg in nada_args:
         arg_type = copy(arg.type)
-        arg_type.inner = arg
+        arg_type.child = arg
         nada_args_type_wrapped.append(arg_type)
 
-    inner = fn(*nada_args_type_wrapped)
+    child = fn(*nada_args_type_wrapped)
 
     return_type = return_ty if return_ty else args.annotations["return"]
     return NadaFunction(
         function_id,
         function=fn,
         args=nada_args,
-        inner=inner,
+        child=child,
         return_type=return_type,
         source_ref=SourceRef.back_frame(),
     )

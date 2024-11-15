@@ -29,8 +29,8 @@ class BinaryOperation:
         AST_OPERATIONS[self.id] = BinaryASTOperation(
             id=self.id,
             name=self.__class__.__name__,
-            left=self.left.inner.id,
-            right=self.right.inner.id,
+            left=self.left.child.id,
+            right=self.right.child.id,
             source_ref=self.source_ref,
             ty=ty,
         )
@@ -39,9 +39,9 @@ class BinaryOperation:
 class UnaryOperation:
     """Superclass of all the unary operations."""
 
-    def __init__(self, inner: AllTypes, source_ref: SourceRef):
+    def __init__(self, child: AllTypes, source_ref: SourceRef):
         self.id = next_operation_id()
-        self.inner = inner
+        self.child = child
         self.source_ref = source_ref
 
     def store_in_ast(self, ty: object):
@@ -49,7 +49,7 @@ class UnaryOperation:
         AST_OPERATIONS[self.id] = UnaryASTOperation(
             id=self.id,
             name=self.__class__.__name__,
-            inner=self.inner.inner.id,
+            child=self.child.child.id,
             source_ref=self.source_ref,
             ty=ty,
         )
@@ -167,9 +167,9 @@ class IfElse:
         """Store object in AST."""
         AST_OPERATIONS[self.id] = IfElseASTOperation(
             id=self.id,
-            this=self.this.inner.id,
-            arg_0=self.arg_0.inner.id,
-            arg_1=self.arg_1.inner.id,
+            condition=self.this.child.id,
+            true_branch_child=self.arg_0.child.id,
+            false_branch_child=self.arg_1.child.id,
             ty=ty,
             source_ref=self.source_ref,
         )
@@ -179,7 +179,7 @@ class Reveal(UnaryOperation):
     """Reveal (i.e. make public) operation."""
 
     def __init__(self, this: AllTypes, source_ref: SourceRef):
-        super().__init__(inner=this, source_ref=source_ref)
+        super().__init__(child=this, source_ref=source_ref)
 
 
 class TruncPr(BinaryOperation):
@@ -190,7 +190,8 @@ class Not(UnaryOperation):
     """Not (!) Operation"""
 
     def __init__(self, this: AllTypes, source_ref: SourceRef):
-        super().__init__(inner=this, source_ref=source_ref)
+        super().__init__(child=this, source_ref=source_ref)
+
 
 class EcdsaSign(BinaryOperation):
     """Ecdsa signing operation."""

@@ -81,7 +81,7 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> Dict[str, Any]:
         timer.start(
             f"nada_dsl.compiler_frontend.nada_dsl_to_nada_mir.{output.name}.process_operation"
         )
-        out_operation_id = output.inner.inner.id
+        out_operation_id = output.child.child.id
         extra_fns = traverse_and_process_operations(
             out_operation_id, operations, FUNCTIONS
         )
@@ -184,7 +184,7 @@ def to_mir_function_list(functions: Dict[int, NadaFunctionASTOperation]) -> List
         function_operations = {}
 
         extra_functions = traverse_and_process_operations(
-            function.inner,
+            function.child,
             function_operations,
             functions,
         )
@@ -255,7 +255,7 @@ def traverse_and_process_operations(
                 extra_functions[wrapped_operation.extra_function.id] = (
                     wrapped_operation.extra_function
                 )
-            stack.extend(operation.inner_operations())
+            stack.extend(operation.child_operations())
     return extra_functions
 
 
