@@ -77,7 +77,7 @@ class ScalarType(NadaType):
         return self
 
     @classmethod
-    def is_scalable(cls) -> bool:
+    def is_scalar(cls) -> bool:
         return True
 
 

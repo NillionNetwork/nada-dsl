@@ -150,10 +150,10 @@ class NadaType:
 
     def to_mir(self):
         """Default implementation for the Conversion of a type into MIR representation."""
-        return self.__class__.class_to_type()
+        return self.__class__.class_to_mir()
 
     @classmethod
-    def class_to_type(cls) -> str:
+    def class_to_mir(cls) -> str:
         """Converts a class into a MIR Nada type."""
         name = cls.__name__
         # Rename public variables so they are considered as the same as literals.
@@ -165,8 +165,8 @@ class NadaType:
         raise NotImplementedError
 
     @classmethod
-    def is_scalable(cls) -> bool:
-        """Returns True if the type is a scalable."""
+    def is_scalar(cls) -> bool:
+        """Returns True if the type is a scalar."""
         return False
 
     @classmethod
