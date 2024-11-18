@@ -178,3 +178,13 @@ def nada_main():
     encoded_program_str = base64.b64encode(bytes(program_str, "utf-8")).decode("utf_8")
     output = compile_string(encoded_program_str)
     print_output(output)
+
+
+def test_compile_ntuple():
+    mir_str = compile_script(f"{get_test_programs_folder()}/ntuple_accessor.py").mir
+    assert mir_str != ""
+
+
+def test_compile_object():
+    mir_str = compile_script(f"{get_test_programs_folder()}/object_accessor.py").mir
+    assert mir_str != ""

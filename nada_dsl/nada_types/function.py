@@ -101,7 +101,7 @@ class NadaFunction(Generic[T, R]):
             name=self.function.__name__,
             args=[arg.id for arg in self.args],
             id=self.id,
-            ty=self.return_type.class_to_type(),
+            ty=self.return_type.class_to_mir(),
             source_ref=self.source_ref,
             child=self.child.child.id,
         )
@@ -125,7 +125,7 @@ class NadaFunctionCall(Generic[R]):
         self.args = args
         self.fn = nada_function
         self.source_ref = source_ref
-        self.store_in_ast(nada_function.return_type.class_to_type())
+        self.store_in_ast(nada_function.return_type.class_to_mir())
 
     def store_in_ast(self, ty):
         """Store this function call in the AST."""

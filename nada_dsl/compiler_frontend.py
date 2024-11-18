@@ -20,10 +20,12 @@ from nada_dsl.ast_util import (
     InputASTOperation,
     LiteralASTOperation,
     MapASTOperation,
+    NTupleAccessorASTOperation,
     NadaFunctionASTOperation,
     NadaFunctionArgASTOperation,
     NadaFunctionCallASTOperation,
     NewASTOperation,
+    ObjectAccessorASTOperation,
     RandomASTOperation,
     ReduceASTOperation,
     UnaryASTOperation,
@@ -296,6 +298,8 @@ def process_operation(
             NewASTOperation,
             RandomASTOperation,
             NadaFunctionArgASTOperation,
+            NTupleAccessorASTOperation,
+            ObjectAccessorASTOperation,
         ),
     ):
         processed_operation = ProcessOperationOutput(operation.to_mir(), None)

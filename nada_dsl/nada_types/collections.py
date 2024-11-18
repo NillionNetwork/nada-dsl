@@ -3,7 +3,7 @@
 import copy
 from dataclasses import dataclass
 import inspect
-from typing import Dict, Generic, List, Optional
+from typing import Any, Dict, Generic, List, Optional
 import typing
 from typing import TypeVar
 
@@ -11,7 +11,9 @@ from nada_dsl.ast_util import (
     AST_OPERATIONS,
     BinaryASTOperation,
     MapASTOperation,
+    NTupleAccessorASTOperation,
     NewASTOperation,
+    ObjectAccessorASTOperation,
     ReduceASTOperation,
     UnaryASTOperation,
 )
@@ -58,7 +60,7 @@ class Collection(NadaType):
             size = {"size": self.size} if self.size else {}
             contained_type = self.retrieve_inner_type()
             return {"Array": {"inner_type": contained_type, **size}}
-        if isinstance(self, (Vector, VectorType)):
+        if isinstance(self, Vector):
             contained_type = self.retrieve_inner_type()
             return {"Vector": {"inner_type": contained_type}}
         if isinstance(self, (Tuple, TupleType)):
@@ -67,13 +69,48 @@ class Collection(NadaType):
                     "left_type": (
                         self.left_type.to_mir()
                         if isinstance(self.left_type, (NadaType, ArrayType, TupleType))
-                        else self.left_type.class_to_type()
+                        else self.left_type.class_to_mir()
                     ),
                     "right_type": (
                         self.right_type.to_mir()
-                        if isinstance(self.right_type, (NadaType, ArrayType, TupleType))
-                        else self.right_type.class_to_type()
+                        if isinstance(
+                            self.right_type,
+                            (NadaType, ArrayType, TupleType),
+                        )
+                        else self.right_type.class_to_mir()
                     ),
+                }
+            }
+        if isinstance(self, NTuple):
+            return {
+                "NTuple": {
+                    "types": [
+                        (
+                            ty.to_mir()
+                            if isinstance(ty, (NadaType, ArrayType, TupleType))
+                            else ty.class_to_mir()
+                        )
+                        for ty in [
+                            type(value)
+                            for value in self.values  # pylint: disable=E1101
+                        ]
+                    ]
+                }
+            }
+        if isinstance(self, Object):
+            return {
+                "Object": {
+                    "types": {
+                        name: (
+                            ty.to_mir()
+                            if isinstance(ty, (NadaType, ArrayType, TupleType))
+                            else ty.class_to_mir()
+                        )
+                        for name, ty in [
+                            (name, type(value))
+                            for name, value in self.values.items()  # pylint: disable=E1101
+                        ]
+                    }
                 }
             }
         raise InvalidTypeError(
@@ -85,7 +122,7 @@ class Collection(NadaType):
         if isinstance(self.contained_type, TypeVar):
             return "T"
         if inspect.isclass(self.contained_type):
-            return self.contained_type.class_to_type()
+            return self.contained_type.class_to_mir()
         return self.contained_type.to_mir()
 
 
@@ -199,100 +236,160 @@ class Tuple(Generic[T, U], Collection):
         return TupleType(left_type=left_type, right_type=right_type)
 
 
-@dataclass
-class NTupleType:
-    """Marker type for NTuples."""
+def _generate_accessor(value: Any, accessor: Any) -> NadaType:
+    ty = type(value)
 
-    types: List[NadaType]
+    if ty.is_scalar():
+        if ty.is_literal():
+            return value
+        return ty(child=accessor)
+    if ty == Array:
+        return Array(
+            child=accessor,
+            contained_type=value.contained_type,
+            size=value.size,
+        )
+    if ty == NTuple:
+        return NTuple(
+            child=accessor,
+            values=value.values,
+        )
+    if ty == Object:
+        return Object(
+            child=accessor,
+            values=value.values,
+        )
+    raise TypeError(f"Unsupported type for accessor: {ty}")
 
-    def to_mir(self):
-        """Convert a n tuple object into a Nada type."""
-        return {
-            "NTuple": {
-                "types": [ty.to_mir() for ty in self.types],
-            }
-        }
 
-
-class NTuple(NadaType):
+class NTuple(Collection):
     """The NTuple type"""
 
-    types: List[NadaType]
+    values: List[NadaType]
 
-    def __init__(self, child, types: List[NadaType]):
-        self.types = types
+    def __init__(self, child, values: List[NadaType]):
+        self.values = values
         self.child = child
         super().__init__(self.child)
 
     @classmethod
-    def new(cls, types: List[NadaType]) -> "NTuple":
+    def new(cls, values: List[NadaType]) -> "NTuple":
         """Constructs a new NTuple."""
         return NTuple(
-            types=types,
+            values=values,
             child=NTupleNew(
-                child=types,
+                child=values,
                 source_ref=SourceRef.back_frame(),
             ),
         )
 
-    @classmethod
-    def generic_type(cls, types: List[NadaType]) -> NTupleType:
-        """Returns the generic type for this NTuple"""
-        return NTupleType(types=types)
+    def __getitem__(self, index: int) -> NadaType:
+        if index >= len(self.values):
+            raise IndexError(f"Invalid index {index} for NTuple.")
 
-    def to_mir(self):
-        """Convert operation wrapper to a dictionary representing its type."""
-        return {"NTuple": {"types": [ty.to_mir() for ty in self.types]}}
+        accessor = NTupleAccessor(
+            index=index,
+            child=self,
+            source_ref=SourceRef.back_frame(),
+        )
+
+        return _generate_accessor(self.values[index], accessor)
 
 
 @dataclass
-class ObjectType:
-    """Marker type for Objects."""
+class NTupleAccessor:
+    """Accessor for NTuple"""
 
-    types: Dict[str, NadaType]
+    child: NTuple
+    index: int
+    source_ref: SourceRef
 
-    def to_mir(self):
-        """Convert an object into a Nada type."""
-        return {
-            "Object": {
-                "types": {name: ty.to_mir() for name, ty in self.types.items()},
-            }
-        }
+    def __init__(
+        self,
+        child: NTuple,
+        index: int,
+        source_ref: SourceRef,
+    ):
+        self.id = next_operation_id()
+        self.child = child
+        self.index = index
+        self.source_ref = source_ref
+
+    def store_in_ast(self, ty: object):
+        """Store this accessor in the AST."""
+        AST_OPERATIONS[self.id] = NTupleAccessorASTOperation(
+            id=self.id,
+            source=self.child.child.id,
+            index=self.index,
+            source_ref=self.source_ref,
+            ty=ty,
+        )
 
 
-class Object(NadaType):
+class Object(Collection):
     """The Object type"""
 
-    types: Dict[str, NadaType]
+    values: Dict[str, NadaType]
 
-    def __init__(self, child, types: Dict[str, NadaType]):
-        self.types = types
+    def __init__(self, child, values: Dict[str, NadaType]):
+        self.values = values
         self.child = child
         super().__init__(self.child)
 
     @classmethod
-    def new(cls, types: Dict[str, NadaType]) -> "Object":
+    def new(cls, values: Dict[str, NadaType]) -> "Object":
         """Constructs a new Object."""
         return Object(
-            types=types,
+            values=values,
             child=ObjectNew(
-                child=types,
+                child=values,
                 source_ref=SourceRef.back_frame(),
             ),
         )
 
-    @classmethod
-    def generic_type(cls, types: Dict[str, NadaType]) -> ObjectType:
-        """Returns the generic type for this Object"""
-        return ObjectType(types=types)
+    def __getattr__(self, attr: str) -> NadaType:
+        if attr not in self.values:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{attr}'"
+            )
 
-    def to_mir(self):
-        """Convert operation wrapper to a dictionary representing its type."""
-        return {
-            "Object": {
-                "types": {name: ty.to_mir() for name, ty in self.types.items()},
-            }
-        }
+        accessor = ObjectAccessor(
+            key=attr,
+            child=self,
+            source_ref=SourceRef.back_frame(),
+        )
+
+        return _generate_accessor(self.values[attr], accessor)
+
+
+@dataclass
+class ObjectAccessor:
+    """Accessor for Object"""
+
+    child: Object
+    key: str
+    source_ref: SourceRef
+
+    def __init__(
+        self,
+        child: Object,
+        key: str,
+        source_ref: SourceRef,
+    ):
+        self.id = next_operation_id()
+        self.child = child
+        self.key = key
+        self.source_ref = source_ref
+
+    def store_in_ast(self, ty: object):
+        """Store this accessor in the AST."""
+        AST_OPERATIONS[self.id] = ObjectAccessorASTOperation(
+            id=self.id,
+            source=self.child.child.id,
+            key=self.key,
+            source_ref=self.source_ref,
+            ty=ty,
+        )
 
 
 # pylint: disable=W0511
@@ -502,21 +599,9 @@ class Array(Generic[T], Collection):
         )
 
     @classmethod
-    def generic_type(cls, contained_type: T, size: int) -> ArrayType:
-        """Return the generic type of the Array."""
-        return ArrayType(contained_type=contained_type, size=size)
-
-    @classmethod
     def init_as_template_type(cls, contained_type) -> "Array[T]":
         """Construct an empty template array with the given child type."""
         return Array(child=None, contained_type=contained_type, size=None)
-
-
-@dataclass
-class VectorType(Collection):
-    """The generic type for Vectors."""
-
-    contained_type: AllTypesType
 
 
 @dataclass
@@ -580,11 +665,6 @@ class Vector(Generic[T], Collection):
         )  # type: ignore
 
     @classmethod
-    def generic_type(cls, contained_type: T) -> VectorType:
-        """Returns the generic type for a Vector with the given child type."""
-        return VectorType(child=None, contained_type=contained_type)
-
-    @classmethod
     def init_as_template_type(cls, contained_type) -> "Vector[T]":
         """Construct an empty Vector with the given child type."""
         return Vector(child=None, contained_type=contained_type, size=None)
@@ -621,10 +701,10 @@ class NTupleNew:
     Represents the creation of a new Tuple.
     """
 
-    child: typing.Tuple
+    child: List[NadaType]
     source_ref: SourceRef
 
-    def __init__(self, child: typing.Tuple, source_ref: SourceRef):
+    def __init__(self, child: List[NadaType], source_ref: SourceRef):
         self.id = next_operation_id()
         self.child = child
         self.source_ref = source_ref
@@ -646,10 +726,10 @@ class ObjectNew:
     Represents the creation of a new Object.
     """
 
-    child: typing.Dict
+    child: Dict[str, NadaType]
     source_ref: SourceRef
 
-    def __init__(self, child: typing.Dict, source_ref: SourceRef):
+    def __init__(self, child: Dict[str, NadaType], source_ref: SourceRef):
         self.id = next_operation_id()
         self.child = child
         self.source_ref = source_ref
@@ -681,7 +761,6 @@ def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
     )
 
 
-@dataclass
 class ArrayNew(Generic[T]):
     """MIR Array new operation"""
 
