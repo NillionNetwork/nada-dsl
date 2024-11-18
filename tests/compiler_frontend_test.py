@@ -30,7 +30,7 @@ from nada_dsl.compiler_frontend import (
     traverse_and_process_operations,
 )
 from nada_dsl.nada_types import AllTypes, Party
-from nada_dsl.nada_types.collections import Array, Vector, Tuple, NTuple, Object, unzip
+from nada_dsl.nada_types.collections import Array, Tuple, NTuple, Object, unzip
 from nada_dsl.nada_types.function import NadaFunctionArg, NadaFunctionCall, nada_fn
 
 
@@ -121,9 +121,7 @@ def test_duplicated_inputs_checks():
         nada_dsl_to_nada_mir([output])
 
 
-@pytest.mark.parametrize(
-    ("input_type", "type_name", "size"), [(Array, "Array", 10), (Vector, "Vector", 10)]
-)
+@pytest.mark.parametrize(("input_type", "type_name", "size"), [(Array, "Array", 10)])
 def test_array_type_conversion(input_type, type_name, size):
     inner_input = create_input(SecretInteger, "name", "party", **{})
     collection = create_collection(input_type, inner_input, size, **{})
@@ -135,7 +133,6 @@ def test_array_type_conversion(input_type, type_name, size):
     ("input_type", "input_name"),
     [
         (Array, "Array"),
-        # TODO(Vector, "Vector")
     ],
 )
 def test_zip(input_type, input_name):
@@ -196,7 +193,7 @@ def test_unzip(input_type: type[Array]):
 @pytest.mark.parametrize(
     ("input_type", "input_name"),
     [
-        (Array, "Array"),  # TODO (Vector, "Vector")
+        (Array, "Array"),
     ],
 )
 def test_map(input_type, input_name):
@@ -224,7 +221,7 @@ def test_map(input_type, input_name):
 @pytest.mark.parametrize(
     ("input_type"),
     [
-        (Array),  # TODO (Vector, "Vector")
+        (Array),
     ],
 )
 def test_reduce(input_type: type[Array]):
@@ -402,7 +399,7 @@ def find_function_in_ast(fn_name: str):
 @pytest.mark.parametrize(
     ("input_type", "input_name"),
     [
-        (Array, "Array"),  # TODO(Vector, "Vector")
+        (Array, "Array"),
     ],
 )
 def test_nada_function_using_matrix(input_type, input_name):
