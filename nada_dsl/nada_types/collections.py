@@ -3,7 +3,7 @@
 import copy
 from dataclasses import dataclass
 import inspect
-from typing import Any, Dict, Generic, List, Optional
+from typing import Any, Dict, Generic, List
 import typing
 from typing import TypeVar
 
@@ -60,9 +60,6 @@ class Collection(NadaType):
             size = {"size": self.size} if self.size else {}
             contained_type = self.retrieve_inner_type()
             return {"Array": {"inner_type": contained_type, **size}}
-        if isinstance(self, Vector):
-            contained_type = self.retrieve_inner_type()
-            return {"Vector": {"inner_type": contained_type}}
         if isinstance(self, (Tuple, TupleType)):
             return {
                 "Tuple": {
@@ -602,72 +599,6 @@ class Array(Generic[T], Collection):
     def init_as_template_type(cls, contained_type) -> "Array[T]":
         """Construct an empty template array with the given child type."""
         return Array(child=None, contained_type=contained_type, size=None)
-
-
-@dataclass
-class Vector(Generic[T], Collection):
-    """
-    The Vector Nada Type.
-
-    This is the representation of Vector types in Nada MIR.
-    A Vector is similar to the Array type but the difference is that
-    its size may change at runtime.
-    """
-
-    contained_type: T
-    size: int
-
-    def __init__(self, child, size, contained_type=None):
-        self.contained_type = (
-            contained_type
-            if (child is None or contained_type is not None)
-            else get_inner_type(child)
-        )
-        self.size = size
-        self.child = child if contained_type else getattr(child, "child", None)
-        self.child.store_in_ast(self.to_mir())
-
-    def __iter__(self):
-        raise NotAllowedException(
-            "Cannot iterate/for loop over a nada Vector,"
-            + " use functional style Vector functions instead (map, reduce, zip)"
-        )
-
-    def map(self: "Vector[T]", function: NadaFunction[T, R]) -> "Vector[R]":
-        """The map operation for Nada Vectors."""
-        return Vector(
-            size=self.size,
-            contained_type=function.return_type,
-            child=(Map(child=self, fn=function, source_ref=SourceRef.back_frame())),
-        )
-
-    def zip(self: "Vector[T]", other: "Vector[R]") -> "Vector[Tuple[T, R]]":
-        """The Zip operation for Nada Vectors."""
-        return Vector(
-            size=self.size,
-            contained_type=Tuple.generic_type(
-                self.contained_type, other.contained_type
-            ),
-            child=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
-        )
-
-    def reduce(
-        self: "Vector[T]", function: NadaFunction[T, R], initial: Optional[R] = None
-    ) -> R:
-        """The reduce operation for Nada Vectors."""
-        return function.return_type(
-            Reduce(
-                child=self,
-                fn=function,
-                initial=initial,
-                source_ref=SourceRef.back_frame(),
-            )
-        )  # type: ignore
-
-    @classmethod
-    def init_as_template_type(cls, contained_type) -> "Vector[T]":
-        """Construct an empty Vector with the given child type."""
-        return Vector(child=None, contained_type=contained_type, size=None)
 
 
 class TupleNew(Generic[T, U]):
