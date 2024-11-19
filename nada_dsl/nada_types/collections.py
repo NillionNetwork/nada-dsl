@@ -1,6 +1,8 @@
 """Nada Collection type definitions."""
 
 from dataclasses import dataclass
+import inspect
+import json
 from typing import Any, Dict, Generic, List
 import typing
 
@@ -27,6 +29,8 @@ from nada_dsl.errors import (
 from nada_dsl.nada_types.function import NadaFunction, create_nada_fn
 from nada_dsl.nada_types.generics import U, T, R
 from . import AllTypes, AllTypesType, DslTypeRepr, OperationType
+from jsonschema import Draft7Validator
+from jsonschema.exceptions import SchemaError
 
 
 def is_primitive_integer(nada_type_str: str):
@@ -349,6 +353,51 @@ class ObjectAccessor:
             source_ref=self.source_ref,
             ty=ty,
         )
+
+
+def _process_schema(schema_node):
+    if "type" not in schema_node:
+        raise TypeError("Missing 'type' in schema node")
+
+    match schema_node["type"]:
+        case "integer":
+            return PublicInteger(child=None)
+        case "boolean":
+            return PublicBoolean(child=None)
+        case "array":
+            items_schema = schema_node.get("items")
+            if items_schema is None:
+                raise TypeError("Array schema missing 'items'")
+            items_object = _process_schema(items_schema)
+            return NTuple.new(values=items_object)
+        case "object":
+            properties = schema_node.get("properties", {})
+            obj_values = {}
+            for prop_name, prop_schema in properties.items():
+                obj_values[prop_name] = _process_schema(prop_schema)
+            return Object.new(values=obj_values)
+        case _:
+            raise TypeError(f"Unsupported type in schema: {schema_node['type']}")
+
+
+class Document(Object):
+    """The Document type"""
+
+    def __init__(self, child, filepath: str):
+        with open(filepath, "r") as schema_file:
+            schema = json.load(schema_file)
+
+        try:
+            Draft7Validator.check_schema(schema)
+        except SchemaError as e:
+            raise TypeError("Schema validation error:", e.message)
+
+        if schema["type"] != "object":
+            raise TypeError("Only objects are supported at the root")
+
+        result = _process_schema(schema)
+
+        super().__init__(child=child, types=result)
 
 
 class Zip:

@@ -151,3 +151,9 @@ def test_compile_ntuple():
 def test_compile_object():
     mir_str = compile_script(f"{get_test_programs_folder()}/object_accessor.py").mir
     assert mir_str != ""
+
+
+def test_compile_document():
+    mir_str = compile_script(f"{get_test_programs_folder()}/document.py").mir
+    print(f"{mir_str}")
+    assert mir_str != ""
