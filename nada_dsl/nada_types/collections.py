@@ -3,6 +3,7 @@
 import copy
 from dataclasses import dataclass
 import inspect
+import traceback
 from typing import Any, Dict, Generic, List
 import typing
 from typing import TypeVar
@@ -47,82 +48,7 @@ def is_primitive_integer(nada_type_str: str):
     )
 
 
-class Collection(NadaType):
-    """Superclass of collection types"""
-
-    left_type: AllTypesType
-    right_type: AllTypesType
-    contained_type: AllTypesType
-
-    def to_mir(self):
-        """Convert operation wrapper to a dictionary representing its type."""
-        if isinstance(self, (Array, ArrayType)):
-            size = {"size": self.size} if self.size else {}
-            contained_type = self.retrieve_inner_type()
-            return {"Array": {"inner_type": contained_type, **size}}
-        if isinstance(self, (Tuple, TupleType)):
-            return {
-                "Tuple": {
-                    "left_type": (
-                        self.left_type.to_mir()
-                        if isinstance(self.left_type, (NadaType, ArrayType, TupleType))
-                        else self.left_type.class_to_mir()
-                    ),
-                    "right_type": (
-                        self.right_type.to_mir()
-                        if isinstance(
-                            self.right_type,
-                            (NadaType, ArrayType, TupleType),
-                        )
-                        else self.right_type.class_to_mir()
-                    ),
-                }
-            }
-        if isinstance(self, NTuple):
-            return {
-                "NTuple": {
-                    "types": [
-                        (
-                            ty.to_mir()
-                            if isinstance(ty, (NadaType, ArrayType, TupleType))
-                            else ty.class_to_mir()
-                        )
-                        for ty in [
-                            type(value)
-                            for value in self.values  # pylint: disable=E1101
-                        ]
-                    ]
-                }
-            }
-        if isinstance(self, Object):
-            return {
-                "Object": {
-                    "types": {
-                        name: (
-                            ty.to_mir()
-                            if isinstance(ty, (NadaType, ArrayType, TupleType))
-                            else ty.class_to_mir()
-                        )
-                        for name, ty in [
-                            (name, type(value))
-                            for name, value in self.values.items()  # pylint: disable=E1101
-                        ]
-                    }
-                }
-            }
-        raise InvalidTypeError(
-            f"{self.__class__.__name__} is not a valid Nada Collection"
-        )
-
-    def retrieve_inner_type(self):
-        """Retrieves the child type of this collection"""
-        if isinstance(self.contained_type, TypeVar):
-            return "T"
-        if inspect.isclass(self.contained_type):
-            return self.contained_type.class_to_mir()
-        return self.contained_type.to_mir()
-
-
+@dataclass
 class Map(Generic[T, R]):
     """The Map operation"""
 
@@ -187,11 +113,14 @@ class Reduce(Generic[T, R]):
 
 
 @dataclass
-class TupleType:
+class TupleMetaType(MetaType):
     """Marker type for Tuples."""
 
     left_type: NadaType
     right_type: NadaType
+
+    def instantiate(self, child):
+        return Tuple(child, self.left_type, self.right_type)
 
     def to_mir(self):
         """Convert a tuple object into a Nada type."""
@@ -203,7 +132,8 @@ class TupleType:
         }
 
 
-class Tuple(Generic[T, U], Collection):
+@dataclass
+class Tuple(Generic[T, U], NadaType):
     """The Tuple type"""
 
     left_type: T
@@ -215,65 +145,112 @@ class Tuple(Generic[T, U], Collection):
         self.child = child
         super().__init__(self.child)
 
+    """TODO this should be deleted and use MetaType.to_mir"""
+
+    # def to_mir(self):
+    #     return {
+    #         "Tuple": {
+    #             "left_type": (
+    #                 self.left_type.to_mir()
+    #                 if isinstance(
+    #                     self.left_type, (NadaType, ArrayMetaType, TupleMetaType)
+    #                 )
+    #                 else self.left_type.class_to_mir()
+    #             ),
+    #             "right_type": (
+    #                 self.right_type.to_mir()
+    #                 if isinstance(
+    #                     self.right_type,
+    #                     (NadaType, ArrayMetaType, TupleMetaType),
+    #                 )
+    #                 else self.right_type.class_to_mir()
+    #             ),
+    #         }
+    #     }
+
     @classmethod
-    def new(cls, left_type: T, right_type: U) -> "Tuple[T, U]":
+    def new(cls, left_value: NadaType, right_value: NadaType) -> "Tuple[T, U]":
         """Constructs a new Tuple."""
         return Tuple(
-            left_type=left_type,
-            right_type=right_type,
+            left_type=left_value.metatype(),
+            right_type=right_value.metatype(),
             child=TupleNew(
-                child=(left_type, right_type),
+                child=(left_value, right_value),
                 source_ref=SourceRef.back_frame(),
             ),
         )
 
     @classmethod
-    def generic_type(cls, left_type: U, right_type: T) -> TupleType:
+    def generic_type(cls, left_type: U, right_type: T) -> TupleMetaType:
         """Returns the generic type for this Tuple"""
-        return TupleType(left_type=left_type, right_type=right_type)
+        return TupleMetaType(left_type=left_type, right_type=right_type)
+
+    def metatype(self):
+        return TupleMetaType(self.left_type, self.right_type)
 
 
-def _generate_accessor(value: Any, accessor: Any) -> NadaType:
-    ty = type(value)
+def _generate_accessor(ty: Any, accessor: Any) -> NadaType:
+    if hasattr(ty, "ty") and ty.ty.is_literal():  # TODO: fix
+        raise TypeError("Literals are not supported in accessors")
+    return ty.instantiate(accessor)
+    # if ty.is_scalar():
+    #     if ty.is_literal():
+    #         return ty  # value.instantiate(child=accessor) ?
+    #     return ty(child=accessor)
+    # if ty == Array:
+    #     return Array(
+    #         child=accessor,
+    #         contained_type=ty.contained_type,
+    #         size=ty.size,
+    #     )
+    # if ty == NTuple:
+    #     return NTuple(
+    #         child=accessor,
+    #         types=ty.types,
+    #     )
+    # if ty == Object:
+    #     return Object(
+    #         child=accessor,
+    #         types=ty.types,
+    #     )
+    # raise TypeError(f"Unsupported type for accessor: {ty}")
 
-    if ty.is_scalar():
-        if ty.is_literal():
-            return value
-        return ty(child=accessor)
-    if ty == Array:
-        return Array(
-            child=accessor,
-            contained_type=value.contained_type,
-            size=value.size,
-        )
-    if ty == NTuple:
-        return NTuple(
-            child=accessor,
-            values=value.values,
-        )
-    if ty == Object:
-        return Object(
-            child=accessor,
-            values=value.values,
-        )
-    raise TypeError(f"Unsupported type for accessor: {ty}")
+
+@dataclass
+class NTupleMetaType(MetaType):
+    """Marker type for NTuples."""
+
+    types: List[NadaType]
+
+    def instantiate(self, child):
+        return NTuple(child, self.types)
+
+    def to_mir(self):
+        """Convert a tuple object into a Nada type."""
+        return {
+            "NTuple": {
+                "types": [ty.to_mir() for ty in self.types],
+            }
+        }
 
 
-class NTuple(Collection):
+@dataclass
+class NTuple(NadaType):
     """The NTuple type"""
 
-    values: List[NadaType]
+    types: List[Any]
 
-    def __init__(self, child, values: List[NadaType]):
-        self.values = values
+    def __init__(self, child, types: List[Any]):
+        self.types = types
         self.child = child
         super().__init__(self.child)
 
     @classmethod
-    def new(cls, values: List[NadaType]) -> "NTuple":
+    def new(cls, values: List[Any]) -> "NTuple":
         """Constructs a new NTuple."""
+        types = [value.metatype() for value in values]
         return NTuple(
-            values=values,
+            types=types,
             child=NTupleNew(
                 child=values,
                 source_ref=SourceRef.back_frame(),
@@ -281,7 +258,7 @@ class NTuple(Collection):
         )
 
     def __getitem__(self, index: int) -> NadaType:
-        if index >= len(self.values):
+        if index >= len(self.types):
             raise IndexError(f"Invalid index {index} for NTuple.")
 
         accessor = NTupleAccessor(
@@ -290,7 +267,26 @@ class NTuple(Collection):
             source_ref=SourceRef.back_frame(),
         )
 
-        return _generate_accessor(self.values[index], accessor)
+        return _generate_accessor(self.types[index], accessor)
+
+    """TODO this should be deleted and use MetaType.to_mir"""
+
+    # def to_mir(self):
+    #     return {
+    #         "NTuple": {
+    #             "types": [
+    #                 (
+    #                     ty.to_mir()
+    #                     if isinstance(ty, (NadaType, ArrayMetaType, TupleMetaType))
+    #                     else ty.class_to_mir()
+    #                 )
+    #                 for ty in self.types
+    #             ]
+    #         }
+    #     }
+
+    def metatype(self):
+        return NTupleMetaType(self.types)
 
 
 @dataclass
@@ -323,29 +319,45 @@ class NTupleAccessor:
         )
 
 
-class Object(Collection):
+@dataclass
+class ObjectMetaType(MetaType):
+    """Marker type for Objects."""
+
+    types: Dict[str, Any]
+
+    def to_mir(self):
+        """Convert an object into a Nada type."""
+        return {"Object": {name: ty.to_mir() for name, ty in self.types.items()}}
+
+    def instantiate(self, child):
+        return Object(child, self.types)
+
+
+@dataclass
+class Object(NadaType):
     """The Object type"""
 
-    values: Dict[str, NadaType]
+    types: Dict[str, Any]
 
-    def __init__(self, child, values: Dict[str, NadaType]):
-        self.values = values
+    def __init__(self, child, types: Dict[str, Any]):
+        self.types = types
         self.child = child
         super().__init__(self.child)
 
     @classmethod
-    def new(cls, values: Dict[str, NadaType]) -> "Object":
+    def new(cls, values: Dict[str, Any]) -> "Object":
         """Constructs a new Object."""
+        types = {key: value.metatype() for key, value in values.items()}
         return Object(
-            values=values,
+            types=types,
             child=ObjectNew(
-                child=values,
+                child=types,
                 source_ref=SourceRef.back_frame(),
             ),
         )
 
     def __getattr__(self, attr: str) -> NadaType:
-        if attr not in self.values:
+        if attr not in self.types:
             raise AttributeError(
                 f"'{self.__class__.__name__}' object has no attribute '{attr}'"
             )
@@ -356,7 +368,26 @@ class Object(Collection):
             source_ref=SourceRef.back_frame(),
         )
 
-        return _generate_accessor(self.values[attr], accessor)
+        return _generate_accessor(self.types[attr], accessor)
+
+    """TODO delete this use Meta.to_mir"""
+
+    # def to_mir(self):
+    #     return {
+    #         "Object": {
+    #             "types": {
+    #                 name: (
+    #                     ty.to_mir()
+    #                     if isinstance(ty, (NadaType, ArrayMetaType, TupleMetaType))
+    #                     else ty.class_to_mir()
+    #                 )
+    #                 for name, ty in self.types.items()
+    #             }
+    #         }
+    #     }
+
+    def metatype(self):
+        return ObjectMetaType(types=self.types)
 
 
 @dataclass
@@ -387,15 +418,6 @@ class ObjectAccessor:
             source_ref=self.source_ref,
             ty=ty,
         )
-
-
-# pylint: disable=W0511
-# TODO: remove this
-def get_inner_type(inner_type):
-    """Utility that returns the inner type for a composite type."""
-    inner_type = copy.copy(inner_type)
-    setattr(inner_type, "inner", None)
-    return inner_type
 
 
 class Zip:
@@ -460,7 +482,7 @@ class InnerProduct:
 
 
 @dataclass
-class ArrayType:
+class ArrayMetaType(MetaType):
     """Marker type for arrays."""
 
     contained_type: AllTypesType
@@ -468,15 +490,17 @@ class ArrayType:
 
     def to_mir(self):
         """Convert this generic type into a MIR Nada type."""
+        size = {"size": self.size} if self.size else {}
         return {
-            "Array": {
-                "inner_type": self.contained_type.to_mir(),
-                "size": self.size,
-            }
+            "Array": {"inner_type": self.contained_type.to_mir(), **size}  # TODO: why?
         }
 
+    def instantiate(self, child):
+        return Array(child, self.size, self.contained_type)
 
-class Array(Generic[T], Collection):
+
+@dataclass
+class Array(Generic[T], NadaType):
     """Nada Array type.
 
     This is the representation of arrays in Nada MIR.
@@ -497,16 +521,22 @@ class Array(Generic[T], Collection):
 
     def __init__(self, child, size: int, contained_type: T = None):
         self.contained_type = (
-            contained_type
-            if (child is None or contained_type is not None)
-            else get_inner_type(child)
+            contained_type if (child is None or contained_type is not None) else child
         )
+
+        # TODO: can we simplify the following 10 lines?
+        # If it's not a metatype, fetch it
+        if self.contained_type is not None and not isinstance(
+            self.contained_type, MetaType
+        ):
+            self.contained_type = self.contained_type.metatype()
+
         self.size = size
         self.child = (
             child if contained_type is not None else getattr(child, "child", None)
         )
         if self.child is not None:
-            self.child.store_in_ast(self.to_mir())
+            self.child.store_in_ast(self.metatype().to_mir())
 
     def __iter__(self):
         raise NotAllowedException(
@@ -543,10 +573,9 @@ class Array(Generic[T], Collection):
             raise IncompatibleTypesError("Cannot zip arrays of different size")
         return Array(
             size=self.size,
-            contained_type=Tuple(
+            contained_type=TupleMetaType(
                 left_type=self.contained_type,
                 right_type=other.contained_type,
-                child=None,
             ),
             child=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
@@ -558,15 +587,11 @@ class Array(Generic[T], Collection):
                 "Cannot do child product of arrays of different size"
             )
 
-        if is_primitive_integer(self.retrieve_inner_type()) and is_primitive_integer(
-            other.retrieve_inner_type()
+        if is_primitive_integer(self.contained_type) and is_primitive_integer(
+            other.contained_type
         ):
-            contained_type = (
-                self.contained_type
-                if inspect.isclass(self.contained_type)
-                else self.contained_type.__class__
-            )
-            return contained_type(
+
+            return self.contained_type.instantiate(
                 child=InnerProduct(
                     left=self, right=other, source_ref=SourceRef.back_frame()
                 )
@@ -575,6 +600,12 @@ class Array(Generic[T], Collection):
         raise InvalidTypeError(
             "Inner product is only implemented for arrays of integer types"
         )
+
+    # TODO delete
+
+    # def to_mir(self):
+    #     size = {"size": self.size} if self.size else {}
+    #     return {"Array": {"inner_type": self.contained_type, **size}}
 
     @classmethod
     def new(cls, *args) -> "Array[T]":
@@ -600,7 +631,11 @@ class Array(Generic[T], Collection):
         """Construct an empty template array with the given child type."""
         return Array(child=None, contained_type=contained_type, size=None)
 
+    def metatype(self):
+        return ArrayMetaType(self.contained_type, self.size)
 
+
+@dataclass
 class TupleNew(Generic[T, U]):
     """MIR Tuple new operation.
 
@@ -626,6 +661,7 @@ class TupleNew(Generic[T, U]):
         )
 
 
+@dataclass
 class NTupleNew:
     """MIR NTuple new operation.
 
@@ -651,6 +687,7 @@ class NTupleNew:
         )
 
 
+@dataclass
 class ObjectNew:
     """MIR Object new operation.
 
@@ -678,10 +715,10 @@ class ObjectNew:
 
 def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
     """The Unzip operation for Arrays."""
-    right_type = ArrayType(
+    right_type = ArrayMetaType(
         contained_type=array.contained_type.right_type, size=array.size
     )
-    left_type = ArrayType(
+    left_type = ArrayMetaType(
         contained_type=array.contained_type.left_type, size=array.size
     )
 
@@ -692,6 +729,7 @@ def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
     )
 
 
+@dataclass
 class ArrayNew(Generic[T]):
     """MIR Array new operation"""
 
