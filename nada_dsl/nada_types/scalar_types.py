@@ -1,6 +1,7 @@
 # pylint:disable=W0401,W0614
 """The Nada Scalar type definitions."""
 
+from abc import ABC
 from dataclasses import dataclass
 from typing import Union, TypeVar
 from typing_extensions import Self
@@ -348,6 +349,26 @@ def binary_logical_operation(
     return SecretBoolean(child=operation)
 
 
+@dataclass
+class MetaType(ABC):
+    pass
+
+
+@dataclass
+class MetaTypePassthroughMixin(MetaType):
+    @classmethod
+    def instantiate(cls, child_or_value):
+        cls.ty(child_or_value)
+
+    @classmethod
+    def to_mir(cls):
+        name = cls.ty.__name__
+        # Rename public variables so they are considered as the same as literals.
+        if name.startswith("Public"):
+            name = name[len("Public") :].lstrip()
+        return name
+
+
 @register_scalar_type(Mode.CONSTANT, BaseType.INTEGER)
 class Integer(NumericType):
     """The Nada Integer type.
@@ -369,6 +390,14 @@ class Integer(NumericType):
     @classmethod
     def is_literal(cls) -> bool:
         return True
+
+    @classmethod
+    def metatype(cls):
+        return IntegerMetaType()
+
+
+class IntegerMetaType(MetaTypePassthroughMixin):
+    ty = Integer
 
 
 @dataclass
@@ -395,6 +424,14 @@ class UnsignedInteger(NumericType):
     @classmethod
     def is_literal(cls) -> bool:
         return True
+
+    @classmethod
+    def metatype(cls):
+        return UnsignedIntegerMetaType()
+
+
+class UnsignedIntegerMetaType(MetaTypePassthroughMixin):
+    ty = UnsignedInteger
 
 
 @register_scalar_type(Mode.CONSTANT, BaseType.BOOLEAN)
@@ -427,6 +464,14 @@ class Boolean(BooleanType):
     def is_literal(cls) -> bool:
         return True
 
+    @classmethod
+    def metatype(cls):
+        return BooleanMetaType()
+
+
+class BooleanMetaType(MetaTypePassthroughMixin):
+    ty = Boolean
+
 
 @register_scalar_type(Mode.PUBLIC, BaseType.INTEGER)
 class PublicInteger(NumericType):
@@ -447,6 +492,14 @@ class PublicInteger(NumericType):
         """Implementation of public equality for Public integer types."""
         return public_equals_operation(self, other)
 
+    @classmethod
+    def metatype(cls):
+        return PublicIntegerMetaType()
+
+
+class PublicIntegerMetaType(MetaTypePassthroughMixin):
+    ty = PublicInteger
+
 
 @register_scalar_type(Mode.PUBLIC, BaseType.UNSIGNED_INTEGER)
 class PublicUnsignedInteger(NumericType):
@@ -466,6 +519,14 @@ class PublicUnsignedInteger(NumericType):
     ) -> "PublicBoolean":
         """Implementation of public equality for Public unsigned integer types."""
         return public_equals_operation(self, other)
+
+    @classmethod
+    def metatype(cls):
+        return PublicUnsignedIntegerMetaType()
+
+
+class PublicUnsignedIntegerMetaType(MetaTypePassthroughMixin):
+    ty = PublicUnsignedInteger
 
 
 @dataclass
@@ -491,6 +552,14 @@ class PublicBoolean(BooleanType):
     ) -> "PublicBoolean":
         """Implementation of public equality for Public boolean types."""
         return public_equals_operation(self, other)
+
+    @classmethod
+    def metatype(cls):
+        return PublicBooleanMetaType()
+
+
+class PublicBooleanMetaType(MetaTypePassthroughMixin):
+    ty = PublicBoolean
 
 
 @dataclass
@@ -536,6 +605,14 @@ class SecretInteger(NumericType):
         """Convert this secret integer into a public variable."""
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
         return PublicInteger(child=operation)
+
+    @classmethod
+    def metatype(cls):
+        return SecretIntegerMetaType()
+
+
+class SecretIntegerMetaType(MetaTypePassthroughMixin):
+    ty = SecretInteger
 
 
 @dataclass
@@ -584,6 +661,14 @@ class SecretUnsignedInteger(NumericType):
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
         return PublicUnsignedInteger(child=operation)
 
+    @classmethod
+    def metatype(cls):
+        return SecretUnsignedIntegerMetaType()
+
+
+class SecretUnsignedIntegerMetaType(MetaTypePassthroughMixin):
+    ty = SecretUnsignedInteger
+
 
 @dataclass
 @register_scalar_type(Mode.SECRET, BaseType.BOOLEAN)
@@ -610,6 +695,14 @@ class SecretBoolean(BooleanType):
         """Generate a random secret boolean."""
         return SecretBoolean(child=Random(source_ref=SourceRef.back_frame()))
 
+    @classmethod
+    def metatype(cls):
+        return SecretBooleanMetaType()
+
+
+class SecretBooleanMetaType(MetaTypePassthroughMixin):
+    ty = SecretBoolean
+
 
 @dataclass
 class EcdsaSignature(NadaType):
@@ -618,6 +711,14 @@ class EcdsaSignature(NadaType):
     def __init__(self, child: OperationType):
         super().__init__(child=child)
 
+    @classmethod
+    def metatype(cls):
+        return EcdsaSignatureMetaType()
+
+
+class EcdsaSignatureMetaType(MetaTypePassthroughMixin):
+    ty = EcdsaSignature
+
 
 @dataclass
 class EcdsaDigestMessage(NadaType):
@@ -625,6 +726,14 @@ class EcdsaDigestMessage(NadaType):
 
     def __init__(self, child: OperationType):
         super().__init__(child=child)
+
+    @classmethod
+    def metatype(cls):
+        return EcdsaDigestMessageMetaType()
+
+
+class EcdsaDigestMessageMetaType(MetaTypePassthroughMixin):
+    ty = EcdsaDigestMessage
 
 
 @dataclass
@@ -639,3 +748,11 @@ class EcdsaPrivateKey(NadaType):
         return EcdsaSignature(
             child=EcdsaSign(left=self, right=digest, source_ref=SourceRef.back_frame())
         )
+
+    @classmethod
+    def metatype(cls):
+        return EcdsaPrivateKeyMetaType()
+
+
+class EcdsaPrivateKeyMetaType(MetaTypePassthroughMixin):
+    ty = EcdsaPrivateKey

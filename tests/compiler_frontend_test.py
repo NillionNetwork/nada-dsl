@@ -125,7 +125,7 @@ def test_duplicated_inputs_checks():
 def test_array_type_conversion(input_type, type_name, size):
     inner_input = create_input(SecretInteger, "name", "party", **{})
     collection = create_collection(input_type, inner_input, size, **{})
-    converted_input = collection.to_mir()
+    converted_input = collection.metatype().to_mir()
     assert list(converted_input.keys()) == [type_name]
 
 
@@ -511,7 +511,7 @@ def test_tuple_new_empty():
         Tuple.new()
     assert (
         str(e.value)
-        == "Tuple.new() missing 2 required positional arguments: 'left_type' and 'right_type'"
+        == "Tuple.new() missing 2 required positional arguments: 'left_value' and 'right_value'"
     )
 
 

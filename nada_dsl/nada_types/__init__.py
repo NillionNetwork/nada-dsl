@@ -2,8 +2,9 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, TypeAlias, Union, Type
+from typing import Any, Dict, TypeAlias, Union, Type
 from nada_dsl.source_ref import SourceRef
+from abc import abstractmethod
 
 
 @dataclass
@@ -144,20 +145,16 @@ class NadaType:
         """
         self.child = child
         if self.child is not None:
-            self.child.store_in_ast(self.to_mir())
+            self.child.store_in_ast(self.metatype().to_mir())
 
-    def to_mir(self):
-        """Default implementation for the Conversion of a type into MIR representation."""
-        return self.__class__.class_to_mir()
-
-    @classmethod
-    def class_to_mir(cls) -> str:
-        """Converts a class into a MIR Nada type."""
-        name = cls.__name__
-        # Rename public variables so they are considered as the same as literals.
-        if name.startswith("Public"):
-            name = name[len("Public") :].lstrip()
-        return name
+    # @classmethod
+    # def class_to_mir(cls) -> str:
+    #     """Converts a class into a MIR Nada type."""
+    #     name = cls.__name__
+    #     # Rename public variables so they are considered as the same as literals.
+    #     if name.startswith("Public"):
+    #         name = name[len("Public") :].lstrip()
+    #     return name
 
     def __bool__(self):
         raise NotImplementedError
