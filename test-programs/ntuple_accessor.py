@@ -15,10 +15,16 @@ def nada_main():
     array = tup[1]
     scalar2 = tup[2]
 
-    @nada_fn
-    def add(a: PublicInteger) -> PublicInteger:
-        return a + my_int2
+    def add(acc: PublicInteger, a: PublicInteger) -> PublicInteger:
+        return a + acc
 
-    result = array.reduce(add, Integer(0))
+    result = array.reduce(add, my_int1)
 
-    return [Output(scalar + scalar2 + result, "my_output", party1)]
+    scalar_sum = scalar + scalar2
+
+    final = result + scalar_sum
+
+    return [Output(final, "my_output", party1)]
+
+if __name__ == "__main__":
+    nada_main()

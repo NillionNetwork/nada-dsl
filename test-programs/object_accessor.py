@@ -9,16 +9,16 @@ def nada_main():
     array = Array.new(my_int1, my_int1)
 
     # Store a scalar, a compound type and a literal.
-    object = Object.new({"a": my_int1, "b": array, "c": Integer(42)})
+    object = Object.new({"a": my_int1, "b": array, "c": my_int2})
 
     scalar = object.a
     array = object.b
-    literal = object.c
+    scalar_2 = object.c
 
-    @nada_fn
-    def add(a: PublicInteger) -> PublicInteger:
-        return a + my_int2
 
-    sum = array.reduce(add, Integer(0))
+    def add(acc: PublicInteger, a: PublicInteger) -> PublicInteger:
+        return acc + a
 
-    return [Output(scalar + literal + sum, "my_output", party1)]
+    sum = array.reduce(add, my_int2)
+
+    return [Output(scalar + scalar_2 + sum, "my_output", party1)]

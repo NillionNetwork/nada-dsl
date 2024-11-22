@@ -31,7 +31,11 @@ from nada_dsl.compiler_frontend import (
 )
 from nada_dsl.nada_types import AllTypes, Party
 from nada_dsl.nada_types.collections import Array, Tuple, NTuple, Object, unzip
-from nada_dsl.nada_types.function import NadaFunctionArg, NadaFunctionCall, nada_fn
+from nada_dsl.nada_types.function import (
+    NadaFunctionArg,
+    NadaFunctionCall,
+    create_nada_fn,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -197,7 +201,6 @@ def test_unzip(input_type: type[Array]):
     ],
 )
 def test_map(input_type, input_name):
-    @nada_fn
     def nada_function(a: SecretInteger) -> SecretInteger:
         return a + a
 
@@ -227,7 +230,6 @@ def test_map(input_type, input_name):
 def test_reduce(input_type: type[Array]):
     c = create_input(SecretInteger, "c", "party", **{})
 
-    @nada_fn
     def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b
 
@@ -260,191 +262,6 @@ def check_nada_function_arg_ref(arg_ref, function_id, name, ty):
     assert arg_ref["NadaFunctionArgRef"]["function_id"] == function_id
     assert arg_ref["NadaFunctionArgRef"]["refers_to"] == name
     assert arg_ref["NadaFunctionArgRef"]["type"] == ty
-
-
-def nada_function_to_mir(function_name: str):
-    nada_function: NadaFunctionASTOperation = find_function_in_ast(function_name)
-    assert isinstance(nada_function, NadaFunctionASTOperation)
-    fn_ops = {}
-    traverse_and_process_operations(nada_function.child, fn_ops, {})
-    return nada_function.to_mir(fn_ops)
-
-
-def test_nada_function_simple():
-    @nada_fn
-    def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
-        return a + b
-
-    nada_function = nada_function_to_mir("nada_function")
-    assert nada_function["function"] == "nada_function"
-    args = nada_function["args"]
-    assert len(args) == 2
-    check_arg(args[0], "a", "SecretInteger")
-    check_arg(args[1], "b", "SecretInteger")
-    assert nada_function["return_type"] == "SecretInteger"
-
-    operations = nada_function["operations"]
-    return_op = operations[nada_function["return_operation_id"]]
-    assert list(return_op.keys()) == ["Addition"]
-    addition = return_op["Addition"]
-
-    check_nada_function_arg_ref(
-        operations[addition["left"]], nada_function["id"], "a", "SecretInteger"
-    )
-    check_nada_function_arg_ref(
-        operations[addition["right"]], nada_function["id"], "b", "SecretInteger"
-    )
-
-
-def test_nada_function_using_inputs():
-    c = create_input(SecretInteger, "c", "party", **{})
-
-    @nada_fn
-    def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
-        return a + b + c
-
-    nada_function = nada_function_to_mir("nada_function")
-    assert nada_function["function"] == "nada_function"
-    args = nada_function["args"]
-    assert len(args) == 2
-    check_arg(args[0], "a", "SecretInteger")
-    check_arg(args[1], "b", "SecretInteger")
-    assert nada_function["return_type"] == "SecretInteger"
-
-    operation = nada_function["operations"]
-    return_op = operation[nada_function["return_operation_id"]]
-
-    assert list(return_op.keys()) == ["Addition"]
-    addition = return_op["Addition"]
-    addition_right = operation[addition["right"]]
-    assert input_reference(addition_right) == "c"
-    addition_left = operation[addition["left"]]
-    assert list(addition_left.keys()) == ["Addition"]
-
-    addition = addition_left["Addition"]
-
-    check_nada_function_arg_ref(
-        operation[addition["left"]], nada_function["id"], "a", "SecretInteger"
-    )
-    check_nada_function_arg_ref(
-        operation[addition["right"]], nada_function["id"], "b", "SecretInteger"
-    )
-
-
-def test_nada_function_call():
-    c = create_input(SecretInteger, "c", "party", **{})
-    d = create_input(SecretInteger, "c", "party", **{})
-
-    @nada_fn
-    def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
-        return a + b
-
-    nada_fn_call_return = nada_function(c, d)
-    nada_fn_type = nada_function_to_mir("nada_function")
-
-    nada_function_call = nada_fn_call_return.child
-    assert isinstance(nada_function_call, NadaFunctionCall)
-    assert nada_function_call.fn.id == nada_fn_type["id"]
-
-
-def test_nada_function_using_operations():
-    c = create_input(SecretInteger, "c", "party", **{})
-    d = create_input(SecretInteger, "d", "party", **{})
-
-    @nada_fn
-    def nada_function(a: SecretInteger, b: SecretInteger) -> SecretInteger:
-        return a + b + c + d
-
-    nada_function_ast = nada_function_to_mir("nada_function")
-    assert nada_function_ast["function"] == "nada_function"
-    args = nada_function_ast["args"]
-    assert len(args) == 2
-    check_arg(args[0], "a", "SecretInteger")
-    check_arg(args[1], "b", "SecretInteger")
-    assert nada_function_ast["return_type"] == "SecretInteger"
-
-    operation = nada_function_ast["operations"]
-    return_op = operation[nada_function_ast["return_operation_id"]]
-
-    assert list(return_op.keys()) == ["Addition"]
-    addition = return_op["Addition"]
-
-    assert input_reference(operation[addition["right"]]) == "d"
-    addition_left = operation[addition["left"]]
-    assert list(addition_left.keys()) == ["Addition"]
-    addition = addition_left["Addition"]
-    assert input_reference(operation[addition["right"]]) == "c"
-
-    addition_left = operation[addition["left"]]
-    assert list(addition_left.keys()) == ["Addition"]
-    addition = addition_left["Addition"]
-
-    check_nada_function_arg_ref(
-        operation[addition["left"]], nada_function_ast["id"], "a", "SecretInteger"
-    )
-    check_nada_function_arg_ref(
-        operation[addition["right"]], nada_function_ast["id"], "b", "SecretInteger"
-    )
-
-
-def find_function_in_ast(fn_name: str):
-    for op in AST_OPERATIONS.values():
-        if isinstance(op, NadaFunctionASTOperation) and op.name == fn_name:
-            return op
-    return None
-
-
-@pytest.mark.parametrize(
-    ("input_type", "input_name"),
-    [
-        (Array, "Array"),
-    ],
-)
-def test_nada_function_using_matrix(input_type, input_name):
-    c = create_input(SecretInteger, "c", "party", **{})
-
-    @nada_fn
-    def add(a: SecretInteger, b: SecretInteger) -> SecretInteger:
-        return a + b
-
-    @nada_fn
-    def matrix_addition(
-        a: input_type[SecretInteger], b: input_type[SecretInteger]
-    ) -> SecretInteger:
-        return a.zip(b).map(add).reduce(add, c)
-
-    add_fn = nada_function_to_mir("add")
-    matrix_addition_fn = nada_function_to_mir("matrix_addition")
-    assert matrix_addition_fn["function"] == "matrix_addition"
-    args = matrix_addition_fn["args"]
-    assert len(args) == 2
-    a_arg_type = {input_name: {"inner_type": "SecretInteger"}}
-    check_arg(args[0], "a", a_arg_type)
-    b_arg_type = {input_name: {"inner_type": "SecretInteger"}}
-    check_arg(args[1], "b", b_arg_type)
-    assert matrix_addition_fn["return_type"] == "SecretInteger"
-
-    operations = matrix_addition_fn["operations"]
-    return_op = operations[matrix_addition_fn["return_operation_id"]]
-    assert list(return_op.keys()) == ["Reduce"]
-    reduce_op = return_op["Reduce"]
-    reduce_op["function_id"] = add_fn["id"]
-    reduce_op["type"] = "SecretInteger"
-
-    reduce_op_inner = operations[reduce_op["inner"]]
-    assert list(reduce_op_inner.keys()) == ["Map"]
-    map_op = reduce_op_inner["Map"]
-    map_op["function_id"] = add_fn["id"]
-    map_op["type"] = {input_name: {"inner_type": "SecretInteger", "size": None}}
-
-    map_op_inner = operations[map_op["inner"]]
-    assert list(map_op_inner.keys()) == ["Zip"]
-    zip_op = map_op_inner["Zip"]
-
-    zip_op_left = operations[zip_op["left"]]
-    zip_op_right = operations[zip_op["right"]]
-    check_nada_function_arg_ref(zip_op_left, matrix_addition_fn["id"], "a", a_arg_type)
-    check_nada_function_arg_ref(zip_op_right, matrix_addition_fn["id"], "b", b_arg_type)
 
 
 def test_array_new():

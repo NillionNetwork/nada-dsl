@@ -1,7 +1,7 @@
 # pylint:disable=W0401,W0614
 """The Nada Scalar type definitions."""
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Union, TypeVar
 from typing_extensions import Self
@@ -349,16 +349,24 @@ def binary_logical_operation(
     return SecretBoolean(child=operation)
 
 
-@dataclass
 class MetaType(ABC):
-    pass
+    is_constant = False
+    is_scalar = False
+    is_compound = False
+
+    @abstractmethod
+    def to_mir(self):
+        pass
+
+    @abstractmethod
+    def instantiate(self, child_or_value):
+        pass
 
 
-@dataclass
 class MetaTypePassthroughMixin(MetaType):
     @classmethod
     def instantiate(cls, child_or_value):
-        cls.ty(child_or_value)
+        return cls.ty(child_or_value)
 
     @classmethod
     def to_mir(cls):
@@ -398,7 +406,8 @@ class Integer(NumericType):
 
 class IntegerMetaType(MetaTypePassthroughMixin):
     ty = Integer
-
+    is_constant = True
+    is_scalar = True
 
 @dataclass
 @register_scalar_type(Mode.CONSTANT, BaseType.UNSIGNED_INTEGER)
@@ -432,6 +441,8 @@ class UnsignedInteger(NumericType):
 
 class UnsignedIntegerMetaType(MetaTypePassthroughMixin):
     ty = UnsignedInteger
+    is_constant = True
+    is_scalar = True
 
 
 @register_scalar_type(Mode.CONSTANT, BaseType.BOOLEAN)
@@ -471,6 +482,8 @@ class Boolean(BooleanType):
 
 class BooleanMetaType(MetaTypePassthroughMixin):
     ty = Boolean
+    is_constant = True
+    is_scalar = True
 
 
 @register_scalar_type(Mode.PUBLIC, BaseType.INTEGER)
@@ -499,6 +512,7 @@ class PublicInteger(NumericType):
 
 class PublicIntegerMetaType(MetaTypePassthroughMixin):
     ty = PublicInteger
+    is_scalar = True
 
 
 @register_scalar_type(Mode.PUBLIC, BaseType.UNSIGNED_INTEGER)
@@ -527,6 +541,7 @@ class PublicUnsignedInteger(NumericType):
 
 class PublicUnsignedIntegerMetaType(MetaTypePassthroughMixin):
     ty = PublicUnsignedInteger
+    is_scalar = True
 
 
 @dataclass
@@ -560,6 +575,7 @@ class PublicBoolean(BooleanType):
 
 class PublicBooleanMetaType(MetaTypePassthroughMixin):
     ty = PublicBoolean
+    is_scalar = True
 
 
 @dataclass
@@ -613,6 +629,7 @@ class SecretInteger(NumericType):
 
 class SecretIntegerMetaType(MetaTypePassthroughMixin):
     ty = SecretInteger
+    is_scalar = True
 
 
 @dataclass
@@ -668,6 +685,7 @@ class SecretUnsignedInteger(NumericType):
 
 class SecretUnsignedIntegerMetaType(MetaTypePassthroughMixin):
     ty = SecretUnsignedInteger
+    is_scalar = True
 
 
 @dataclass
@@ -702,6 +720,7 @@ class SecretBoolean(BooleanType):
 
 class SecretBooleanMetaType(MetaTypePassthroughMixin):
     ty = SecretBoolean
+    is_scalar = True
 
 
 @dataclass
