@@ -28,7 +28,7 @@ from nada_dsl.errors import (
     InvalidTypeError,
     NotAllowedException,
 )
-from nada_dsl.nada_types.function import NadaFunction, nada_fn
+from nada_dsl.nada_types.function import NadaFunction, create_nada_fn
 from nada_dsl.nada_types.generics import U, T, R
 from . import AllTypes, AllTypesType, NadaTypeRepr, OperationType
 
@@ -112,12 +112,13 @@ class Reduce(Generic[T, R]):
         )
 
 
-@dataclass
 class TupleMetaType(MetaType):
     """Marker type for Tuples."""
+    is_compound = True
 
-    left_type: NadaType
-    right_type: NadaType
+    def __init__(self, left_type: MetaType, right_type: MetaType):
+        self.left_type = left_type
+        self.right_type = right_type
 
     def instantiate(self, child):
         return Tuple(child, self.left_type, self.right_type)
@@ -145,29 +146,6 @@ class Tuple(Generic[T, U], NadaType):
         self.child = child
         super().__init__(self.child)
 
-    """TODO this should be deleted and use MetaType.to_mir"""
-
-    # def to_mir(self):
-    #     return {
-    #         "Tuple": {
-    #             "left_type": (
-    #                 self.left_type.to_mir()
-    #                 if isinstance(
-    #                     self.left_type, (NadaType, ArrayMetaType, TupleMetaType)
-    #                 )
-    #                 else self.left_type.class_to_mir()
-    #             ),
-    #             "right_type": (
-    #                 self.right_type.to_mir()
-    #                 if isinstance(
-    #                     self.right_type,
-    #                     (NadaType, ArrayMetaType, TupleMetaType),
-    #                 )
-    #                 else self.right_type.class_to_mir()
-    #             ),
-    #         }
-    #     }
-
     @classmethod
     def new(cls, left_value: NadaType, right_value: NadaType) -> "Tuple[T, U]":
         """Constructs a new Tuple."""
@@ -193,34 +171,14 @@ def _generate_accessor(ty: Any, accessor: Any) -> NadaType:
     if hasattr(ty, "ty") and ty.ty.is_literal():  # TODO: fix
         raise TypeError("Literals are not supported in accessors")
     return ty.instantiate(accessor)
-    # if ty.is_scalar():
-    #     if ty.is_literal():
-    #         return ty  # value.instantiate(child=accessor) ?
-    #     return ty(child=accessor)
-    # if ty == Array:
-    #     return Array(
-    #         child=accessor,
-    #         contained_type=ty.contained_type,
-    #         size=ty.size,
-    #     )
-    # if ty == NTuple:
-    #     return NTuple(
-    #         child=accessor,
-    #         types=ty.types,
-    #     )
-    # if ty == Object:
-    #     return Object(
-    #         child=accessor,
-    #         types=ty.types,
-    #     )
-    # raise TypeError(f"Unsupported type for accessor: {ty}")
 
 
-@dataclass
 class NTupleMetaType(MetaType):
     """Marker type for NTuples."""
+    is_compound = True
 
-    types: List[NadaType]
+    def __init__(self, types: List[MetaType]):
+        self.types = types
 
     def instantiate(self, child):
         return NTuple(child, self.types)
@@ -269,22 +227,6 @@ class NTuple(NadaType):
 
         return _generate_accessor(self.types[index], accessor)
 
-    """TODO this should be deleted and use MetaType.to_mir"""
-
-    # def to_mir(self):
-    #     return {
-    #         "NTuple": {
-    #             "types": [
-    #                 (
-    #                     ty.to_mir()
-    #                     if isinstance(ty, (NadaType, ArrayMetaType, TupleMetaType))
-    #                     else ty.class_to_mir()
-    #                 )
-    #                 for ty in self.types
-    #             ]
-    #         }
-    #     }
-
     def metatype(self):
         return NTupleMetaType(self.types)
 
@@ -319,15 +261,20 @@ class NTupleAccessor:
         )
 
 
-@dataclass
 class ObjectMetaType(MetaType):
     """Marker type for Objects."""
+    is_compound = True
 
-    types: Dict[str, Any]
+    def __init__(self, types: Dict[str, MetaType]):
+        self.types = types
 
     def to_mir(self):
         """Convert an object into a Nada type."""
-        return {"Object": {name: ty.to_mir() for name, ty in self.types.items()}}
+        return {
+            "Object": {
+                "types": { name: ty.to_mir() for name, ty in self.types.items() }
+            }
+        }
 
     def instantiate(self, child):
         return Object(child, self.types)
@@ -351,7 +298,7 @@ class Object(NadaType):
         return Object(
             types=types,
             child=ObjectNew(
-                child=types,
+                child=values,
                 source_ref=SourceRef.back_frame(),
             ),
         )
@@ -369,22 +316,6 @@ class Object(NadaType):
         )
 
         return _generate_accessor(self.types[attr], accessor)
-
-    """TODO delete this use Meta.to_mir"""
-
-    # def to_mir(self):
-    #     return {
-    #         "Object": {
-    #             "types": {
-    #                 name: (
-    #                     ty.to_mir()
-    #                     if isinstance(ty, (NadaType, ArrayMetaType, TupleMetaType))
-    #                     else ty.class_to_mir()
-    #                 )
-    #                 for name, ty in self.types.items()
-    #             }
-    #         }
-    #     }
 
     def metatype(self):
         return ObjectMetaType(types=self.types)
@@ -480,16 +411,23 @@ class InnerProduct:
             ty=ty,
         )
 
-
-@dataclass
 class ArrayMetaType(MetaType):
     """Marker type for arrays."""
+    is_compound = True
 
-    contained_type: AllTypesType
-    size: int
+
+    def __init__(self, contained_type: AllTypesType, size: int):
+        self.contained_type = contained_type
+        self.size = size
 
     def to_mir(self):
         """Convert this generic type into a MIR Nada type."""
+        # TODO size is None when array used in function argument and used @nada_fn
+        # So you know the type but not the size, we should stop using @nada_fn decorator
+        # and apply the same logic when the function gets passed to .map() or .reduce()
+        # so we now the size of the array
+        if self.size is None:
+            raise NotImplementedError("ArrayMetaType.to_mir")
         size = {"size": self.size} if self.size else {}
         return {
             "Array": {"inner_type": self.contained_type.to_mir(), **size}  # TODO: why?
@@ -520,16 +458,7 @@ class Array(Generic[T], NadaType):
     size: int
 
     def __init__(self, child, size: int, contained_type: T = None):
-        self.contained_type = (
-            contained_type if (child is None or contained_type is not None) else child
-        )
-
-        # TODO: can we simplify the following 10 lines?
-        # If it's not a metatype, fetch it
-        if self.contained_type is not None and not isinstance(
-            self.contained_type, MetaType
-        ):
-            self.contained_type = self.contained_type.metatype()
+        self.contained_type = contained_type or child.metatype()
 
         self.size = size
         self.child = (
@@ -543,11 +472,14 @@ class Array(Generic[T], NadaType):
             "Cannot loop over a Nada Array, use functional style Array operations (map, reduce, zip)."
         )
 
+    def check_not_constant(self, ty):
+        if ty.is_constant:
+            raise NotAllowedException("functors (map and reduce) can't be called with constant args")
+
     def map(self: "Array[T]", function) -> "Array":
         """The map operation for Arrays."""
-        nada_function = function
-        if not isinstance(function, NadaFunction):
-            nada_function = nada_fn(function)
+        self.check_not_constant(self.contained_type)
+        nada_function = create_nada_fn(function, args_ty=[self.contained_type])
         return Array(
             size=self.size,
             contained_type=nada_function.return_type,
@@ -556,9 +488,10 @@ class Array(Generic[T], NadaType):
 
     def reduce(self: "Array[T]", function, initial: R) -> R:
         """The Reduce operation for arrays."""
-        if not isinstance(function, NadaFunction):
-            function = nada_fn(function)
-        return function.return_type(
+        self.check_not_constant(self.contained_type)
+        self.check_not_constant(initial.metatype())
+        function = create_nada_fn(function, args_ty=[initial.metatype(), self.contained_type])
+        return function.return_type.instantiate(
             Reduce(
                 child=self,
                 fn=function,
@@ -601,12 +534,6 @@ class Array(Generic[T], NadaType):
             "Inner product is only implemented for arrays of integer types"
         )
 
-    # TODO delete
-
-    # def to_mir(self):
-    #     size = {"size": self.size} if self.size else {}
-    #     return {"Array": {"inner_type": self.contained_type, **size}}
-
     @classmethod
     def new(cls, *args) -> "Array[T]":
         """Constructs a new Array."""
@@ -618,18 +545,13 @@ class Array(Generic[T], NadaType):
             raise TypeError("All arguments must be of the same type")
 
         return Array(
-            contained_type=first_arg,
+            contained_type=first_arg.metatype(),
             size=len(args),
             child=ArrayNew(
                 child=args,
                 source_ref=SourceRef.back_frame(),
             ),
         )
-
-    @classmethod
-    def init_as_template_type(cls, contained_type) -> "Array[T]":
-        """Construct an empty template array with the given child type."""
-        return Array(child=None, contained_type=contained_type, size=None)
 
     def metatype(self):
         return ArrayMetaType(self.contained_type, self.size)
