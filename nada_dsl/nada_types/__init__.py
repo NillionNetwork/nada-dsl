@@ -1,10 +1,10 @@
 """Nada type definitions."""
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, TypeAlias, Union, Type
+from typing import Dict, TypeAlias, Union, Type
 from nada_dsl.source_ref import SourceRef
-from abc import abstractmethod
 
 
 @dataclass
@@ -85,7 +85,7 @@ OperationType = Union[
 ]
 
 ""
-NadaTypeRepr: TypeAlias = str | Dict[str, Dict]
+DslTypeRepr: TypeAlias = str | Dict[str, Dict]
 """Type alias for the NadaType representation. 
 
 This representation can be either a string ("SecretInteger") 
@@ -113,8 +113,9 @@ class BaseType(Enum):
         return self in (BaseType.INTEGER, BaseType.UNSIGNED_INTEGER)
 
 
+# TODO: abstract?
 @dataclass
-class NadaType:
+class DslType:
     """Nada type class.
 
     This is the parent class of all nada types.
@@ -145,16 +146,7 @@ class NadaType:
         """
         self.child = child
         if self.child is not None:
-            self.child.store_in_ast(self.metatype().to_mir())
-
-    # @classmethod
-    # def class_to_mir(cls) -> str:
-    #     """Converts a class into a MIR Nada type."""
-    #     name = cls.__name__
-    #     # Rename public variables so they are considered as the same as literals.
-    #     if name.startswith("Public"):
-    #         name = name[len("Public") :].lstrip()
-    #     return name
+            self.child.store_in_ast(self.type().to_mir())
 
     def __bool__(self):
         raise NotImplementedError
@@ -168,3 +160,7 @@ class NadaType:
     def is_literal(cls) -> bool:
         """Returns True if the type is a literal."""
         return False
+
+    @abstractmethod
+    def type(self):
+        """Returns a meta type for this NadaType."""
