@@ -6,7 +6,6 @@ Nada function definitions and utilities.
 import inspect
 from dataclasses import dataclass
 from typing import Generic, List, Callable
-from copy import copy
 from nada_dsl import SourceRef
 from nada_dsl.ast_util import (
     AST_OPERATIONS,
@@ -16,9 +15,7 @@ from nada_dsl.ast_util import (
     next_operation_id,
 )
 from nada_dsl.nada_types.generics import T, R
-from nada_dsl.nada_types import Mode, NadaType
-from nada_dsl.nada_types.scalar_types import ScalarType
-from nada_dsl.errors import NotAllowedException
+from nada_dsl.nada_types import DslType
 
 
 class NadaFunctionArg(Generic[T]):
@@ -68,7 +65,7 @@ class NadaFunction(Generic[T, R]):
         function: Callable[[T], R],
         return_type: R,
         source_ref: SourceRef,
-        child: NadaType,
+        child: DslType,
     ):
         self.child = child
         self.id = function_id
@@ -101,7 +98,7 @@ class NadaFunctionCall(Generic[R]):
     """Represents a call to a Nada Function."""
 
     fn: NadaFunction
-    args: List[NadaType]
+    args: List[DslType]
     source_ref: SourceRef
 
     def __init__(self, nada_function, args, source_ref):
@@ -109,7 +106,7 @@ class NadaFunctionCall(Generic[R]):
         self.args = args
         self.fn = nada_function
         self.source_ref = source_ref
-        self.store_in_ast(nada_function.return_type.metatype().to_mir())
+        self.store_in_ast(nada_function.return_type.type().to_mir())
 
     def store_in_ast(self, ty):
         """Store this function call in the AST."""
@@ -120,6 +117,7 @@ class NadaFunctionCall(Generic[R]):
             source_ref=self.source_ref,
             ty=ty,
         )
+
 
 def create_nada_fn(fn, args_ty) -> NadaFunction[T, R]:
     """
@@ -149,7 +147,7 @@ def create_nada_fn(fn, args_ty) -> NadaFunction[T, R]:
 
     child = fn(*nada_args_type_wrapped)
 
-    return_type = child.metatype()
+    return_type = child.type()
     return NadaFunction(
         function_id,
         function=fn,

@@ -129,7 +129,7 @@ def test_duplicated_inputs_checks():
 def test_array_type_conversion(input_type, type_name, size):
     inner_input = create_input(SecretInteger, "name", "party", **{})
     collection = create_collection(input_type, inner_input, size, **{})
-    converted_input = collection.metatype().to_mir()
+    converted_input = collection.type().to_mir()
     assert list(converted_input.keys()) == [type_name]
 
 

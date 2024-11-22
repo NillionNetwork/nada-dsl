@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import hashlib
 from typing import Dict, List
 from sortedcontainers import SortedDict
-from nada_dsl.nada_types import NadaTypeRepr, Party
+from nada_dsl.nada_types import DslTypeRepr, Party
 from nada_dsl.source_ref import SourceRef
 
 OPERATION_ID_COUNTER = 0
@@ -41,7 +41,7 @@ class ASTOperation(ABC):
 
     id: int
     source_ref: SourceRef
-    ty: NadaTypeRepr
+    ty: DslTypeRepr
 
     def child_operations(self) -> List[int]:
         """Returns the list of identifiers of all the child operations of this operation."""
