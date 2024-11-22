@@ -26,5 +26,6 @@ def nada_main():
 
     return [Output(final, "my_output", party1)]
 
+
 if __name__ == "__main__":
     nada_main()

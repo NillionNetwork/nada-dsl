@@ -15,7 +15,6 @@ def nada_main():
     array = object.b
     scalar_2 = object.c
 
-
     def add(acc: PublicInteger, a: PublicInteger) -> PublicInteger:
         return acc + a
 
