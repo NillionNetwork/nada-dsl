@@ -108,7 +108,7 @@ class Reduce(Generic[T, R]):
         )
 
 
-class TupleType(DslType):
+class TupleType(NadaType):
     """Marker type for Tuples."""
 
     is_compound = True
@@ -171,7 +171,7 @@ def _generate_accessor(ty: Any, accessor: Any) -> DslType:
     return ty.instantiate(accessor)
 
 
-class NTupleType(DslType):
+class NTupleType(NadaType):
     """Marker type for NTuples."""
 
     is_compound = True
@@ -261,7 +261,7 @@ class NTupleAccessor:
         )
 
 
-class ObjectType(DslType):
+class ObjectType(NadaType):
     """Marker type for Objects."""
 
     is_compound = True
@@ -412,7 +412,7 @@ class InnerProduct:
         )
 
 
-class ArrayType(DslType):
+class ArrayType(NadaType):
     """Marker type for arrays."""
 
     is_compound = True
@@ -533,7 +533,6 @@ class Array(Generic[T], DslType):
         if is_primitive_integer(self.contained_type) and is_primitive_integer(
             other.contained_type
         ):
-
             return self.contained_type.instantiate(
                 InnerProduct(left=self, right=other, source_ref=SourceRef.back_frame())
             )  # type: ignore
