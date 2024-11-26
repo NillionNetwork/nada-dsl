@@ -15,7 +15,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-dependencies = ["grpcio-tools==1.62.3", "betterproto==2.0.0b7"]
+dependencies = [
+    "grpcio-tools==1.62.3",
+    "betterproto==2.0.0b7",
+    "jsonschema==4.22.0",
+]
 
 [project.optional-dependencies]
 dev = ["betterproto[compiler]==2.0.0b7"]

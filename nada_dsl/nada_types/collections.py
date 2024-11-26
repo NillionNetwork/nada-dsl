@@ -1,6 +1,8 @@
 """Nada Collection type definitions."""
-
+import os
 from dataclasses import dataclass
+import inspect
+import json
 from typing import Any, Dict, Generic, List
 import typing
 
@@ -12,7 +14,7 @@ from nada_dsl.ast_util import (
     NewASTOperation,
     ObjectAccessorASTOperation,
     ReduceASTOperation,
-    UnaryASTOperation,
+    UnaryASTOperation, DocumentAccessorASTOperation,
 )
 from nada_dsl.nada_types import DslType
 
@@ -27,6 +29,8 @@ from nada_dsl.errors import (
 from nada_dsl.nada_types.function import NadaFunction, create_nada_fn
 from nada_dsl.nada_types.generics import U, T, R
 from . import AllTypes, AllTypesType, DslTypeRepr, OperationType
+from jsonschema import Draft7Validator
+from jsonschema.exceptions import SchemaError
 
 
 def is_primitive_integer(nada_type_str: str):
@@ -165,7 +169,7 @@ class Tuple(Generic[T, U], DslType):
         return TupleType(self.left_type, self.right_type)
 
 
-def _generate_accessor(ty: Any, accessor: Any) -> DslType:
+def _wrap_accessor_with_type(ty: Any, accessor: Any) -> DslType:
     if hasattr(ty, "ty") and ty.ty.is_literal():  # TODO: fix
         raise TypeError("Literals are not supported in accessors")
     return ty.instantiate(accessor)
@@ -176,7 +180,7 @@ class NTupleType(NadaType):
 
     is_compound = True
 
-    def __init__(self, types: List[DslType]):
+    def __init__(self, types: List[NadaType]):
         self.types = types
 
     def instantiate(self, child_or_value):
@@ -224,7 +228,7 @@ class NTuple(DslType):
             source_ref=SourceRef.back_frame(),
         )
 
-        return _generate_accessor(self.types[index], accessor)
+        return _wrap_accessor_with_type(self.types[index], accessor)
 
     def type(self):
         """Metatype for NTuple"""
@@ -266,7 +270,7 @@ class ObjectType(NadaType):
 
     is_compound = True
 
-    def __init__(self, types: Dict[str, DslType]):
+    def __init__(self, types: Dict[str, NadaType]):
         self.types = types
 
     def to_mir(self):
@@ -314,7 +318,7 @@ class Object(DslType):
             source_ref=SourceRef.back_frame(),
         )
 
-        return _generate_accessor(self.types[attr], accessor)
+        return _wrap_accessor_with_type(self.types[attr], accessor)
 
     def type(self):
         """Metatype for Object"""
@@ -350,6 +354,117 @@ class ObjectAccessor:
             ty=ty,
         )
 
+class DocumentType(NadaType):
+    """Marker type for Objects."""
+
+    is_compound = True
+
+    def __init__(self, types: Dict[str, NadaType]):
+        self.types = types
+
+    def to_mir(self):
+        """Convert an object into a Nada type."""
+        return {
+            "Document": {"types": {name: ty.to_mir() for name, ty in self.types.items()}}
+        }
+
+    def instantiate(self, child_or_value):
+        return Document(child_or_value, self.types)
+
+class Document(DslType):
+    """The Document type"""
+
+    def __init__(self, child, filepath: str = None, public: bool = False, schema: dict = None):
+        if not schema:
+            with open(filepath, "r") as schema_file:
+                schema = json.load(schema_file)
+
+        try:
+            Draft7Validator.check_schema(schema)
+        except SchemaError as e:
+            raise TypeError("Schema validation error:", e.message)
+
+
+        self.__schema = schema
+        self.__public = public
+        super().__init__(child)
+
+    def __getattr__(self, item):
+        if item not in self.__schema["properties"]:
+            raise AttributeError(
+                f"'Document has no attribute '{item}'"
+            )
+
+        accessor = DocumentAccessor(
+            key=item,
+            child=self,
+            source_ref=SourceRef.back_frame(),
+        )
+
+        attribute_type = self.__schema_to_nada_type(self.__schema["properties"][item])
+
+        return _wrap_accessor_with_type(attribute_type, accessor)
+
+    def __schema_to_nada_type(self, schema: dict) -> NadaType:
+        IntegerType = PublicIntegerType if self.__public else SecretIntegerType
+        UnsignedIntegerType = PublicUnsignedIntegerType if self.__public else SecretUnsignedIntegerType
+        BooleanType = PublicBooleanType if self.__public else SecretBooleanType
+        if schema["type"] == "integer" and "nada_type" in schema and schema["nada_type"] == "unsigned":
+            return UnsignedIntegerType()
+        if schema["type"] == "integer":
+            return IntegerType()
+        elif schema["type"] == "boolean":
+            return BooleanType()
+        elif schema["type"] == "object":
+            return ObjectType(types={key: self.__schema_to_nada_type(value) for key, value in schema["properties"].items()})
+        elif schema["type"] == "array" and "prefixItems" in schema:
+            return NTupleType([self.__schema_to_nada_type(value) for value in schema["prefixItems"]])
+        elif schema["type"] == "array":
+            if "size" not in schema:
+                raise TypeError("size not defined in array schema")
+            return ArrayType(contained_type=self.__schema_to_nada_type(schema["items"]), size=schema["size"])
+        else:
+            raise TypeError(f"type '{schema['type']}' not supported in json schema")
+
+    def type(self):
+        return DocumentType({key: self.__schema_to_nada_type(value) for key, value in self.__schema["properties"].items()})
+
+class PublicDocument(Document):
+    def __init__(self, child, filepath: str):
+        super().__init__(child, filepath, True)
+
+class SecretDocument(Document):
+    def __init__(self, child, filepath: str):
+        super().__init__(child, filepath, False)
+
+@dataclass
+class DocumentAccessor:
+    """Accessor for Object"""
+
+    child: Object
+    key: str
+    source_ref: SourceRef
+
+    def __init__(
+        self,
+        child: Object,
+        key: str,
+        source_ref: SourceRef,
+    ):
+        self.id = next_operation_id()
+        self.child = child
+        self.key = key
+        self.source_ref = source_ref
+
+    def store_in_ast(self, ty: object):
+        """Store this accessor in the AST."""
+        AST_OPERATIONS[self.id] = DocumentAccessorASTOperation(
+            id=self.id,
+            source=self.child.child.id,
+            key=self.key,
+            source_ref=self.source_ref,
+            ty=ty,
+        )
 
 class Zip:
     """The Zip operation."""

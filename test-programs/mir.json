@@ -1,0 +1,164 @@
+{
+  "functions": [],
+  "parties": [
+    {
+      "name": "Party1",
+      "source_ref_index": 4
+    }
+  ],
+  "inputs": [
+    {
+      "name": "my_int",
+      "type": "Integer",
+      "party": "Party1",
+      "doc": "",
+      "source_ref_index": 1
+    },
+    {
+      "name": "my_doc",
+      "type": {
+        "Document": {
+          "types": {
+            "a": "SecretInteger",
+            "b": "SecretBoolean",
+            "c": {
+              "Object": {
+                "types": {
+                  "c": "SecretInteger"
+                }
+              }
+            },
+            "d": {
+              "Array": {
+                "inner_type": "SecretInteger",
+                "size": 2
+              }
+            },
+            "e": {
+              "NTuple": {
+                "types": [
+                  "SecretInteger",
+                  "SecretBoolean"
+                ]
+              }
+            },
+            "f": "SecretInteger"
+          }
+        }
+      },
+      "party": "Party1",
+      "doc": "",
+      "source_ref_index": 3
+    }
+  ],
+  "literals": [],
+  "outputs": [
+    {
+      "operation_id": 9,
+      "name": "my_output",
+      "party": "Party1",
+      "type": "SecretInteger",
+      "source_ref_index": 2
+    }
+  ],
+  "operations": {
+    "9": {
+      "Addition": {
+        "id": 9,
+        "left": 8,
+        "right": 2,
+        "type": "SecretInteger",
+        "source_ref_index": 0
+      }
+    },
+    "2": {
+      "InputReference": {
+        "id": 2,
+        "refers_to": "my_int",
+        "type": "Integer",
+        "source_ref_index": 1
+      }
+    },
+    "8": {
+      "DocumentAccessor": {
+        "id": 8,
+        "key": "a",
+        "source": 1,
+        "type": "SecretInteger",
+        "source_ref_index": 2
+      }
+    },
+    "1": {
+      "InputReference": {
+        "id": 1,
+        "refers_to": "my_doc",
+        "type": {
+          "Document": {
+            "types": {
+              "a": "SecretInteger",
+              "b": "SecretBoolean",
+              "c": {
+                "Object": {
+                  "types": {
+                    "c": "SecretInteger"
+                  }
+                }
+              },
+              "d": {
+                "Array": {
+                  "inner_type": "SecretInteger",
+                  "size": 2
+                }
+              },
+              "e": {
+                "NTuple": {
+                  "types": [
+                    "SecretInteger",
+                    "SecretBoolean"
+                  ]
+                }
+              },
+              "f": "SecretInteger"
+            }
+          }
+        },
+        "source_ref_index": 3
+      }
+    }
+  },
+  "source_files": {
+    "document.py": "import os.path\n\nfrom nada_dsl import *\n\nschema = {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"type\": \"object\",\n    \"properties\": {\n        \"a\": {\n            \"type\": \"integer\"\n        },\n        \"b\": {\n            \"type\": \"boolean\"\n        },\n        \"c\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"c\": {\n                    \"type\": \"integer\"\n                }\n            }\n        },\n        \"d\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"integer\"\n            },\n            \"size\": 2\n        },\n        \"e\": {\n            \"type\": \"array\",\n            \"prefixItems\": [{\"type\":  \"integer\"}, {\"type\":  \"boolean\"}]\n        },\n        \"f\": {\n            \"type\": \"integer\",\n            \"nada_type\": \"unsigned_integer\"\n        }\n    },\n    \"required\": [\n        \"a\",\n        \"b\"\n    ],\n    \"additionalProperties\": False\n}\n\ndef nada_main():\n    party1 = Party(name=\"Party1\")\n    doc = Document(Input(name=\"my_doc\", party=party1), schema=schema)\n    my_int = PublicInteger(Input(name=\"my_int\", party=party1))\n    doc.a\n    doc.b\n    doc.c\n    doc.d\n    doc.e\n    return [Output(doc.a + my_int, \"my_output\", party1)]\n"
+  },
+  "source_refs": [
+    {
+      "lineno": 137,
+      "offset": 0,
+      "file": "scalar_types.py",
+      "length": 0
+    },
+    {
+      "lineno": 49,
+      "offset": 1031,
+      "file": "document.py",
+      "length": 62
+    },
+    {
+      "lineno": 55,
+      "offset": 0,
+      "file": "document.py",
+      "length": 0
+    },
+    {
+      "lineno": 48,
+      "offset": 961,
+      "file": "document.py",
+      "length": 69
+    },
+    {
+      "lineno": 47,
+      "offset": 927,
+      "file": "document.py",
+      "length": 33
+    }
+  ]
+}

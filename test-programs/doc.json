@@ -1,0 +1,40 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "a": {
+            "type": "integer"
+        },
+        "b": {
+            "type": "boolean"
+        },
+        "c": {
+            "type": "object",
+            "properties": {
+                "c": {
+                    "type": "integer"
+                }
+            }
+        },
+        "d": {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "size": 2
+        },
+        "e": {
+            "type": "array",
+            "prefixItems": [{"type":  "integer"}, {"type":  "boolean"}]
+        },
+        "f": {
+            "type": "integer",
+            "nada_type": "unsigned_integer"
+        }
+    },
+    "required": [
+        "a",
+        "b"
+    ],
+    "additionalProperties": false
+}

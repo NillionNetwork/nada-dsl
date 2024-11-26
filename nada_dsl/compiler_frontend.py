@@ -11,6 +11,7 @@ import inspect
 from typing import List, Dict, Any, Optional, Tuple
 from sortedcontainers import SortedDict
 
+from nada_dsl import DocumentAccessorASTOperation
 from nada_dsl.ast_util import (
     AST_OPERATIONS,
     ASTOperation,
@@ -300,6 +301,7 @@ def process_operation(
             NadaFunctionArgASTOperation,
             NTupleAccessorASTOperation,
             ObjectAccessorASTOperation,
+            DocumentAccessorASTOperation,
         ),
     ):
         processed_operation = ProcessOperationOutput(operation.to_mir(), None)
