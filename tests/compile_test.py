@@ -157,3 +157,4 @@ def test_compile_document():
     mir_str = compile_script(f"{get_test_programs_folder()}/document.py").mir
     print(f"{mir_str}")
     assert mir_str != ""
+    raise Exception("TODO: implement the rest of the test")

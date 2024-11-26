@@ -1,5 +1,5 @@
 """Nada Collection type definitions."""
-
+import os
 from dataclasses import dataclass
 import inspect
 import json
@@ -14,7 +14,7 @@ from nada_dsl.ast_util import (
     NewASTOperation,
     ObjectAccessorASTOperation,
     ReduceASTOperation,
-    UnaryASTOperation,
+    UnaryASTOperation, DocumentAccessorASTOperation,
 )
 from nada_dsl.nada_types import DslType
 
@@ -169,7 +169,7 @@ class Tuple(Generic[T, U], DslType):
         return TupleType(self.left_type, self.right_type)
 
 
-def _generate_accessor(ty: Any, accessor: Any) -> DslType:
+def _wrap_accessor_with_type(ty: Any, accessor: Any) -> DslType:
     if hasattr(ty, "ty") and ty.ty.is_literal():  # TODO: fix
         raise TypeError("Literals are not supported in accessors")
     return ty.instantiate(accessor)
@@ -180,7 +180,7 @@ class NTupleType(NadaType):
 
     is_compound = True
 
-    def __init__(self, types: List[DslType]):
+    def __init__(self, types: List[NadaType]):
         self.types = types
 
     def instantiate(self, child_or_value):
@@ -228,7 +228,7 @@ class NTuple(DslType):
             source_ref=SourceRef.back_frame(),
         )
 
-        return _generate_accessor(self.types[index], accessor)
+        return _wrap_accessor_with_type(self.types[index], accessor)
 
     def type(self):
         """Metatype for NTuple"""
@@ -270,7 +270,7 @@ class ObjectType(NadaType):
 
     is_compound = True
 
-    def __init__(self, types: Dict[str, DslType]):
+    def __init__(self, types: Dict[str, NadaType]):
         self.types = types
 
     def to_mir(self):
@@ -318,7 +318,7 @@ class Object(DslType):
             source_ref=SourceRef.back_frame(),
         )
 
-        return _generate_accessor(self.types[attr], accessor)
+        return _wrap_accessor_with_type(self.types[attr], accessor)
 
     def type(self):
         """Metatype for Object"""
@@ -354,85 +354,117 @@ class ObjectAccessor:
             ty=ty,
         )
 
+class DocumentType(NadaType):
+    """Marker type for Objects."""
 
-def _process_schema(schema_node):
-    if "type" not in schema_node:
-        raise TypeError("Missing 'type' in schema node")
+    is_compound = True
 
-    match schema_node["type"]:
-        case "integer":
-            return PublicInteger(child=None)
-        case "boolean":
-            return PublicBoolean(child=None)
-        case "array":
-            items_schema = schema_node.get("items")
-            if items_schema is None:
-                raise TypeError("Array schema missing 'items'")
-            ntuple = NTuple.__new__(NTuple)
-            ntuple.types = []
-            ntuple.child = None
-            for index, item_schema in enumerate(items_schema):
-                ty = _process_schema(item_schema)
-                ntuple.types.append(ty)
-            return ntuple
-        case "object":
-            properties = schema_node.get("properties", {})
-            obj = Object.__new__(Object)
-            obj.types = {}
-            obj.child = None
-            for key, prop_schema in properties.items():
-                ty = _process_schema(prop_schema)
-                obj.types[key] = ty
-            return obj
-        case _:
-            raise TypeError(f"Unsupported type in schema: {schema_node['type']}")
+    def __init__(self, types: Dict[str, NadaType]):
+        self.types = types
 
+    def to_mir(self):
+        """Convert an object into a Nada type."""
+        return {
+            "Document": {"types": {name: ty.to_mir() for name, ty in self.types.items()}}
+        }
 
-def _assign_accessors(parent):
-    if isinstance(parent, NTuple):
-        for index, ty in enumerate(parent.types):
-            accessor = NTupleAccessor(
-                index=index,
-                child=parent,
-                source_ref=SourceRef.back_frame(),
-            )
-            ty.child = accessor
-            _assign_accessors(ty)
-    elif isinstance(parent, Object):
-        for key, ty in parent.types.items():
-            accessor = ObjectAccessor(
-                key=key,
-                child=parent,
-                source_ref=SourceRef.back_frame(),
-            )
-            ty.child = accessor
-            _assign_accessors(ty)
-    else:
-        # Base case: PublicInteger or PublicBoolean
-        pass
+    def instantiate(self, child_or_value):
+        return Document(child_or_value, self.types)
 
-
-class Document(Object):
+class Document(DslType):
     """The Document type"""
 
-    def __init__(self, child, filepath: str):
-        with open(filepath, "r") as schema_file:
-            schema = json.load(schema_file)
+    def __init__(self, child, filepath: str = None, public: bool = False, schema: dict = None):
+        if not schema:
+            with open(filepath, "r") as schema_file:
+                schema = json.load(schema_file)
 
         try:
             Draft7Validator.check_schema(schema)
         except SchemaError as e:
             raise TypeError("Schema validation error:", e.message)
 
-        if schema["type"] != "object":
-            raise TypeError("Only objects are supported at the root")
 
-        # result = _process_schema(self, 0, 0, schema)
-        # result = _process_schema(schema)
-        # _assign_accessors(result)
+        self.__schema = schema
+        self.__public = public
+        super().__init__(child)
 
-        super().__init__(child=child, types={})  # TMP
+    def __getattr__(self, item):
+        if item not in self.__schema["properties"]:
+            raise AttributeError(
+                f"'Document has no attribute '{item}'"
+            )
 
+        accessor = DocumentAccessor(
+            key=item,
+            child=self,
+            source_ref=SourceRef.back_frame(),
+        )
+
+        attribute_type = self.__schema_to_nada_type(self.__schema["properties"][item])
+
+        return _wrap_accessor_with_type(attribute_type, accessor)
+
+    def __schema_to_nada_type(self, schema: dict) -> NadaType:
+        IntegerType = PublicIntegerType if self.__public else SecretIntegerType
+        UnsignedIntegerType = PublicUnsignedIntegerType if self.__public else SecretUnsignedIntegerType
+        BooleanType = PublicBooleanType if self.__public else SecretBooleanType
+        if schema["type"] == "integer" and "nada_type" in schema and schema["nada_type"] == "unsigned":
+            return UnsignedIntegerType()
+        if schema["type"] == "integer":
+            return IntegerType()
+        elif schema["type"] == "boolean":
+            return BooleanType()
+        elif schema["type"] == "object":
+            return ObjectType(types={key: self.__schema_to_nada_type(value) for key, value in schema["properties"].items()})
+        elif schema["type"] == "array" and "prefixItems" in schema:
+            return NTupleType([self.__schema_to_nada_type(value) for value in schema["prefixItems"]])
+        elif schema["type"] == "array":
+            if "size" not in schema:
+                raise TypeError("size not defined in array schema")
+            return ArrayType(contained_type=self.__schema_to_nada_type(schema["items"]), size=schema["size"])
+        else:
+            raise TypeError(f"type '{schema['type']}' not supported in json schema")
+
+    def type(self):
+        return DocumentType({key: self.__schema_to_nada_type(value) for key, value in self.__schema["properties"].items()})
+
+class PublicDocument(Document):
+    def __init__(self, child, filepath: str):
+        super().__init__(child, filepath, True)
+
+class SecretDocument(Document):
+    def __init__(self, child, filepath: str):
+        super().__init__(child, filepath, False)
+
+@dataclass
+class DocumentAccessor:
+    """Accessor for Object"""
+
+    child: Object
+    key: str
+    source_ref: SourceRef
+
+    def __init__(
+        self,
+        child: Object,
+        key: str,
+        source_ref: SourceRef,
+    ):
+        self.id = next_operation_id()
+        self.child = child
+        self.key = key
+        self.source_ref = source_ref
+
+    def store_in_ast(self, ty: object):
+        """Store this accessor in the AST."""
+        AST_OPERATIONS[self.id] = DocumentAccessorASTOperation(
+            id=self.id,
+            source=self.child.child.id,
+            key=self.key,
+            source_ref=self.source_ref,
+            ty=ty,
+        )
 
 class Zip:
     """The Zip operation."""

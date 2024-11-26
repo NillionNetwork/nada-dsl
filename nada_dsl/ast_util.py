@@ -419,3 +419,24 @@ class ObjectAccessorASTOperation(ASTOperation):
                 "source_ref_index": self.source_ref.to_index(),
             }
         }
+
+@dataclass
+class DocumentAccessorASTOperation(ASTOperation):
+    """AST representation of an document accessor operation."""
+
+    key: str
+    source: int
+
+    def child_operations(self):
+        return [self.source]
+
+    def to_mir(self):
+        return {
+            "DocumentAccessor": {
+                "id": self.id,
+                "key": self.key,
+                "source": self.source,
+                "type": self.ty,
+                "source_ref_index": self.source_ref.to_index(),
+            }
+        }

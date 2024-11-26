@@ -114,7 +114,6 @@ class BaseType(Enum):
 
 
 # TODO: abstract?
-@dataclass
 class DslType:
     """Nada type class.
 
@@ -135,8 +134,6 @@ class DslType:
     of `to_mir()`.
 
     """
-
-    child: OperationType
 
     def __init__(self, child: OperationType):
         """NadaType default constructor
