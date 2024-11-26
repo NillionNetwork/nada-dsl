@@ -2,6 +2,7 @@
 Common functions that Nada DSL static analysis submodules can use to build
 interactive HTML reports.
 """
+
 # pylint: disable=wildcard-import,unused-wildcard-import,invalid-name
 from __future__ import annotations
 from typing import List, Tuple
@@ -13,9 +14,10 @@ import parsial
 try:
     from nada_dsl.audit.abstract import *
     from nada_dsl.audit.common import *
-except: # pylint: disable=bare-except # For Nada DSL Sandbox support.
+except:  # pylint: disable=bare-except # For Nada DSL Sandbox support.
     from abstract import *
     from common import *
+
 
 def parse(source: str) -> Tuple[asttokens.ASTTokens, List[int]]:
     """
@@ -23,98 +25,108 @@ def parse(source: str) -> Tuple[asttokens.ASTTokens, List[int]]:
     and return both its abstract syntax tree and a list of which lines
     were skipped by the partial parser due to syntax errors.
     """
-    lines = source.split('\n')
+    lines = source.split("\n")
     (_, slices) = parsial.parsial(ast.parse)(source)
     lines_ = [l[s] for (l, s) in zip(lines, slices)]
     skips = [i for i in range(len(lines)) if len(lines[i]) != len(lines_[i])]
-    return (asttokens.ASTTokens('\n'.join(lines_), parse=True), skips)
+    return (asttokens.ASTTokens("\n".join(lines_), parse=True), skips)
+
 
 def locations(report_, asttokens_, a):
     """
     Return the starting and ending locations corresponding to an :obj:`ast`
     node.
     """
-    ((start_line, start_column), (end_line, end_column)) = \
+    ((start_line, start_column), (end_line, end_column)) = (
         asttokens_.get_text_positions(a, True)
+    )
 
     # Skip any whitespace when determining the starting location.
     line = report_.lines[start_line - 1]
-    while line[start_column] == ' ' and start_column < len(line):
+    while line[start_column] == " " and start_column < len(line):
         start_column += 1
 
     return (
         richreports.location((start_line, start_column)),
-        richreports.location((end_line, end_column - 1))
+        richreports.location((end_line, end_column - 1)),
     )
+
 
 def type_to_str(t):
     """
     Convert a type and/or type error :obj:`ast` node attribute into a
     human-readable string.
     """
-    if hasattr(t, '__name__'):
-        if t.__name__ == 'list':
-            if hasattr(t, '__args__'):
-                return 'list[' + type_to_str(t.__args__[0]) + ']'
-            return 'list'
+    if hasattr(t, "__name__"):
+        if t.__name__ == "list":
+            if hasattr(t, "__args__"):
+                return "list[" + type_to_str(t.__args__[0]) + "]"
+            return "list"
 
         return str(t.__name__)
 
     if isinstance(t, TypeError):
-        return str('TypeError: ' + str(t))
+        return str("TypeError: " + str(t))
 
-    return str('TypeError: ' + 'type cannot be determined')
+    return str("TypeError: " + "type cannot be determined")
+
 
 def enrich_from_type(report_, type_, start, end):
     """
     Enrich a range within a report according to the supplied type attribute.
     """
-    if (
-        type_ in (
-            bool, int, str, range,
-            Party, Input, Output,
-            Integer, PublicInteger, SecretInteger,
-            Boolean, PublicBoolean, SecretBoolean
-        )
-        or
-        (
-            hasattr(type_, '__name__') and
-            type_.__name__ == 'list'
-        )
-    ):
+    if type_ in (
+        bool,
+        int,
+        str,
+        range,
+        Party,
+        Input,
+        Output,
+        Integer,
+        PublicInteger,
+        SecretInteger,
+        Boolean,
+        PublicBoolean,
+        SecretBoolean,
+    ) or (hasattr(type_, "__name__") and type_.__name__ == "list"):
         t_str = type_to_str(type_)
         report_.enrich(
-            start, end,
-            '<span class="types-' + t_str + '">', '</span>',
-            True,
-            True
+            start, end, '<span class="types-' + t_str + '">', "</span>", True, True
         )
 
     if isinstance(type_, (TypeError, TypeErrorRoot)):
         report_.enrich(
-            start, end,
-            '<span class="types-' + type_.__class__.__name__ + '">', '</span>',
+            start,
+            end,
+            '<span class="types-' + type_.__class__.__name__ + '">',
+            "</span>",
             True,
-            True
+            True,
         )
+
 
 def enrich_syntaxrestriction(report_, r, start, end):
     """
     Enrich a range within a report according to the supplied syntax restriction.
     """
     report_.enrich(
-        start, end,
-        '<span class="rules-SyntaxRestriction">', '</span>',
+        start,
+        end,
+        '<span class="rules-SyntaxRestriction">',
+        "</span>",
         enrich_intermediate_lines=True,
-        skip_whitespace=True
+        skip_whitespace=True,
     )
     report_.enrich(
-        start, end,
+        start,
+        end,
         '<span class="detail" data-detail="SyntaxRestriction: ' + str(r) + '">',
-        '</span>',
+        "</span>",
         enrich_intermediate_lines=True,
-        skip_whitespace=True
+        skip_whitespace=True,
     )
+
 
 def enrich_keyword(report_, start, length):
     """
@@ -122,11 +134,14 @@ def enrich_keyword(report_, start, length):
     """
     (start_line, start_column) = start
     report_.enrich(
-        (start_line, start_column), (start_line, start_column + length),
-        '<span class="keyword">', '</span>',
+        (start_line, start_column),
+        (start_line, start_column + length),
+        '<span class="keyword">',
+        "</span>",
         enrich_intermediate_lines=True,
-        skip_whitespace=True
+        skip_whitespace=True,
     )
+
 
 def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
     """
@@ -135,11 +150,11 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
     """
     # pylint: disable=too-many-statements,too-many-branches
     for a in ast.walk(atok.tree):
-        r = audits(a, 'rules')
-        t = audits(a, 'types')
+        r = audits(a, "rules")
+        t = audits(a, "types")
 
         if isinstance(a, (ast.Assign, ast.AnnAssign)):
-            target = a.targets[0] if hasattr(a, 'targets') else a.target
+            target = a.targets[0] if hasattr(a, "targets") else a.target
             (start, end) = locations(report_, atok, target)
             if isinstance(r, SyntaxRestriction):
                 enrich_syntaxrestriction(report_, r, start, end)
@@ -147,13 +162,15 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
                 enrich_from_type(report_, t, start, end)
                 t_str = (
                     type_to_str(t)
-                    if not isinstance(t, TypeError) else
-                    'TypeError: ' + str(t)
+                    if not isinstance(t, TypeError)
+                    else "TypeError: " + str(t)
                 )
                 report_.enrich(
-                    start, end,
-                    '<span class="detail" data-detail="' + t_str + '">', '</span>',
-                    True
+                    start,
+                    end,
+                    '<span class="detail" data-detail="' + t_str + '">',
+                    "</span>",
+                    True,
                 )
 
         elif isinstance(r, SyntaxRestriction):
@@ -161,7 +178,7 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
             enrich_syntaxrestriction(report_, r, start, end)
 
         elif isinstance(r, RuleInAncestor):
-            pass # This node will be wrapped by an ancestor's enrichment.
+            pass  # This node will be wrapped by an ancestor's enrichment.
 
         elif isinstance(a, ast.ImportFrom):
             (start, _) = locations(report_, atok, a)
@@ -173,11 +190,13 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
                 enrich_syntaxrestriction(report_, r, start, end)
             else:
                 enrich_keyword(report_, start, 6)
-                t = audits(a.value, 'types')
+                t = audits(a.value, "types")
                 report_.enrich(
-                    start, start + (0, 6),
-                    '<span class="detail" data-detail="' + type_to_str(t) + '">', '</span>',
-                    True
+                    start,
+                    start + (0, 6),
+                    '<span class="detail" data-detail="' + type_to_str(t) + '">',
+                    "</span>",
+                    True,
                 )
 
         elif isinstance(a, ast.For):
@@ -186,10 +205,12 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
             (_, start) = locations(report_, atok, a.target)
             (end, _) = locations(report_, atok, a.iter)
             report_.enrich(
-                start + (0, 1), end - (0, 1),
-                '<span class="keyword">', '</span>',
+                start + (0, 1),
+                end - (0, 1),
+                '<span class="keyword">',
+                "</span>",
                 enrich_intermediate_lines=True,
-                skip_whitespace=True
+                skip_whitespace=True,
             )
 
         elif isinstance(a, ast.FunctionDef):
@@ -205,10 +226,12 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
                 (_, start) = locations(report_, atok, generator.target)
                 (end, _) = locations(report_, atok, generator.iter)
                 report_.enrich(
-                    start + (0, 1), end - (0, 1),
-                    '<span class="keyword">', '</span>',
+                    start + (0, 1),
+                    end - (0, 1),
+                    '<span class="keyword">',
+                    "</span>",
                     enrich_intermediate_lines=True,
-                    skip_whitespace=True
+                    skip_whitespace=True,
                 )
 
         elif isinstance(a, ast.Call):
@@ -218,9 +241,11 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
                 start = start + (0, 1)
             enrich_from_type(report_, t, start, end)
             report_.enrich(
-                start, end,
-                '<span class="detail" data-detail="' + type_to_str(t) + '">', '</span>',
-                True
+                start,
+                end,
+                '<span class="detail" data-detail="' + type_to_str(t) + '">',
+                "</span>",
+                True,
             )
 
         elif isinstance(a, ast.BoolOp):
@@ -229,13 +254,15 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
                 (_, end) = locations(report_, atok, left)
                 (start, _) = locations(report_, atok, right)
                 (start, end) = (end + (0, 1), start - (0, 1))
-                report_.enrich(start, end, '<b>', '</b>', True, True)
+                report_.enrich(start, end, "<b>", "</b>", True, True)
                 enrich_from_type(report_, t, start, end)
                 report_.enrich(
-                    start, end,
-                    '<span class="detail" data-detail="' + type_to_str(t) + '">', '</span>',
+                    start,
+                    end,
+                    '<span class="detail" data-detail="' + type_to_str(t) + '">',
+                    "</span>",
                     True,
-                    True
+                    True,
                 )
 
         elif isinstance(a, ast.BinOp):
@@ -244,10 +271,12 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
             (start, end) = (end + (0, 1), start - (0, 1))
             enrich_from_type(report_, t, start, end)
             report_.enrich(
-                start, end,
-                '<span class="detail" data-detail="' + type_to_str(t) + '">', '</span>',
+                start,
+                end,
+                '<span class="detail" data-detail="' + type_to_str(t) + '">',
+                "</span>",
                 True,
-                True
+                True,
             )
 
         elif isinstance(a, ast.Compare):
@@ -256,10 +285,12 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
             (start, end) = (end + (0, 1), start - (0, 1))
             enrich_from_type(report_, t, start, end)
             report_.enrich(
-                start, end,
-                '<span class="detail" data-detail="' + type_to_str(t) + '">', '</span>',
+                start,
+                end,
+                '<span class="detail" data-detail="' + type_to_str(t) + '">',
+                "</span>",
                 True,
-                True
+                True,
             )
 
         elif isinstance(a, ast.UnaryOp):
@@ -268,11 +299,13 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
             end = end - (0, 2)
             enrich_from_type(report_, t, start, end)
             if isinstance(a.op, ast.Not):
-                report_.enrich(start, end, '<b>', '</b>', True)
+                report_.enrich(start, end, "<b>", "</b>", True)
             report_.enrich(
-                start, end,
-                '<span class="detail" data-detail="' + type_to_str(t) + '">', '</span>',
-                True
+                start,
+                end,
+                '<span class="detail" data-detail="' + type_to_str(t) + '">',
+                "</span>",
+                True,
             )
 
         elif isinstance(a, ast.Constant):
@@ -282,9 +315,11 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
             else:
                 enrich_from_type(report_, t, start, end)
                 report_.enrich(
-                    start, end,
-                    '<span class="detail" data-detail="' + type_to_str(t) + '">', '</span>',
-                    True
+                    start,
+                    end,
+                    '<span class="detail" data-detail="' + type_to_str(t) + '">',
+                    "</span>",
+                    True,
                 )
 
         elif isinstance(a, ast.Name):
@@ -295,16 +330,21 @@ def enrich_fromaudits(report_: richreports.report, atok) -> richreports.report:
                 if t is not None and not isinstance(t, TypeInParent):
                     enrich_from_type(report_, t, start, end)
                     report_.enrich(
-                        start, end,
-                        '<span class="detail" data-detail="' + type_to_str(t) + '">', '</span>',
-                        True
+                        start,
+                        end,
+                        '<span class="detail" data-detail="' + type_to_str(t) + '">',
+                        "</span>",
+                        True,
                     )
+
 
 def html(report: richreports.report) -> str:
     """
     Return a self-contained CSS/HTML document corresponding to a report.
     """
-    head = '    ' + '''
+    head = (
+        "    "
+        + """
     <style>
       body { font-family:Monospace; white-space;pre; }
       .keyword { font-weight:bold; color:#000000; }
@@ -337,9 +377,13 @@ def html(report: richreports.report) -> str:
         color:#FFFFFF;
       }
     </style>
-    '''.strip() + '\n'
+    """.strip()
+        + "\n"
+    )
 
-    script = '    ' + '''
+    script = (
+        "    "
+        + """
     <script>
       window.onload = function () {
         const elements = document.getElementsByClassName("detail");
@@ -363,16 +407,18 @@ def html(report: richreports.report) -> str:
         }
       };
     </script>
-    '''.strip() + '\n'
+    """.strip()
+        + "\n"
+    )
 
     return (
-        '<html>\n' +
-        '  <head>\n' + 
-        head +
-        '  </head>\n' +
-        '  <body>\n  <div id="detail"></div>\n' +
-        report.render() +
-        '\n  </body>\n' +
-        script +
-        '</html>\n'
+        "<html>\n"
+        + "  <head>\n"
+        + head
+        + "  </head>\n"
+        + '  <body>\n  <div id="detail"></div>\n'
+        + report.render()
+        + "\n  </body>\n"
+        + script
+        + "</html>\n"
     )

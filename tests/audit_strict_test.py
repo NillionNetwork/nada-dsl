@@ -1,9 +1,11 @@
 """
 Nada DSL audit component tests.
 """
+
 import richreports
 
 from nada_dsl.audit.strict import strict
+
 
 def test_strict_syntax():
     source = """
@@ -56,7 +58,8 @@ def nada_main():
 
     return [Output(value=new_int, party=party1, name="my_output")]
 """
-    assert(isinstance(strict(source), richreports.report))
+    assert isinstance(strict(source), richreports.report)
+
 
 def test_strict_functional():
     source = """
@@ -84,7 +87,8 @@ def nada_main():
       for c in range(4)
     ]
 """
-    assert(isinstance(strict(source), richreports.report))
+    assert isinstance(strict(source), richreports.report)
+
 
 def test_strict_imperative():
     source = """
@@ -121,4 +125,4 @@ def nada_main():
 
     return outputs
 """
-    assert(isinstance(strict(source), richreports.report))
+    assert isinstance(strict(source), richreports.report)

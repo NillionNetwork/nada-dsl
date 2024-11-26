@@ -42,6 +42,7 @@ dev-dependencies = [
     "tomli",
     "requests",
     "typing_extensions~=4.12.2",
+    "ruff>=0.8.0"
 ]
 
 [tool.uv.sources]
