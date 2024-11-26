@@ -2,20 +2,20 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-        "name": {
+        "c": {
             "type": "integer"
         },
         "a": {
             "type": "integer",
             "minimum": 0
         },
-        "email": {
+        "b": {
             "type": "integer"
         }
     },
     "required": [
-        "name",
-        "age"
+        "a",
+        "b"
     ],
     "additionalProperties": false
 }

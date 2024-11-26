@@ -112,7 +112,7 @@ class Reduce(Generic[T, R]):
         )
 
 
-class TupleType(DslType):
+class TupleType(NadaType):
     """Marker type for Tuples."""
 
     is_compound = True
@@ -175,7 +175,7 @@ def _generate_accessor(ty: Any, accessor: Any) -> DslType:
     return ty.instantiate(accessor)
 
 
-class NTupleType(DslType):
+class NTupleType(NadaType):
     """Marker type for NTuples."""
 
     is_compound = True
@@ -218,17 +218,8 @@ class NTuple(DslType):
             ),
         )
 
-    def setValues(self, values: List[DslType]):
-        child = (
-            NTupleNew(
-                child=values,
-                source_ref=SourceRef.back_frame(),
-            ),
-        )
-        self.__init__(child, values)
-
     def __getitem__(self, index: int) -> DslType:
-        if index >= len(self.values):
+        if index >= len(self.types):
             raise IndexError(f"Invalid index {index} for NTuple.")
 
         accessor = NTupleAccessor(
@@ -274,7 +265,7 @@ class NTupleAccessor:
         )
 
 
-class ObjectType(DslType):
+class ObjectType(NadaType):
     """Marker type for Objects."""
 
     is_compound = True
@@ -315,17 +306,8 @@ class Object(DslType):
             ),
         )
 
-    def setValues(self, values: Dict[str, DslType]):
-        child = (
-            ObjectNew(
-                child=values,
-                source_ref=SourceRef.back_frame(),
-            ),
-        )
-        self.__init__(child, values)
-
     def __getattr__(self, attr: str) -> DslType:
-        if "values" not in self.__dict__ or attr not in self.values:
+        if attr not in self.types:
             raise AttributeError(
                 f"'{self.__class__.__name__}' object has no attribute '{attr}'"
             )
@@ -373,95 +355,34 @@ class ObjectAccessor:
         )
 
 
-# def _process_schema(self: NadaType, index, key, schema_node):
-#     if "type" not in schema_node:
-#         raise TypeError("Missing 'type' in schema node")
-
-#     match schema_node["type"]:
-#         case "integer":
-#             if type(self) == NTuple:
-#                 accessor = NTupleAccessor(
-#                     index=index,
-#                     child=self,
-#                     source_ref=SourceRef.back_frame(),
-#                 )
-#             elif type(self) == Object:
-#                 accessor = ObjectAccessor(
-#                     key=key,
-#                     child=self,
-#                     source_ref=SourceRef.back_frame(),
-#                 )
-#             else:
-#                 raise TypeError(f"Unsupported 'self': {type(self)}")
-#             return PublicInteger(child=accessor)
-#         case "boolean":
-#             if type(self) == NTuple:
-#                 accessor = NTupleAccessor(
-#                     index=index,
-#                     child=self,
-#                     source_ref=SourceRef.back_frame(),
-#                 )
-#             elif type(self) == Object:
-#                 accessor = ObjectAccessor(
-#                     key=key,
-#                     child=self,
-#                     source_ref=SourceRef.back_frame(),
-#                 )
-#             else:
-#                 raise TypeError(f"Unsupported 'self': {type(self)}")
-#             return PublicBoolean(child=accessor)
-#         case "array":
-#             items_schema = schema_node.get("items")
-#             if items_schema is None:
-#                 raise TypeError("Array schema missing 'items'")
-#             ntuple = object.__new__(NTuple)
-#             values = []
-#             for index, item in enumerate(items_schema):
-#                 values.append(_process_schema(ntuple, index, 0, item))
-#             print(f"**** values: {values}")
-#             ntuple.setValues(values)
-#             return ntuple
-#         case "object":
-#             properties = schema_node.get("properties", {})
-#             values = {}
-#             obj = object.__new__(Object)
-#             for prop_name, prop_schema in properties.items():
-#                 values[prop_name] = _process_schema(obj, 0, prop_name, prop_schema)
-#             print(f"**** values: {values}")
-#             obj.setValues(values)
-#             return obj
-#         case _:
-#             raise TypeError(f"Unsupported type in schema: {schema_node['type']}")
-
-
 def _process_schema(schema_node):
     if "type" not in schema_node:
         raise TypeError("Missing 'type' in schema node")
 
     match schema_node["type"]:
         case "integer":
-            return PublicInteger(child=None)  # Placeholder for now
+            return PublicInteger(child=None)
         case "boolean":
-            return PublicBoolean(child=None)  # Placeholder for now
+            return PublicBoolean(child=None)
         case "array":
             items_schema = schema_node.get("items")
             if items_schema is None:
                 raise TypeError("Array schema missing 'items'")
             ntuple = NTuple.__new__(NTuple)
-            ntuple.values = []  # Placeholder
-            ntuple.child = None  # Placeholder
+            ntuple.types = []
+            ntuple.child = None
             for index, item_schema in enumerate(items_schema):
-                value = _process_schema(item_schema)
-                ntuple.values.append(value)
+                ty = _process_schema(item_schema)
+                ntuple.types.append(ty)
             return ntuple
         case "object":
             properties = schema_node.get("properties", {})
             obj = Object.__new__(Object)
-            obj.values = {}  # Placeholder
-            obj.child = None  # Placeholder
+            obj.types = {}
+            obj.child = None
             for key, prop_schema in properties.items():
-                value = _process_schema(prop_schema)
-                obj.values[key] = value
+                ty = _process_schema(prop_schema)
+                obj.types[key] = ty
             return obj
         case _:
             raise TypeError(f"Unsupported type in schema: {schema_node['type']}")
@@ -469,23 +390,23 @@ def _process_schema(schema_node):
 
 def _assign_accessors(parent):
     if isinstance(parent, NTuple):
-        for index, value in enumerate(parent.values):
+        for index, ty in enumerate(parent.types):
             accessor = NTupleAccessor(
                 index=index,
                 child=parent,
                 source_ref=SourceRef.back_frame(),
             )
-            value.child = accessor
-            _assign_accessors(value)
+            ty.child = accessor
+            _assign_accessors(ty)
     elif isinstance(parent, Object):
-        for key, value in parent.values.items():
+        for key, ty in parent.types.items():
             accessor = ObjectAccessor(
                 key=key,
                 child=parent,
                 source_ref=SourceRef.back_frame(),
             )
-            value.child = accessor
-            _assign_accessors(value)
+            ty.child = accessor
+            _assign_accessors(ty)
     else:
         # Base case: PublicInteger or PublicBoolean
         pass
@@ -507,10 +428,10 @@ class Document(Object):
             raise TypeError("Only objects are supported at the root")
 
         # result = _process_schema(self, 0, 0, schema)
-        result = _process_schema(schema)
-        _assign_accessors(result)
+        # result = _process_schema(schema)
+        # _assign_accessors(result)
 
-        super().__init__(child=child, types=result)
+        super().__init__(child=child, types={})  # TMP
 
 
 class Zip:
@@ -574,7 +495,7 @@ class InnerProduct:
         )
 
 
-class ArrayType(DslType):
+class ArrayType(NadaType):
     """Marker type for arrays."""
 
     is_compound = True
