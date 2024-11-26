@@ -332,7 +332,6 @@ def test_nada_function_using_inputs():
 
 
 def test_nada_function_call():
-
     c = create_input(SecretInteger, "c", "party", **{})
     d = create_input(SecretInteger, "c", "party", **{})
 
@@ -349,7 +348,6 @@ def test_nada_function_call():
 
 
 def test_nada_function_using_operations():
-
     c = create_input(SecretInteger, "c", "party", **{})
     d = create_input(SecretInteger, "d", "party", **{})
 

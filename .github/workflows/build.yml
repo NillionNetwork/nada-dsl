@@ -28,7 +28,8 @@ jobs:
           version: "0.4.24"
       - name: Install dependencies
         run: uv sync --all-extras --dev
-
+      - name: Format check
+        run: make format-check
       - name: Lint with pylint
         run: |
           uv run pylint nada_dsl/

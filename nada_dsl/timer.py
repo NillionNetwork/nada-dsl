@@ -1,8 +1,8 @@
 """
 Timer class
 
-This is a timer class used to measure the performance of different stages 
-in the compilation process.  
+This is a timer class used to measure the performance of different stages
+in the compilation process.
 """
 
 from dataclasses import dataclass

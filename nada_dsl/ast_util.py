@@ -1,4 +1,4 @@
-""" AST utilities."""
+"""AST utilities."""
 
 from abc import ABC
 from dataclasses import dataclass
@@ -94,7 +94,6 @@ class UnaryASTOperation(ASTOperation):
         return [self.child]
 
     def to_mir(self):
-
         return {
             self.name: {
                 "id": self.id,

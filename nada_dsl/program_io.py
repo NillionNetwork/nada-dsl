@@ -1,6 +1,6 @@
-"""Program Input Output utilities. 
+"""Program Input Output utilities.
 
-Define the types used for inputs and outputs in Nada programs. 
+Define the types used for inputs and outputs in Nada programs.
 
 """
 
