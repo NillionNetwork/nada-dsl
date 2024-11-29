@@ -8,6 +8,7 @@ from nada_dsl.ast_util import (
     AST_OPERATIONS,
     BinaryASTOperation,
     MapASTOperation,
+    TupleAccessorASTOperation,
     NTupleAccessorASTOperation,
     NewASTOperation,
     ObjectAccessorASTOperation,
@@ -130,6 +131,12 @@ class TupleType(NadaType):
         }
 
 
+def _generate_accessor(ty: Any, accessor: Any) -> DslType:
+    if hasattr(ty, "ty") and ty.ty.is_literal():  # TODO: fix
+        raise TypeError("Literals are not supported in accessors")
+    return ty.instantiate(accessor)
+
+
 @dataclass
 class Tuple(Generic[T, U], DslType):
     """The Tuple type"""
@@ -160,15 +167,59 @@ class Tuple(Generic[T, U], DslType):
         """Returns the generic type for this Tuple"""
         return TupleType(left_type=left_type, right_type=right_type)
 
+    @property
+    def left(self) -> DslType:
+        accessor = TupleAccessor(
+            index=0,
+            child=self,
+            source_ref=SourceRef.back_frame(),
+        )
+
+        return _generate_accessor(self.left_type, accessor)
+
+    @property
+    def right(self) -> DslType:
+        accessor = TupleAccessor(
+            index=1,
+            child=self,
+            source_ref=SourceRef.back_frame(),
+        )
+
+        return _generate_accessor(self.right_type, accessor)
+
     def type(self):
         """Metatype for Tuple"""
         return TupleType(self.left_type, self.right_type)
 
 
-def _generate_accessor(ty: Any, accessor: Any) -> DslType:
-    if hasattr(ty, "ty") and ty.ty.is_literal():  # TODO: fix
-        raise TypeError("Literals are not supported in accessors")
-    return ty.instantiate(accessor)
+@dataclass
+class TupleAccessor:
+    """Accessor for Tuple"""
+
+    child: Tuple
+    index: int
+    source_ref: SourceRef
+
+    def __init__(
+        self,
+        child: Tuple,
+        index: int,
+        source_ref: SourceRef,
+    ):
+        self.id = next_operation_id()
+        self.child = child
+        self.index = index
+        self.source_ref = source_ref
+
+    def store_in_ast(self, ty: object):
+        """Store this accessor in the AST."""
+        AST_OPERATIONS[self.id] = TupleAccessorASTOperation(
+            id=self.id,
+            source=self.child.child.id,
+            index=self.index,
+            source_ref=self.source_ref,
+            ty=ty,
+        )
 
 
 class NTupleType(NadaType):
