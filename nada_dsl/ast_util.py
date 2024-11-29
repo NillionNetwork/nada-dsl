@@ -378,6 +378,28 @@ class CastASTOperation(ASTOperation):
 
 
 @dataclass
+class TupleAccessorASTOperation(ASTOperation):
+    """AST representation of a tuple accessor operation."""
+
+    index: int
+    source: int
+
+    def child_operations(self):
+        return [self.source]
+
+    def to_mir(self):
+        return {
+            "TupleAccessor": {
+                "id": self.id,
+                "index": self.index,
+                "source": self.source,
+                "type": self.ty,
+                "source_ref_index": self.source_ref.to_index(),
+            }
+        }
+
+
+@dataclass
 class NTupleAccessorASTOperation(ASTOperation):
     """AST representation of a n tuple accessor operation."""
 
