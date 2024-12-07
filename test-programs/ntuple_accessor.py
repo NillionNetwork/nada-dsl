@@ -9,16 +9,23 @@ def nada_main():
     array = Array.new(my_int1, my_int1)
 
     # Store a scalar, a compound type and a literal.
-    tuple = NTuple.new([my_int1, array, Integer(42)])
+    tup = NTuple.new([my_int1, array, my_int2])
 
-    scalar = tuple[0]
-    array = tuple[1]
-    literal = tuple[2]
+    scalar = tup[0]
+    array = tup[1]
+    scalar2 = tup[2]
 
-    @nada_fn
-    def add(a: PublicInteger) -> PublicInteger:
-        return a + my_int2
+    def add(acc: PublicInteger, a: PublicInteger) -> PublicInteger:
+        return a + acc
 
-    sum = array.reduce(add, Integer(0))
+    result = array.reduce(add, my_int1)
 
-    return [Output(scalar + literal + sum, "my_output", party1)]
+    scalar_sum = scalar + scalar2
+
+    final = result + scalar_sum
+
+    return [Output(final, "my_output", party1)]
+
+
+if __name__ == "__main__":
+    nada_main()

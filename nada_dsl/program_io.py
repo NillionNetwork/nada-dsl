@@ -15,11 +15,11 @@ from nada_dsl.ast_util import (
 )
 from nada_dsl.errors import InvalidTypeError
 from nada_dsl.nada_types import AllTypes, Party
-from nada_dsl.nada_types import NadaType
+from nada_dsl.nada_types import DslType
 from nada_dsl.source_ref import SourceRef
 
 
-class Input(NadaType):
+class Input(DslType):
     """
     Represents an input to the computation.
 
@@ -55,7 +55,8 @@ class Input(NadaType):
         )
 
 
-class Literal(NadaType):
+@dataclass
+class Literal(DslType):
     """
     Represents a literal value.
 
@@ -102,7 +103,7 @@ class Output:
 
     def __init__(self, child, name, party):
         self.source_ref = SourceRef.back_frame()
-        if not issubclass(type(child), NadaType):
+        if not issubclass(type(child), DslType):
             raise InvalidTypeError(
                 f"{self.source_ref.file}:{self.source_ref.lineno}: Output value "
                 f"{child} of type {type(child)} is not "

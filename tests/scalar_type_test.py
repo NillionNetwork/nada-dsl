@@ -7,6 +7,7 @@ import pytest
 from nada_dsl import Input, Party
 from nada_dsl.nada_types import BaseType, Mode
 from nada_dsl.nada_types.scalar_types import (
+    BooleanDslType,
     Integer,
     PublicInteger,
     SecretInteger,
@@ -16,7 +17,7 @@ from nada_dsl.nada_types.scalar_types import (
     UnsignedInteger,
     PublicUnsignedInteger,
     SecretUnsignedInteger,
-    ScalarType,
+    ScalarDslType,
     BooleanType,
 )
 
@@ -119,7 +120,9 @@ binary_arithmetic_operations = (
 
 
 @pytest.mark.parametrize("left, right, operation", binary_arithmetic_operations)
-def test_binary_arithmetic_operations(left: ScalarType, right: ScalarType, operation):
+def test_binary_arithmetic_operations(
+    left: ScalarDslType, right: ScalarDslType, operation
+):
     result = operation(left, right)
     assert result.base_type, left.base_type
     assert result.base_type, right.base_type
@@ -136,7 +139,7 @@ allowed_pow_operands = (
 
 
 @pytest.mark.parametrize("left, right", allowed_pow_operands)
-def test_pow(left: ScalarType, right: ScalarType):
+def test_pow(left: ScalarDslType, right: ScalarDslType):
     result = left**right
     assert result.base_type, left.base_type
     assert result.base_type, right.base_type
@@ -161,7 +164,7 @@ allowed_shift_operands = (
 
 
 @pytest.mark.parametrize("left, right, operation", allowed_shift_operands)
-def test_shift(left: ScalarType, right: ScalarType, operation):
+def test_shift(left: ScalarDslType, right: ScalarDslType, operation):
     result = operation(left, right)
     assert result.base_type, left.base_type
     assert result.mode, left.mode
@@ -188,7 +191,9 @@ binary_relational_operations = (
 
 
 @pytest.mark.parametrize("left, right, operation", binary_relational_operations)
-def test_binary_relational_operations(left: ScalarType, right: ScalarType, operation):
+def test_binary_relational_operations(
+    left: ScalarDslType, right: ScalarDslType, operation
+):
     result = operation(left, right)
     assert result.base_type, BaseType.BOOLEAN
     assert result.mode.value, max([left.mode.value, right.mode.value])
@@ -206,7 +211,7 @@ equals_operations = (
 
 
 @pytest.mark.parametrize("left, right, operation", equals_operations)
-def test_equals_operations(left: ScalarType, right: ScalarType, operation):
+def test_equals_operations(left: ScalarDslType, right: ScalarDslType, operation):
     result = operation(left, right)
     assert result.base_type, BaseType.BOOLEAN
     assert result.mode.value, max([left.mode.value, right.mode.value])
@@ -253,7 +258,7 @@ binary_logic_operations = combine_lists(
 
 
 @pytest.mark.parametrize("left, right, operation", binary_logic_operations)
-def test_logic_operations(left: BooleanType, right: BooleanType, operation):
+def test_logic_operations(left: BooleanDslType, right: BooleanDslType, operation):
     result = operation(left, right)
     assert result.base_type, BaseType.BOOLEAN
     assert result.mode.value, max([left.mode.value, right.mode.value])
@@ -317,7 +322,7 @@ if_else_operands = (
 
 
 @pytest.mark.parametrize("condition, left, right", if_else_operands)
-def test_if_else(condition: BooleanType, left: ScalarType, right: ScalarType):
+def test_if_else(condition: BooleanType, left: ScalarDslType, right: ScalarDslType):
     result = condition.if_else(left, right)
     assert left.base_type == right.base_type
     assert result.base_type == left.base_type
@@ -525,7 +530,7 @@ not_allowed_if_else_operands = (
 
 
 @pytest.mark.parametrize("condition, left, right", not_allowed_if_else_operands)
-def test_if_else(condition: BooleanType, left: ScalarType, right: ScalarType):
+def test_if_else(condition: BooleanType, left: ScalarDslType, right: ScalarDslType):
     with pytest.raises(Exception) as invalid_operation:
         condition.if_else(left, right)
     assert invalid_operation.type == TypeError

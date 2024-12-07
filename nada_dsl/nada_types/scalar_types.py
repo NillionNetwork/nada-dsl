@@ -1,13 +1,14 @@
 # pylint:disable=W0401,W0614
 """The Nada Scalar type definitions."""
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Union, TypeVar
 from typing_extensions import Self
 from nada_dsl.operations import *
 from nada_dsl.program_io import Literal
 from nada_dsl import SourceRef
-from . import NadaType, Mode, BaseType, OperationType
+from . import DslType, Mode, BaseType, OperationType
 
 # Constant dictionary that stores all the Nada types and is use to
 # convert from the (mode, base_type) representation to the concrete Nada type
@@ -46,7 +47,7 @@ SCALAR_TYPES: dict[tuple[Mode, BaseType], type[AnyScalarType]] = {}
 AnyBoolean = Union["Boolean", "PublicBoolean", "SecretBoolean"]
 
 
-class ScalarType(NadaType):
+class ScalarDslType(DslType):
     """The Nada Scalar type.
     This is the super class for all scalar types in Nada.
     These are:
@@ -82,7 +83,7 @@ class ScalarType(NadaType):
 
 
 def equals_operation(
-    operation, operator, left: ScalarType, right: ScalarType, f
+    operation, operator, left: ScalarDslType, right: ScalarDslType, f
 ) -> AnyBoolean:
     """This function is an abstraction for the equality operations"""
     base_type = left.base_type
@@ -122,7 +123,7 @@ def new_scalar_type(mode: Mode, base_type: BaseType) -> type[AnyScalarType]:
     return SCALAR_TYPES[(mode, base_type)]
 
 
-class NumericType(ScalarType):
+class NumericDslType(ScalarDslType):
     """The superclass of all the numeric types in Nada:
     - Integer, PublicInteger, SecretInteger
     - UnsignedInteger, PublicUnsignedInteger, SecretUnsignedInteger
@@ -213,8 +214,8 @@ class NumericType(ScalarType):
 
 
 def binary_arithmetic_operation(
-    operation, operator, left: ScalarType, right: ScalarType, f
-) -> ScalarType:
+    operation, operator, left: ScalarDslType, right: ScalarDslType, f
+) -> ScalarDslType:
     """This function is an abstraction for the binary arithmetic operations.
 
     Arithmetic operations apply to Numeric types only in Nada."""
@@ -233,8 +234,8 @@ def binary_arithmetic_operation(
 
 
 def shift_operation(
-    operation, operator, left: ScalarType, right: ScalarType, f
-) -> ScalarType:
+    operation, operator, left: ScalarDslType, right: ScalarDslType, f
+) -> ScalarDslType:
     """This function is an abstraction for the shift operations"""
     base_type = left.base_type
     right_base_type = right.base_type
@@ -255,7 +256,7 @@ def shift_operation(
 
 
 def binary_relational_operation(
-    operation, operator, left: ScalarType, right: ScalarType, f
+    operation, operator, left: ScalarDslType, right: ScalarDslType, f
 ) -> AnyBoolean:
     """This function is an abstraction for the binary relational operations"""
     base_type = left.base_type
@@ -272,7 +273,9 @@ def binary_relational_operation(
             return new_scalar_type(mode, BaseType.BOOLEAN)(child)  # type: ignore
 
 
-def public_equals_operation(left: ScalarType, right: ScalarType) -> "PublicBoolean":
+def public_equals_operation(
+    left: ScalarDslType, right: ScalarDslType
+) -> "PublicBoolean":
     """This function is an abstraction for the public_equals operation for all types."""
     base_type = left.base_type
     if base_type != right.base_type:
@@ -287,7 +290,7 @@ def public_equals_operation(left: ScalarType, right: ScalarType) -> "PublicBoole
     )
 
 
-class BooleanType(ScalarType):
+class BooleanDslType(ScalarDslType):
     """This abstraction represents all boolean types:
     - Boolean, PublicBoolean, SecretBoolean
     It provides common operation implementations for all the boolean types, defined above.
@@ -327,8 +330,8 @@ class BooleanType(ScalarType):
 
 
 def binary_logical_operation(
-    operation, operator, left: ScalarType, right: ScalarType, f
-) -> ScalarType:
+    operation, operator, left: ScalarDslType, right: ScalarDslType, f
+) -> ScalarDslType:
     """This function is an abstraction for the logical operations."""
     base_type = left.base_type
     if base_type != right.base_type or not base_type == BaseType.BOOLEAN:
@@ -348,8 +351,42 @@ def binary_logical_operation(
     return SecretBoolean(child=operation)
 
 
+class NadaType(ABC):
+    """Abstract meta type"""
+
+    is_constant = False
+    is_scalar = False
+    is_compound = False
+
+    @abstractmethod
+    def instantiate(self, child_or_value):
+        """Creates a value corresponding to this meta type"""
+
+    @abstractmethod
+    def to_mir(self):
+        """Returns a MIR representation of this meta type"""
+
+
+class TypePassthroughMixin(NadaType):
+    """Mixin for meta types"""
+
+    def instantiate(self, child_or_value):
+        """Creates a value corresponding to this meta type"""
+        return self.ty(child_or_value)
+
+    def to_mir(self):
+        name = self.ty.__name__
+        # Rename public variables so they are considered as the same as literals.
+        if name.startswith("Public"):
+            name = name[len("Public") :].lstrip()
+
+        if name.endswith("Type"):
+            name = name[: -len("Type")].rstrip()
+        return name
+
+
 @register_scalar_type(Mode.CONSTANT, BaseType.INTEGER)
-class Integer(NumericType):
+class Integer(NumericDslType):
     """The Nada Integer type.
 
     Represents a constant (literal) integer."""
@@ -364,16 +401,27 @@ class Integer(NumericType):
         self.value = value
 
     def __eq__(self, other) -> AnyBoolean:
-        return ScalarType.__eq__(self, other)
+        return ScalarDslType.__eq__(self, other)
 
     @classmethod
     def is_literal(cls) -> bool:
         return True
 
+    def type(self):
+        return IntegerType()
+
+
+class IntegerType(TypePassthroughMixin):
+    """Meta type for integers"""
+
+    ty = Integer
+    is_constant = True
+    is_scalar = True
+
 
 @dataclass
 @register_scalar_type(Mode.CONSTANT, BaseType.UNSIGNED_INTEGER)
-class UnsignedInteger(NumericType):
+class UnsignedInteger(NumericDslType):
     """The Nada Unsigned Integer type.
 
     Represents a constant (literal) unsigned integer."""
@@ -390,15 +438,26 @@ class UnsignedInteger(NumericType):
         self.value = value
 
     def __eq__(self, other) -> AnyBoolean:
-        return ScalarType.__eq__(self, other)
+        return ScalarDslType.__eq__(self, other)
 
     @classmethod
     def is_literal(cls) -> bool:
         return True
 
+    def type(self):
+        return UnsignedIntegerType()
+
+
+class UnsignedIntegerType(TypePassthroughMixin):
+    """Meta type for unsigned integers"""
+
+    ty = UnsignedInteger
+    is_constant = True
+    is_scalar = True
+
 
 @register_scalar_type(Mode.CONSTANT, BaseType.BOOLEAN)
-class Boolean(BooleanType):
+class Boolean(BooleanDslType):
     """The Nada Boolean type.
 
     Represents a constant (literal) boolean."""
@@ -418,7 +477,7 @@ class Boolean(BooleanType):
         return self.value
 
     def __eq__(self, other) -> AnyBoolean:
-        return ScalarType.__eq__(self, other)
+        return ScalarDslType.__eq__(self, other)
 
     def __invert__(self: "Boolean") -> "Boolean":
         return Boolean(value=bool(not self.value))
@@ -427,19 +486,30 @@ class Boolean(BooleanType):
     def is_literal(cls) -> bool:
         return True
 
+    def type(self):
+        return BooleanType()
+
+
+class BooleanType(TypePassthroughMixin):
+    """Meta type for booleans"""
+
+    ty = Boolean
+    is_constant = True
+    is_scalar = True
+
 
 @register_scalar_type(Mode.PUBLIC, BaseType.INTEGER)
-class PublicInteger(NumericType):
+class PublicInteger(NumericDslType):
     """The Nada Public Unsigned Integer type.
 
     Represents a public unsigned integer in a program. This is a public variable
     evaluated at runtime."""
 
-    def __init__(self, child: NadaType):
+    def __init__(self, child: DslType):
         super().__init__(child, BaseType.INTEGER, Mode.PUBLIC)
 
     def __eq__(self, other) -> AnyBoolean:
-        return ScalarType.__eq__(self, other)
+        return ScalarDslType.__eq__(self, other)
 
     def public_equals(
         self, other: Union["PublicInteger", "SecretInteger"]
@@ -447,19 +517,29 @@ class PublicInteger(NumericType):
         """Implementation of public equality for Public integer types."""
         return public_equals_operation(self, other)
 
+    def type(self):
+        return PublicIntegerType()
+
+
+class PublicIntegerType(TypePassthroughMixin):
+    """Meta type for public integers"""
+
+    ty = PublicInteger
+    is_scalar = True
+
 
 @register_scalar_type(Mode.PUBLIC, BaseType.UNSIGNED_INTEGER)
-class PublicUnsignedInteger(NumericType):
+class PublicUnsignedInteger(NumericDslType):
     """The Nada Public Integer type.
 
     Represents a public integer in a program. This is a public variable
     evaluated at runtime."""
 
-    def __init__(self, child: NadaType):
+    def __init__(self, child: DslType):
         super().__init__(child, BaseType.UNSIGNED_INTEGER, Mode.PUBLIC)
 
     def __eq__(self, other) -> AnyBoolean:
-        return ScalarType.__eq__(self, other)
+        return ScalarDslType.__eq__(self, other)
 
     def public_equals(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger"]
@@ -467,20 +547,30 @@ class PublicUnsignedInteger(NumericType):
         """Implementation of public equality for Public unsigned integer types."""
         return public_equals_operation(self, other)
 
+    def type(self):
+        return PublicUnsignedIntegerType()
+
+
+class PublicUnsignedIntegerType(TypePassthroughMixin):
+    """Meta type for public unsigned integers"""
+
+    ty = PublicUnsignedInteger
+    is_scalar = True
+
 
 @dataclass
 @register_scalar_type(Mode.PUBLIC, BaseType.BOOLEAN)
-class PublicBoolean(BooleanType):
+class PublicBoolean(BooleanDslType):
     """The Nada Public Boolean type.
 
     Represents a public boolean in a program. This is a public variable
     evaluated at runtime."""
 
-    def __init__(self, child: NadaType):
+    def __init__(self, child: DslType):
         super().__init__(child, BaseType.BOOLEAN, Mode.PUBLIC)
 
     def __eq__(self, other) -> AnyBoolean:
-        return ScalarType.__eq__(self, other)
+        return ScalarDslType.__eq__(self, other)
 
     def __invert__(self: "PublicBoolean") -> "PublicBoolean":
         operation = Not(this=self, source_ref=SourceRef.back_frame())
@@ -492,17 +582,27 @@ class PublicBoolean(BooleanType):
         """Implementation of public equality for Public boolean types."""
         return public_equals_operation(self, other)
 
+    def type(self):
+        return PublicBooleanType()
+
+
+class PublicBooleanType(TypePassthroughMixin):
+    """Meta type for public booleans"""
+
+    ty = PublicBoolean
+    is_scalar = True
+
 
 @dataclass
 @register_scalar_type(Mode.SECRET, BaseType.INTEGER)
-class SecretInteger(NumericType):
+class SecretInteger(NumericDslType):
     """The Nada secret integer type."""
 
-    def __init__(self, child: NadaType):
+    def __init__(self, child: DslType):
         super().__init__(child, BaseType.INTEGER, Mode.SECRET)
 
     def __eq__(self, other) -> AnyBoolean:
-        return ScalarType.__eq__(self, other)
+        return ScalarDslType.__eq__(self, other)
 
     def public_equals(
         self, other: Union["PublicInteger", "SecretInteger"]
@@ -537,17 +637,27 @@ class SecretInteger(NumericType):
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
         return PublicInteger(child=operation)
 
+    def type(self):
+        return SecretIntegerType()
+
+
+class SecretIntegerType(TypePassthroughMixin):
+    """Meta type for secret integers"""
+
+    ty = SecretInteger
+    is_scalar = True
+
 
 @dataclass
 @register_scalar_type(Mode.SECRET, BaseType.UNSIGNED_INTEGER)
-class SecretUnsignedInteger(NumericType):
+class SecretUnsignedInteger(NumericDslType):
     """The Nada Secret Unsigned integer type."""
 
-    def __init__(self, child: NadaType):
+    def __init__(self, child: DslType):
         super().__init__(child, BaseType.UNSIGNED_INTEGER, Mode.SECRET)
 
     def __eq__(self, other) -> AnyBoolean:
-        return ScalarType.__eq__(self, other)
+        return ScalarDslType.__eq__(self, other)
 
     def public_equals(
         self, other: Union["PublicUnsignedInteger", "SecretUnsignedInteger"]
@@ -584,17 +694,27 @@ class SecretUnsignedInteger(NumericType):
         operation = Reveal(this=self, source_ref=SourceRef.back_frame())
         return PublicUnsignedInteger(child=operation)
 
+    def type(self):
+        return SecretUnsignedIntegerType()
+
+
+class SecretUnsignedIntegerType(TypePassthroughMixin):
+    """Meta type for secret unsigned integers"""
+
+    ty = SecretUnsignedInteger
+    is_scalar = True
+
 
 @dataclass
 @register_scalar_type(Mode.SECRET, BaseType.BOOLEAN)
-class SecretBoolean(BooleanType):
+class SecretBoolean(BooleanDslType):
     """The SecretBoolean Nada MIR type."""
 
-    def __init__(self, child: NadaType):
+    def __init__(self, child: DslType):
         super().__init__(child, BaseType.BOOLEAN, Mode.SECRET)
 
     def __eq__(self, other) -> AnyBoolean:
-        return ScalarType.__eq__(self, other)
+        return ScalarDslType.__eq__(self, other)
 
     def __invert__(self: "SecretBoolean") -> "SecretBoolean":
         operation = Not(this=self, source_ref=SourceRef.back_frame())
@@ -610,25 +730,53 @@ class SecretBoolean(BooleanType):
         """Generate a random secret boolean."""
         return SecretBoolean(child=Random(source_ref=SourceRef.back_frame()))
 
+    def type(self):
+        return SecretBooleanType()
+
+
+class SecretBooleanType(TypePassthroughMixin):
+    """Meta type for secret booleans"""
+
+    ty = SecretBoolean
+    is_scalar = True
+
 
 @dataclass
-class EcdsaSignature(NadaType):
+class EcdsaSignature(DslType):
     """The EcdsaSignature Nada MIR type."""
 
     def __init__(self, child: OperationType):
         super().__init__(child=child)
 
+    def type(self):
+        return EcdsaSignatureType()
+
+
+class EcdsaSignatureType(TypePassthroughMixin):
+    """Meta type for EcdsaSignatures"""
+
+    ty = EcdsaSignature
+
 
 @dataclass
-class EcdsaDigestMessage(NadaType):
+class EcdsaDigestMessage(DslType):
     """The EcdsaDigestMessage Nada MIR type."""
 
     def __init__(self, child: OperationType):
         super().__init__(child=child)
 
+    def type(self):
+        return EcdsaDigestMessageType()
+
+
+class EcdsaDigestMessageType(TypePassthroughMixin):
+    """Meta type for EcdsaDigestMessages"""
+
+    ty = EcdsaDigestMessage
+
 
 @dataclass
-class EcdsaPrivateKey(NadaType):
+class EcdsaPrivateKey(DslType):
     """The EcdsaPrivateKey Nada MIR type."""
 
     def __init__(self, child: OperationType):
@@ -639,3 +787,12 @@ class EcdsaPrivateKey(NadaType):
         return EcdsaSignature(
             child=EcdsaSign(left=self, right=digest, source_ref=SourceRef.back_frame())
         )
+
+    def type(self):
+        return EcdsaPrivateKeyType()
+
+
+class EcdsaPrivateKeyType(TypePassthroughMixin):
+    """Meta type for EcdsaPrivateKeys"""
+
+    ty = EcdsaPrivateKey
