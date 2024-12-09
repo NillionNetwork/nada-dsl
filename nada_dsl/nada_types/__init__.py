@@ -121,7 +121,7 @@ class NadaType:
     In Nada, all the types wrap Operations. For instance, an addition between two integers
     is represented like this SecretInteger(child=Addition(...)).
 
-    In MIR, the representation is based around operations. A MIR operation points to other
+    In MIR, the representation is based on operations. A MIR operation points to other
     operations and has a return type.
 
     To aid MIR conversion, we store in memory (`AST_OPERATIONS`) all the operations in a
@@ -154,7 +154,7 @@ class NadaType:
     def class_to_mir(cls) -> str:
         """Converts a class into a MIR Nada type."""
         name = cls.__name__
-        # Rename public variables so they are considered as the same as literals.
+        # Rename public variables so they are considered the same as literals.
         if name.startswith("Public"):
             name = name[len("Public") :].lstrip()
         return name

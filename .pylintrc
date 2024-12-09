@@ -34,7 +34,7 @@ extension-pkg-allow-list=
 extension-pkg-whitelist=
 
 # Return non-zero exit code if any of these messages/categories are detected,
-# even if score is above --fail-under value. Syntax same as enable. Messages
+# even if the score is above --fail-under value. Syntax same as enable. Messages
 # specified are enabled, while categories only check already-enabled messages.
 fail-on=
 
@@ -48,7 +48,7 @@ fail-under=10
 # Files or directories to be skipped. They should be base names, not paths.
 ignore=CVS
 
-# Add files or directories matching the regular expressions patterns to the
+# Add files or directories matching the regular expression patterns to the
 # ignore-list. The regex matches against paths and can be in Posix or Windows
 # format. Because '\\' represents the directory delimiter on Windows systems,
 # it can't be used as an escape character.
@@ -293,7 +293,7 @@ max-attributes=7
 # Maximum number of boolean expressions in an if statement (see R0916).
 max-bool-expr=5
 
-# Maximum number of branch for function / method body.
+# Maximum number of branches for function / method body.
 max-branches=12
 
 # Maximum number of locals for function / method body.
@@ -417,8 +417,8 @@ confidence=HIGH,
 # option multiple times (only on the command line, not in the configuration
 # file where it should appear only once). You can also use "--disable=all" to
 # disable everything first and then re-enable specific checks. For example, if
-# you want to run only the similarities checker, you can use "--disable=all
-# --enable=similarities". If you want to run only the classes checker, but have
+# If you want to run only the similarities checker, you can use "--disable=all
+# --enable=similarities". If you want to run only the classes checker but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
 disable=raw-checker-failed,
@@ -435,8 +435,8 @@ disable=raw-checker-failed,
         W0223,W0718,R0903,R0913,R0801,R0401,W0231,W0603
 
 # Enable the message, report, category or checker with the given id(s). You can
-# either give multiple identifier separated by comma (,) or put this option
-# multiple time (only on the command line, not in the configuration file where
+# either give multiple identifiers separated by comma (,) or put this option
+# multiple times (only on the command line, not in the configuration file where
 # it should appear only once). See also the "--disable" option for examples.
 enable=
 
@@ -464,7 +464,7 @@ notes-rgx=
 # Maximum number of nested blocks for function / method body
 max-nested-blocks=5
 
-# Complete name of functions that never returns. When checking for
+# Complete name of functions that never return. When checking for
 # inconsistent-return-statements if a never returning function is called then
 # it will be considered as an explicit return statement and no message will be
 # printed.
@@ -616,7 +616,7 @@ allow-global-unused-variables=yes
 # List of names allowed to shadow builtins
 allowed-redefined-builtins=
 
-# List of strings which can identify a callback function by name. A callback
+# List of strings that can identify a callback function by name. A callback
 # name must start or end with one of those strings.
 callbacks=cb_,
           _cb

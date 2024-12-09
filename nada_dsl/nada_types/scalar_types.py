@@ -9,7 +9,7 @@ from nada_dsl.program_io import Literal
 from nada_dsl import SourceRef
 from . import NadaType, Mode, BaseType, OperationType
 
-# Constant dictionary that stores all the Nada types and is use to
+# Constant dictionary that stores all the Nada types and is used to
 # convert from the (mode, base_type) representation to the concrete Nada type
 # (Integer, SecretBoolean,...)
 

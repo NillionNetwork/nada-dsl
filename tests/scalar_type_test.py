@@ -168,7 +168,7 @@ def test_shift(left: ScalarType, right: ScalarType, operation):
 
 
 # Binary relational operations.
-# Equals and NotEquals are not included, because they accept by the Boolean types as well
+# Equals and NotEquals are not included, because they are accepted by the Boolean types as well
 binary_relational_functions = [
     lambda lhs, rhs: lhs < rhs,
     lambda lhs, rhs: lhs > rhs,
@@ -409,7 +409,7 @@ def test_not_allowed_pow(left, right):
     assert invalid_operation.type == TypeError
 
 
-# List of operands that the shift operation do not accept.
+# List of operands that the shift operation does not accept.
 not_allowed_shift = (
     combine_lists(combine_lists(booleans, booleans), shift_functions)
     + combine_lists(combine_lists(integers, booleans), shift_functions)
