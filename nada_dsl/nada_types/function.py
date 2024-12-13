@@ -6,7 +6,6 @@ Nada function definitions and utilities.
 import inspect
 from dataclasses import dataclass
 from typing import Generic, List, Callable
-from copy import copy
 from nada_dsl import SourceRef
 from nada_dsl.ast_util import (
     AST_OPERATIONS,
@@ -16,9 +15,7 @@ from nada_dsl.ast_util import (
     next_operation_id,
 )
 from nada_dsl.nada_types.generics import T, R
-from nada_dsl.nada_types import Mode, NadaType
-from nada_dsl.nada_types.scalar_types import ScalarType
-from nada_dsl.errors import NotAllowedException
+from nada_dsl.nada_types import DslType
 
 
 class NadaFunctionArg(Generic[T]):
@@ -53,8 +50,6 @@ class NadaFunction(Generic[T, R]):
 
     Represents a Nada Function. Nada functions are special types of functions that are used
     in map / reduce operations.
-
-    They are decorated using the `@nada_fn` decorator.
     """
 
     id: int
@@ -70,22 +65,8 @@ class NadaFunction(Generic[T, R]):
         function: Callable[[T], R],
         return_type: R,
         source_ref: SourceRef,
-        child: NadaType,
+        child: DslType,
     ):
-        if issubclass(return_type, ScalarType) and return_type.mode == Mode.CONSTANT:
-            raise NotAllowedException(
-                "Nada functions with literal return types are not allowed"
-            )
-        # Nada functions with literal argument types are not supported.
-        # This is because the compiler consolidates operations between literals.
-        if all(
-            issubclass(arg.type.__class__, ScalarType)
-            and arg.type.mode == Mode.CONSTANT
-            for arg in args
-        ):
-            raise NotAllowedException(
-                "Nada functions with literal argument types are not allowed"
-            )
         self.child = child
         self.id = function_id
         self.args = args
@@ -101,7 +82,7 @@ class NadaFunction(Generic[T, R]):
             name=self.function.__name__,
             args=[arg.id for arg in self.args],
             id=self.id,
-            ty=self.return_type.class_to_mir(),
+            ty=self.return_type.to_mir(),
             source_ref=self.source_ref,
             child=self.child.child.id,
         )
@@ -117,7 +98,7 @@ class NadaFunctionCall(Generic[R]):
     """Represents a call to a Nada Function."""
 
     fn: NadaFunction
-    args: List[NadaType]
+    args: List[DslType]
     source_ref: SourceRef
 
     def __init__(self, nada_function, args, source_ref):
@@ -125,7 +106,7 @@ class NadaFunctionCall(Generic[R]):
         self.args = args
         self.fn = nada_function
         self.source_ref = source_ref
-        self.store_in_ast(nada_function.return_type.class_to_mir())
+        self.store_in_ast(nada_function.return_type.type().to_mir())
 
     def store_in_ast(self, ty):
         """Store this function call in the AST."""
@@ -138,20 +119,7 @@ class NadaFunctionCall(Generic[R]):
         )
 
 
-def contained_types(ty):
-    """Utility function that calculates the child type for a function argument."""
-
-    origin_ty = getattr(ty, "__origin__", ty)
-    if not issubclass(origin_ty, ScalarType):
-        inner_ty = getattr(ty, "__args__", None)
-        inner_ty = contained_types(inner_ty[0]) if inner_ty else T
-        return origin_ty.init_as_template_type(inner_ty)
-    if origin_ty.mode == Mode.CONSTANT:
-        return origin_ty(value=0)
-    return origin_ty(child=None)
-
-
-def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
+def create_nada_fn(fn, args_ty) -> NadaFunction[T, R]:
     """
     Can be used also for lambdas
     ```python
@@ -165,28 +133,21 @@ def nada_fn(fn, args_ty=None, return_ty=None) -> NadaFunction[T, R]:
     args = inspect.getfullargspec(fn)
     nada_args = []
     function_id = next_operation_id()
-    for arg in args.args:
-        arg_type = args_ty[arg] if args_ty else args.annotations[arg]
-        arg_type = contained_types(arg_type)
+    nada_args_type_wrapped = []
+    for arg, arg_ty in zip(args.args, args_ty):
         # We'll get the function source ref for now
         nada_arg = NadaFunctionArg(
             function_id,
             name=arg,
-            arg_type=arg_type,
+            arg_type=arg_ty,
             source_ref=SourceRef.back_frame(),
         )
         nada_args.append(nada_arg)
-
-    nada_args_type_wrapped = []
-
-    for arg in nada_args:
-        arg_type = copy(arg.type)
-        arg_type.child = arg
-        nada_args_type_wrapped.append(arg_type)
+        nada_args_type_wrapped.append(arg_ty.instantiate(nada_arg))
 
     child = fn(*nada_args_type_wrapped)
 
-    return_type = return_ty if return_ty else args.annotations["return"]
+    return_type = child.type()
     return NadaFunction(
         function_id,
         function=fn,

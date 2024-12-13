@@ -1,23 +1,21 @@
 """Nada Collection type definitions."""
 
-import copy
 from dataclasses import dataclass
-import inspect
 from typing import Any, Dict, Generic, List
 import typing
-from typing import TypeVar
 
 from nada_dsl.ast_util import (
     AST_OPERATIONS,
     BinaryASTOperation,
     MapASTOperation,
+    TupleAccessorASTOperation,
     NTupleAccessorASTOperation,
     NewASTOperation,
     ObjectAccessorASTOperation,
     ReduceASTOperation,
     UnaryASTOperation,
 )
-from nada_dsl.nada_types import NadaType
+from nada_dsl.nada_types import DslType
 
 # Wildcard import due to non-zero types
 from nada_dsl.nada_types.scalar_types import *  # pylint: disable=W0614:wildcard-import
@@ -27,9 +25,9 @@ from nada_dsl.errors import (
     InvalidTypeError,
     NotAllowedException,
 )
-from nada_dsl.nada_types.function import NadaFunction, nada_fn
+from nada_dsl.nada_types.function import NadaFunction, create_nada_fn
 from nada_dsl.nada_types.generics import U, T, R
-from . import AllTypes, AllTypesType, NadaTypeRepr, OperationType
+from . import AllTypes, AllTypesType, DslTypeRepr, OperationType
 
 
 def is_primitive_integer(nada_type_str: str):
@@ -47,82 +45,7 @@ def is_primitive_integer(nada_type_str: str):
     )
 
 
-class Collection(NadaType):
-    """Superclass of collection types"""
-
-    left_type: AllTypesType
-    right_type: AllTypesType
-    contained_type: AllTypesType
-
-    def to_mir(self):
-        """Convert operation wrapper to a dictionary representing its type."""
-        if isinstance(self, (Array, ArrayType)):
-            size = {"size": self.size} if self.size else {}
-            contained_type = self.retrieve_inner_type()
-            return {"Array": {"inner_type": contained_type, **size}}
-        if isinstance(self, (Tuple, TupleType)):
-            return {
-                "Tuple": {
-                    "left_type": (
-                        self.left_type.to_mir()
-                        if isinstance(self.left_type, (NadaType, ArrayType, TupleType))
-                        else self.left_type.class_to_mir()
-                    ),
-                    "right_type": (
-                        self.right_type.to_mir()
-                        if isinstance(
-                            self.right_type,
-                            (NadaType, ArrayType, TupleType),
-                        )
-                        else self.right_type.class_to_mir()
-                    ),
-                }
-            }
-        if isinstance(self, NTuple):
-            return {
-                "NTuple": {
-                    "types": [
-                        (
-                            ty.to_mir()
-                            if isinstance(ty, (NadaType, ArrayType, TupleType))
-                            else ty.class_to_mir()
-                        )
-                        for ty in [
-                            type(value)
-                            for value in self.values  # pylint: disable=E1101
-                        ]
-                    ]
-                }
-            }
-        if isinstance(self, Object):
-            return {
-                "Object": {
-                    "types": {
-                        name: (
-                            ty.to_mir()
-                            if isinstance(ty, (NadaType, ArrayType, TupleType))
-                            else ty.class_to_mir()
-                        )
-                        for name, ty in [
-                            (name, type(value))
-                            for name, value in self.values.items()  # pylint: disable=E1101
-                        ]
-                    }
-                }
-            }
-        raise InvalidTypeError(
-            f"{self.__class__.__name__} is not a valid Nada Collection"
-        )
-
-    def retrieve_inner_type(self):
-        """Retrieves the child type of this collection"""
-        if isinstance(self.contained_type, TypeVar):
-            return "T"
-        if inspect.isclass(self.contained_type):
-            return self.contained_type.class_to_mir()
-        return self.contained_type.to_mir()
-
-
+@dataclass
 class Map(Generic[T, R]):
     """The Map operation"""
 
@@ -186,12 +109,17 @@ class Reduce(Generic[T, R]):
         )
 
 
-@dataclass
-class TupleType:
+class TupleType(NadaType):
     """Marker type for Tuples."""
 
-    left_type: NadaType
-    right_type: NadaType
+    is_compound = True
+
+    def __init__(self, left_type: DslType, right_type: DslType):
+        self.left_type = left_type
+        self.right_type = right_type
+
+    def instantiate(self, child_or_value):
+        return Tuple(child_or_value, self.left_type, self.right_type)
 
     def to_mir(self):
         """Convert a tuple object into a Nada type."""
@@ -203,7 +131,14 @@ class TupleType:
         }
 
 
-class Tuple(Generic[T, U], Collection):
+def _generate_accessor(ty: Any, accessor: Any) -> DslType:
+    if hasattr(ty, "ty") and ty.ty.is_literal():  # TODO: fix
+        raise TypeError("Literals are not supported in accessors")
+    return ty.instantiate(accessor)
+
+
+@dataclass
+class Tuple(Generic[T, U], DslType):
     """The Tuple type"""
 
     left_type: T
@@ -216,13 +151,13 @@ class Tuple(Generic[T, U], Collection):
         super().__init__(self.child)
 
     @classmethod
-    def new(cls, left_type: T, right_type: U) -> "Tuple[T, U]":
+    def new(cls, left_value: DslType, right_value: DslType) -> "Tuple[T, U]":
         """Constructs a new Tuple."""
         return Tuple(
-            left_type=left_type,
-            right_type=right_type,
+            left_type=left_value.type(),
+            right_type=right_value.type(),
             child=TupleNew(
-                child=(left_type, right_type),
+                child=(left_value, right_value),
                 source_ref=SourceRef.back_frame(),
             ),
         )
@@ -232,56 +167,108 @@ class Tuple(Generic[T, U], Collection):
         """Returns the generic type for this Tuple"""
         return TupleType(left_type=left_type, right_type=right_type)
 
-
-def _generate_accessor(value: Any, accessor: Any) -> NadaType:
-    ty = type(value)
-
-    if ty.is_scalar():
-        if ty.is_literal():
-            return value
-        return ty(child=accessor)
-    if ty == Array:
-        return Array(
-            child=accessor,
-            contained_type=value.contained_type,
-            size=value.size,
+    @property
+    def left(self) -> DslType:
+        """The left element of the  Tuple."""
+        accessor = TupleAccessor(
+            index=0,
+            child=self,
+            source_ref=SourceRef.back_frame(),
         )
-    if ty == NTuple:
-        return NTuple(
-            child=accessor,
-            values=value.values,
+
+        return _generate_accessor(self.left_type, accessor)
+
+    @property
+    def right(self) -> DslType:
+        """The right element of the Tuple."""
+        accessor = TupleAccessor(
+            index=1,
+            child=self,
+            source_ref=SourceRef.back_frame(),
         )
-    if ty == Object:
-        return Object(
-            child=accessor,
-            values=value.values,
-        )
-    raise TypeError(f"Unsupported type for accessor: {ty}")
+
+        return _generate_accessor(self.right_type, accessor)
+
+    def type(self):
+        """Metatype for Tuple"""
+        return TupleType(self.left_type, self.right_type)
 
 
-class NTuple(Collection):
+@dataclass
+class TupleAccessor:
+    """Accessor for Tuple"""
+
+    child: Tuple
+    index: int
+    source_ref: SourceRef
+
+    def __init__(
+        self,
+        child: Tuple,
+        index: int,
+        source_ref: SourceRef,
+    ):
+        self.id = next_operation_id()
+        self.child = child
+        self.index = index
+        self.source_ref = source_ref
+
+    def store_in_ast(self, ty: object):
+        """Store this accessor in the AST."""
+        AST_OPERATIONS[self.id] = TupleAccessorASTOperation(
+            id=self.id,
+            source=self.child.child.id,
+            index=self.index,
+            source_ref=self.source_ref,
+            ty=ty,
+        )
+
+
+class NTupleType(NadaType):
+    """Marker type for NTuples."""
+
+    is_compound = True
+
+    def __init__(self, types: List[DslType]):
+        self.types = types
+
+    def instantiate(self, child_or_value):
+        return NTuple(child_or_value, self.types)
+
+    def to_mir(self):
+        """Convert a tuple object into a Nada type."""
+        return {
+            "NTuple": {
+                "types": [ty.to_mir() for ty in self.types],
+            }
+        }
+
+
+@dataclass
+class NTuple(DslType):
     """The NTuple type"""
 
-    values: List[NadaType]
+    types: List[Any]
 
-    def __init__(self, child, values: List[NadaType]):
-        self.values = values
+    def __init__(self, child, types: List[Any]):
+        self.types = types
         self.child = child
         super().__init__(self.child)
 
     @classmethod
-    def new(cls, values: List[NadaType]) -> "NTuple":
+    def new(cls, values: List[Any]) -> "NTuple":
         """Constructs a new NTuple."""
+        types = [value.type() for value in values]
         return NTuple(
-            values=values,
+            types=types,
             child=NTupleNew(
                 child=values,
                 source_ref=SourceRef.back_frame(),
             ),
         )
 
-    def __getitem__(self, index: int) -> NadaType:
-        if index >= len(self.values):
+    def __getitem__(self, index: int) -> DslType:
+        if index >= len(self.types):
             raise IndexError(f"Invalid index {index} for NTuple.")
 
         accessor = NTupleAccessor(
@@ -290,7 +277,11 @@ class NTuple(Collection):
             source_ref=SourceRef.back_frame(),
         )
 
-        return _generate_accessor(self.values[index], accessor)
+        return _generate_accessor(self.types[index], accessor)
+
+    def type(self):
+        """Metatype for NTuple"""
+        return NTupleType(self.types)
 
 
 @dataclass
@@ -323,29 +314,49 @@ class NTupleAccessor:
         )
 
 
-class Object(Collection):
+class ObjectType(NadaType):
+    """Marker type for Objects."""
+
+    is_compound = True
+
+    def __init__(self, types: Dict[str, DslType]):
+        self.types = types
+
+    def to_mir(self):
+        """Convert an object into a Nada type."""
+        return {
+            "Object": {"types": {name: ty.to_mir() for name, ty in self.types.items()}}
+        }
+
+    def instantiate(self, child_or_value):
+        return Object(child_or_value, self.types)
+
+
+@dataclass
+class Object(DslType):
     """The Object type"""
 
-    values: Dict[str, NadaType]
+    types: Dict[str, Any]
 
-    def __init__(self, child, values: Dict[str, NadaType]):
-        self.values = values
+    def __init__(self, child, types: Dict[str, Any]):
+        self.types = types
         self.child = child
         super().__init__(self.child)
 
     @classmethod
-    def new(cls, values: Dict[str, NadaType]) -> "Object":
+    def new(cls, values: Dict[str, Any]) -> "Object":
         """Constructs a new Object."""
+        types = {key: value.type() for key, value in values.items()}
         return Object(
-            values=values,
+            types=types,
             child=ObjectNew(
                 child=values,
                 source_ref=SourceRef.back_frame(),
             ),
         )
 
-    def __getattr__(self, attr: str) -> NadaType:
-        if attr not in self.values:
+    def __getattr__(self, attr: str) -> DslType:
+        if attr not in self.types:
             raise AttributeError(
                 f"'{self.__class__.__name__}' object has no attribute '{attr}'"
             )
@@ -356,7 +367,11 @@ class Object(Collection):
             source_ref=SourceRef.back_frame(),
         )
 
-        return _generate_accessor(self.values[attr], accessor)
+        return _generate_accessor(self.types[attr], accessor)
+
+    def type(self):
+        """Metatype for Object"""
+        return ObjectType(types=self.types)
 
 
 @dataclass
@@ -389,15 +404,6 @@ class ObjectAccessor:
         )
 
 
-# pylint: disable=W0511
-# TODO: remove this
-def get_inner_type(inner_type):
-    """Utility that returns the inner type for a composite type."""
-    inner_type = copy.copy(inner_type)
-    setattr(inner_type, "inner", None)
-    return inner_type
-
-
 class Zip:
     """The Zip operation."""
 
@@ -407,7 +413,7 @@ class Zip:
         self.right = right
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: NadaTypeRepr):
+    def store_in_ast(self, ty: DslTypeRepr):
         """Store a Zip object in the AST."""
         AST_OPERATIONS[self.id] = BinaryASTOperation(
             id=self.id,
@@ -427,7 +433,7 @@ class Unzip:
         self.child = child
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: NadaTypeRepr):
+    def store_in_ast(self, ty: DslTypeRepr):
         """Store an Unzip object in the AST."""
         AST_OPERATIONS[self.id] = UnaryASTOperation(
             id=self.id,
@@ -447,7 +453,7 @@ class InnerProduct:
         self.right = right
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: NadaTypeRepr):
+    def store_in_ast(self, ty: DslTypeRepr):
         """Store the InnerProduct object in the AST."""
         AST_OPERATIONS[self.id] = BinaryASTOperation(
             id=self.id,
@@ -459,15 +465,23 @@ class InnerProduct:
         )
 
 
-@dataclass
-class ArrayType:
+class ArrayType(NadaType):
     """Marker type for arrays."""
 
-    contained_type: AllTypesType
-    size: int
+    is_compound = True
+
+    def __init__(self, contained_type: AllTypesType, size: int):
+        self.contained_type = contained_type
+        self.size = size
 
     def to_mir(self):
         """Convert this generic type into a MIR Nada type."""
+        # TODO size is None when array used in function argument and used @nada_fn
+        # So you know the type but not the size, we should stop using @nada_fn decorator
+        # and apply the same logic when the function gets passed to .map() or .reduce()
+        # so we now the size of the array
+        if self.size is None:
+            raise NotImplementedError("ArrayType.to_mir")
         return {
             "Array": {
                 "inner_type": self.contained_type.to_mir(),
@@ -475,8 +489,12 @@ class ArrayType:
             }
         }
 
+    def instantiate(self, child_or_value):
+        return Array(child_or_value, self.size, self.contained_type)
 
-class Array(Generic[T], Collection):
+
+@dataclass
+class Array(Generic[T], DslType):
     """Nada Array type.
 
     This is the representation of arrays in Nada MIR.
@@ -497,27 +515,32 @@ class Array(Generic[T], Collection):
 
     def __init__(self, child, size: int, contained_type: T = None):
         self.contained_type = (
-            contained_type
-            if (child is None or contained_type is not None)
-            else get_inner_type(child)
+            contained_type if contained_type is not None else child.type()
         )
+
         self.size = size
         self.child = (
             child if contained_type is not None else getattr(child, "child", None)
         )
         if self.child is not None:
-            self.child.store_in_ast(self.to_mir())
+            self.child.store_in_ast(self.type().to_mir())
 
     def __iter__(self):
         raise NotAllowedException(
             "Cannot loop over a Nada Array, use functional style Array operations (map, reduce, zip)."
         )
 
+    def check_not_constant(self, ty):
+        """Checks that a type is not a constant"""
+        if ty.is_constant:
+            raise NotAllowedException(
+                "functors (map and reduce) can't be called with constant args"
+            )
+
     def map(self: "Array[T]", function) -> "Array":
         """The map operation for Arrays."""
-        nada_function = function
-        if not isinstance(function, NadaFunction):
-            nada_function = nada_fn(function)
+        self.check_not_constant(self.contained_type)
+        nada_function = create_nada_fn(function, args_ty=[self.contained_type])
         return Array(
             size=self.size,
             contained_type=nada_function.return_type,
@@ -526,9 +549,12 @@ class Array(Generic[T], Collection):
 
     def reduce(self: "Array[T]", function, initial: R) -> R:
         """The Reduce operation for arrays."""
-        if not isinstance(function, NadaFunction):
-            function = nada_fn(function)
-        return function.return_type(
+        self.check_not_constant(self.contained_type)
+        self.check_not_constant(initial.type())
+        function = create_nada_fn(
+            function, args_ty=[initial.type(), self.contained_type]
+        )
+        return function.return_type.instantiate(
             Reduce(
                 child=self,
                 fn=function,
@@ -543,10 +569,9 @@ class Array(Generic[T], Collection):
             raise IncompatibleTypesError("Cannot zip arrays of different size")
         return Array(
             size=self.size,
-            contained_type=Tuple(
+            contained_type=TupleType(
                 left_type=self.contained_type,
                 right_type=other.contained_type,
-                child=None,
             ),
             child=Zip(left=self, right=other, source_ref=SourceRef.back_frame()),
         )
@@ -558,18 +583,11 @@ class Array(Generic[T], Collection):
                 "Cannot do child product of arrays of different size"
             )
 
-        if is_primitive_integer(self.retrieve_inner_type()) and is_primitive_integer(
-            other.retrieve_inner_type()
+        if is_primitive_integer(self.contained_type) and is_primitive_integer(
+            other.contained_type
         ):
-            contained_type = (
-                self.contained_type
-                if inspect.isclass(self.contained_type)
-                else self.contained_type.__class__
-            )
-            return contained_type(
-                child=InnerProduct(
-                    left=self, right=other, source_ref=SourceRef.back_frame()
-                )
+            return self.contained_type.instantiate(
+                InnerProduct(left=self, right=other, source_ref=SourceRef.back_frame())
             )  # type: ignore
 
         raise InvalidTypeError(
@@ -587,7 +605,7 @@ class Array(Generic[T], Collection):
             raise TypeError("All arguments must be of the same type")
 
         return Array(
-            contained_type=first_arg,
+            contained_type=first_arg.type(),
             size=len(args),
             child=ArrayNew(
                 child=args,
@@ -595,12 +613,12 @@ class Array(Generic[T], Collection):
             ),
         )
 
-    @classmethod
-    def init_as_template_type(cls, contained_type) -> "Array[T]":
-        """Construct an empty template array with the given child type."""
-        return Array(child=None, contained_type=contained_type, size=None)
+    def type(self):
+        """Metatype for Array"""
+        return ArrayType(self.contained_type, self.size)
 
 
+@dataclass
 class TupleNew(Generic[T, U]):
     """MIR Tuple new operation.
 
@@ -626,16 +644,17 @@ class TupleNew(Generic[T, U]):
         )
 
 
+@dataclass
 class NTupleNew:
     """MIR NTuple new operation.
 
     Represents the creation of a new Tuple.
     """
 
-    child: List[NadaType]
+    child: List[DslType]
     source_ref: SourceRef
 
-    def __init__(self, child: List[NadaType], source_ref: SourceRef):
+    def __init__(self, child: List[DslType], source_ref: SourceRef):
         self.id = next_operation_id()
         self.child = child
         self.source_ref = source_ref
@@ -651,16 +670,17 @@ class NTupleNew:
         )
 
 
+@dataclass
 class ObjectNew:
     """MIR Object new operation.
 
     Represents the creation of a new Object.
     """
 
-    child: Dict[str, NadaType]
+    child: Dict[str, DslType]
     source_ref: SourceRef
 
-    def __init__(self, child: Dict[str, NadaType], source_ref: SourceRef):
+    def __init__(self, child: Dict[str, DslType], source_ref: SourceRef):
         self.id = next_operation_id()
         self.child = child
         self.source_ref = source_ref
@@ -692,6 +712,7 @@ def unzip(array: Array[Tuple[T, R]]) -> Tuple[Array[T], Array[R]]:
     )
 
 
+@dataclass
 class ArrayNew(Generic[T]):
     """MIR Array new operation"""
 
@@ -703,7 +724,7 @@ class ArrayNew(Generic[T]):
         self.child = child
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: NadaType):
+    def store_in_ast(self, ty: DslType):
         """Store this ArrayNew object in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import hashlib
 from typing import Dict, List
 from sortedcontainers import SortedDict
-from nada_dsl.nada_types import NadaTypeRepr, Party
+from nada_dsl.nada_types import DslTypeRepr, Party
 from nada_dsl.source_ref import SourceRef
 
 OPERATION_ID_COUNTER = 0
@@ -41,7 +41,7 @@ class ASTOperation(ABC):
 
     id: int
     source_ref: SourceRef
-    ty: NadaTypeRepr
+    ty: DslTypeRepr
 
     def child_operations(self) -> List[int]:
         """Returns the list of identifiers of all the child operations of this operation."""
@@ -371,6 +371,28 @@ class CastASTOperation(ASTOperation):
                 "id": self.id,
                 "target": self.target,
                 "to": self.ty,
+                "type": self.ty,
+                "source_ref_index": self.source_ref.to_index(),
+            }
+        }
+
+
+@dataclass
+class TupleAccessorASTOperation(ASTOperation):
+    """AST representation of a tuple accessor operation."""
+
+    index: int
+    source: int
+
+    def child_operations(self):
+        return [self.source]
+
+    def to_mir(self):
+        return {
+            "TupleAccessor": {
+                "id": self.id,
+                "index": self.index,
+                "source": self.source,
                 "type": self.ty,
                 "source_ref_index": self.source_ref.to_index(),
             }
