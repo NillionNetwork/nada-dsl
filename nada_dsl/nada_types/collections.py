@@ -169,6 +169,7 @@ class Tuple(Generic[T, U], DslType):
 
     @property
     def left(self) -> DslType:
+        """The left element of the  Tuple."""
         accessor = TupleAccessor(
             index=0,
             child=self,
@@ -179,6 +180,7 @@ class Tuple(Generic[T, U], DslType):
 
     @property
     def right(self) -> DslType:
+        """The right element of the Tuple."""
         accessor = TupleAccessor(
             index=1,
             child=self,
