@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package nillion.nada.types.v1;
+
+// The Scalar Type enumeration.enum
+// List of the different scalar types in Nada.
+enum ScalarType {
+  INTEGER = 0;
+  UNSIGNED_INTEGER = 1;
+  BOOLEAN = 2;
+  SECRET_INTEGER = 3;
+  SECRET_UNSIGNED_INTEGER = 4;
+  SECRET_BOOLEAN = 5;
+  // ECDSA private key for the threshold ecdsa signature feature.
+  ECDSA_PRIVATE_KEY = 6;
+  // Public ECDSA message digest.
+  ECDSA_DIGEST_MESSAGE = 7;
+  // Public ECDSA signature.
+  ECDSA_SIGNATURE = 8;
+}
+
+// Array type, defines a collection of homogeneous values
+message Array {
+  // Size of the array
+  uint32 size = 1;
+}
+
+// Tuple type, a binary tuple
+message Tuple {
+  // Left type
+  NadaType left = 1;
+  // Right type
+  NadaType right = 2;
+}
+
+// Collection type, defines a collection of same values
+message CollectionType {
+  oneof collection_type {
+    Array array = 1;
+  }
+  // Type of the elements of this collection
+  NadaType contained_type = 2;
+}
+
+message Ntuple {
+  // Number of elements in the tuple
+  repeated NadaType fields = 1;
+}
+
+message Object {
+  // Number of elements in the object
+   map<string, NadaType> fields = 1;
+}
+
+message NadaType {
+  oneof nada_type {
+    ScalarType scalar = 1;
+    Tuple tuple = 2;
+    CollectionType collection = 3;
+    Ntuple ntuple = 4;
+    Object object = 5;
+  }
+}

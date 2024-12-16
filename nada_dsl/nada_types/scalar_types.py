@@ -5,10 +5,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Union, TypeVar
 from typing_extensions import Self
+
+from nada_mir_proto.nillion.nada.types import v1 as proto_ty
+
 from nada_dsl.operations import *
 from nada_dsl.program_io import Literal
 from nada_dsl import SourceRef
 from . import DslType, Mode, BaseType, OperationType
+
 
 # Constant dictionary that stores all the Nada types and is use to
 # convert from the (mode, base_type) representation to the concrete Nada type
@@ -363,7 +367,7 @@ class NadaType(ABC):
         """Creates a value corresponding to this meta type"""
 
     @abstractmethod
-    def to_mir(self):
+    def to_mir(self) -> proto_ty.NadaType:
         """Returns a MIR representation of this meta type"""
 
 
@@ -374,15 +378,8 @@ class TypePassthroughMixin(NadaType):
         """Creates a value corresponding to this meta type"""
         return self.ty(child_or_value)
 
-    def to_mir(self):
-        name = self.ty.__name__
-        # Rename public variables so they are considered as the same as literals.
-        if name.startswith("Public"):
-            name = name[len("Public") :].lstrip()
-
-        if name.endswith("Type"):
-            name = name[: -len("Type")].rstrip()
-        return name
+    def to_mir(self) -> proto_ty.NadaType:
+        return proto_ty.NadaType(scalar=self.proto_ty)
 
 
 @register_scalar_type(Mode.CONSTANT, BaseType.INTEGER)
@@ -417,6 +414,7 @@ class IntegerType(TypePassthroughMixin):
     ty = Integer
     is_constant = True
     is_scalar = True
+    proto_ty = proto_ty.ScalarType.INTEGER
 
 
 @dataclass
@@ -454,6 +452,7 @@ class UnsignedIntegerType(TypePassthroughMixin):
     ty = UnsignedInteger
     is_constant = True
     is_scalar = True
+    proto_ty = proto_ty.ScalarType.UNSIGNED_INTEGER
 
 
 @register_scalar_type(Mode.CONSTANT, BaseType.BOOLEAN)
@@ -496,6 +495,7 @@ class BooleanType(TypePassthroughMixin):
     ty = Boolean
     is_constant = True
     is_scalar = True
+    proto_ty = proto_ty.ScalarType.BOOLEAN
 
 
 @register_scalar_type(Mode.PUBLIC, BaseType.INTEGER)
@@ -526,6 +526,7 @@ class PublicIntegerType(TypePassthroughMixin):
 
     ty = PublicInteger
     is_scalar = True
+    proto_ty = proto_ty.ScalarType.INTEGER
 
 
 @register_scalar_type(Mode.PUBLIC, BaseType.UNSIGNED_INTEGER)
@@ -556,6 +557,7 @@ class PublicUnsignedIntegerType(TypePassthroughMixin):
 
     ty = PublicUnsignedInteger
     is_scalar = True
+    proto_ty = proto_ty.ScalarType.UNSIGNED_INTEGER
 
 
 @dataclass
@@ -591,6 +593,7 @@ class PublicBooleanType(TypePassthroughMixin):
 
     ty = PublicBoolean
     is_scalar = True
+    proto_ty = proto_ty.ScalarType.BOOLEAN
 
 
 @dataclass
@@ -646,6 +649,7 @@ class SecretIntegerType(TypePassthroughMixin):
 
     ty = SecretInteger
     is_scalar = True
+    proto_ty = proto_ty.ScalarType.SECRET_INTEGER
 
 
 @dataclass
@@ -703,6 +707,7 @@ class SecretUnsignedIntegerType(TypePassthroughMixin):
 
     ty = SecretUnsignedInteger
     is_scalar = True
+    proto_ty = proto_ty.ScalarType.SECRET_UNSIGNED_INTEGER
 
 
 @dataclass
@@ -739,6 +744,7 @@ class SecretBooleanType(TypePassthroughMixin):
 
     ty = SecretBoolean
     is_scalar = True
+    proto_ty = proto_ty.ScalarType.SECRET_BOOLEAN
 
 
 @dataclass
@@ -756,6 +762,7 @@ class EcdsaSignatureType(TypePassthroughMixin):
     """Meta type for EcdsaSignatures"""
 
     ty = EcdsaSignature
+    proto_ty = proto_ty.ScalarType.ECDSA_SIGNATURE
 
 
 @dataclass
@@ -773,6 +780,7 @@ class EcdsaDigestMessageType(TypePassthroughMixin):
     """Meta type for EcdsaDigestMessages"""
 
     ty = EcdsaDigestMessage
+    proto_ty = proto_ty.ScalarType.ECDSA_DIGEST_MESSAGE
 
 
 @dataclass
@@ -796,3 +804,4 @@ class EcdsaPrivateKeyType(TypePassthroughMixin):
     """Meta type for EcdsaPrivateKeys"""
 
     ty = EcdsaPrivateKey
+    proto_ty = proto_ty.ScalarType.ECDSA_PRIVATE_KEY

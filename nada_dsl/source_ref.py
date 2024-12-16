@@ -8,6 +8,7 @@ import os
 from dataclasses import dataclass
 from typing import Tuple
 import inspect
+from nada_mir_proto.nillion.nada.mir import v1 as proto_mir
 
 USED_SOURCES = {}
 REFS = []
@@ -79,7 +80,7 @@ class SourceRef:
         as well as an entry in an array, and returns an index to it"""
         global next_index
         key = self.to_key()
-        value = self.to_value()
+        value = self.to_mir()
         if key in index_map:
             return index_map[key]
 
@@ -88,14 +89,14 @@ class SourceRef:
         next_index += 1
         return index_map[key]
 
-    def to_value(self):
-        """Convert the SourceRef object to a dictionary."""
-        return {
-            "lineno": self.lineno,
-            "offset": self.offset,
-            "file": self.file,
-            "length": self.length,
-        }
+    def to_mir(self):
+        """Convert the SourceRef object to MIR"""
+        return proto_mir.SourceRef(
+            lineno=self.lineno,
+            offset=self.offset,
+            file=self.file,
+            length=self.length,
+        )
 
     def to_key(self):
         """Convert the current object into the key representation used by 'index_map'"""

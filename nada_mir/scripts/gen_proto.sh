@@ -6,9 +6,7 @@ set -e
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}" 2>/dev/null)" && pwd -P)"
 
-# This is the path where nada-mir-model has been checked out in your workstation
-NADA_MIR_MODEL_ROOT=${SCRIPT_PATH}/../../../nada-mir-model
-GRPC_ROOT=${NADA_MIR_MODEL_ROOT}/proto
+PROTO_ROOT=${SCRIPT_PATH}/../proto
 
 mir_files=(
   "nillion/nada/v1/mir.proto"
@@ -24,5 +22,8 @@ mkdir -p ${OUTPUT_DIR}
 cd ${SCRIPT_PATH}/../src
 
 for file in "${mir_files[@]}"; do
-  python -m grpc_tools.protoc -I${GRPC_ROOT} --python_betterproto_out=nada_mir_proto $file
+  python -m grpc_tools.protoc \
+    -I${PROTO_ROOT} \
+    --python_betterproto_out=nada_mir_proto \
+    $file
 done
