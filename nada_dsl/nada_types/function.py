@@ -4,15 +4,16 @@ Nada function definitions and utilities.
 """
 
 import inspect
-from dataclasses import dataclass
 from typing import Generic, List, Callable
+
+from nada_mir_proto.nillion.nada.types import v1 as proto_ty
+
 from nada_dsl import SourceRef
 from nada_dsl.ast_util import (
     AST_OPERATIONS,
     NadaFunctionASTOperation,
     NadaFunctionArgASTOperation,
-    NadaFunctionCallASTOperation,
-    next_operation_id,
+    OperationId,
 )
 from nada_dsl.nada_types.generics import T, R
 from nada_dsl.nada_types import DslType
@@ -27,14 +28,14 @@ class NadaFunctionArg(Generic[T]):
     source_ref: SourceRef
 
     def __init__(self, function_id: int, name: str, arg_type: T, source_ref: SourceRef):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.function_id = function_id
         self.name = name
         self.type = arg_type
         self.source_ref = source_ref
         self.store_in_ast(arg_type.to_mir())
 
-    def store_in_ast(self, ty):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store object in AST."""
         AST_OPERATIONS[self.id] = NadaFunctionArgASTOperation(
             id=self.id,
@@ -87,37 +88,6 @@ class NadaFunction(Generic[T, R]):
             child=self.child.child.id,
         )
 
-    def __call__(self, *args, **kwargs) -> R:
-        return self.return_type(
-            child=NadaFunctionCall(self, args, source_ref=SourceRef.back_frame())
-        )
-
-
-@dataclass
-class NadaFunctionCall(Generic[R]):
-    """Represents a call to a Nada Function."""
-
-    fn: NadaFunction
-    args: List[DslType]
-    source_ref: SourceRef
-
-    def __init__(self, nada_function, args, source_ref):
-        self.id = next_operation_id()
-        self.args = args
-        self.fn = nada_function
-        self.source_ref = source_ref
-        self.store_in_ast(nada_function.return_type.type().to_mir())
-
-    def store_in_ast(self, ty):
-        """Store this function call in the AST."""
-        AST_OPERATIONS[self.id] = NadaFunctionCallASTOperation(
-            id=self.id,
-            args=[arg.child.id for arg in self.args],
-            fn=self.fn.id,
-            source_ref=self.source_ref,
-            ty=ty,
-        )
-
 
 def create_nada_fn(fn, args_ty) -> NadaFunction[T, R]:
     """
@@ -132,7 +102,7 @@ def create_nada_fn(fn, args_ty) -> NadaFunction[T, R]:
 
     args = inspect.getfullargspec(fn)
     nada_args = []
-    function_id = next_operation_id()
+    function_id = OperationId.next()
     nada_args_type_wrapped = []
     for arg, arg_ty in zip(args.args, args_ty):
         # We'll get the function source ref for now

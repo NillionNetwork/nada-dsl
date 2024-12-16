@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, Generic, List
 import typing
 
+from sortedcontainers import SortedDict
+
 from nada_dsl.ast_util import (
     AST_OPERATIONS,
     BinaryASTOperation,
@@ -27,7 +29,7 @@ from nada_dsl.errors import (
 )
 from nada_dsl.nada_types.function import NadaFunction, create_nada_fn
 from nada_dsl.nada_types.generics import U, T, R
-from . import AllTypes, AllTypesType, DslTypeRepr, OperationType
+from . import AllTypes, OperationType
 
 
 def is_primitive_integer(nada_type_str: str):
@@ -59,12 +61,12 @@ class Map(Generic[T, R]):
         fn: NadaFunction[T, R],
         source_ref: SourceRef,
     ):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.fn = fn
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store MP in AST"""
         AST_OPERATIONS[self.id] = MapASTOperation(
             id=self.id,
@@ -91,13 +93,13 @@ class Reduce(Generic[T, R]):
         initial: R,
         source_ref: SourceRef,
     ):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.fn = fn
         self.initial = initial
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store a reduce object in AST"""
         AST_OPERATIONS[self.id] = ReduceASTOperation(
             id=self.id,
@@ -114,21 +116,20 @@ class TupleType(NadaType):
 
     is_compound = True
 
-    def __init__(self, left_type: DslType, right_type: DslType):
+    def __init__(self, left_type: NadaType, right_type: NadaType):
         self.left_type = left_type
         self.right_type = right_type
 
     def instantiate(self, child_or_value):
         return Tuple(child_or_value, self.left_type, self.right_type)
 
-    def to_mir(self):
+    def to_mir(self) -> proto_ty.NadaType:
         """Convert a tuple object into a Nada type."""
-        return {
-            "Tuple": {
-                "left_type": self.left_type.to_mir(),
-                "right_type": self.right_type.to_mir(),
-            }
-        }
+        return proto_ty.NadaType(
+            tuple=proto_ty.Tuple(
+                left=self.left_type.to_mir(), right=self.right_type.to_mir()
+            )
+        )
 
 
 def _generate_accessor(ty: Any, accessor: Any) -> DslType:
@@ -141,17 +142,17 @@ def _generate_accessor(ty: Any, accessor: Any) -> DslType:
 class Tuple(Generic[T, U], DslType):
     """The Tuple type"""
 
-    left_type: T
-    right_type: U
+    left_type: NadaType
+    right_type: NadaType
 
-    def __init__(self, child, left_type: T, right_type: U):
+    def __init__(self, child, left_type: NadaType, right_type: NadaType):
         self.left_type = left_type
         self.right_type = right_type
         self.child = child
         super().__init__(self.child)
 
     @classmethod
-    def new(cls, left_value: DslType, right_value: DslType) -> "Tuple[T, U]":
+    def new(cls, left_value: T, right_value: U) -> "Tuple[T, U]":
         """Constructs a new Tuple."""
         return Tuple(
             left_type=left_value.type(),
@@ -208,12 +209,12 @@ class TupleAccessor:
         index: int,
         source_ref: SourceRef,
     ):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.index = index
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: object):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store this accessor in the AST."""
         AST_OPERATIONS[self.id] = TupleAccessorASTOperation(
             id=self.id,
@@ -229,19 +230,17 @@ class NTupleType(NadaType):
 
     is_compound = True
 
-    def __init__(self, types: List[DslType]):
+    def __init__(self, types: List[NadaType]):
         self.types = types
 
     def instantiate(self, child_or_value):
         return NTuple(child_or_value, self.types)
 
-    def to_mir(self):
+    def to_mir(self) -> proto_ty.NadaType:
         """Convert a tuple object into a Nada type."""
-        return {
-            "NTuple": {
-                "types": [ty.to_mir() for ty in self.types],
-            }
-        }
+        return proto_ty.NadaType(
+            ntuple=proto_ty.Ntuple(fields=[ty.to_mir() for ty in self.types])
+        )
 
 
 @dataclass
@@ -298,12 +297,12 @@ class NTupleAccessor:
         index: int,
         source_ref: SourceRef,
     ):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.index = index
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: object):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store this accessor in the AST."""
         AST_OPERATIONS[self.id] = NTupleAccessorASTOperation(
             id=self.id,
@@ -319,14 +318,17 @@ class ObjectType(NadaType):
 
     is_compound = True
 
-    def __init__(self, types: Dict[str, DslType]):
+    def __init__(self, types: Dict[str, NadaType]):
         self.types = types
 
-    def to_mir(self):
+    def to_mir(self) -> proto_ty.NadaType:
         """Convert an object into a Nada type."""
-        return {
-            "Object": {"types": {name: ty.to_mir() for name, ty in self.types.items()}}
-        }
+        fields = SortedDict({name: ty.to_mir() for name, ty in self.types.items()})
+        return proto_ty.NadaType(
+            object=proto_ty.Object(
+                fields=[proto_ty.ObjectEntry(name=k, type=v) for k, v in fields.items()],
+            )
+        )
 
     def instantiate(self, child_or_value):
         return Object(child_or_value, self.types)
@@ -388,12 +390,12 @@ class ObjectAccessor:
         key: str,
         source_ref: SourceRef,
     ):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.key = key
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: object):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store this accessor in the AST."""
         AST_OPERATIONS[self.id] = ObjectAccessorASTOperation(
             id=self.id,
@@ -408,16 +410,16 @@ class Zip:
     """The Zip operation."""
 
     def __init__(self, left: AllTypes, right: AllTypes, source_ref: SourceRef):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.left = left
         self.right = right
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: DslTypeRepr):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store a Zip object in the AST."""
         AST_OPERATIONS[self.id] = BinaryASTOperation(
             id=self.id,
-            name="Zip",
+            variant=proto_op.BinaryOperationVariant.ZIP,
             left=self.left.child.id,
             right=self.right.child.id,
             source_ref=self.source_ref,
@@ -429,15 +431,15 @@ class Unzip:
     """The Unzip operation."""
 
     def __init__(self, child: AllTypes, source_ref: SourceRef):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: DslTypeRepr):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store an Unzip object in the AST."""
         AST_OPERATIONS[self.id] = UnaryASTOperation(
             id=self.id,
-            name="Unzip",
+            variant=proto_op.UnaryOperationVariant.UNZIP,
             child=self.child.child.id,
             source_ref=self.source_ref,
             ty=ty,
@@ -448,16 +450,16 @@ class InnerProduct:
     """Inner product of two arrays."""
 
     def __init__(self, left: AllTypes, right: AllTypes, source_ref: SourceRef):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.left = left
         self.right = right
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: DslTypeRepr):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store the InnerProduct object in the AST."""
         AST_OPERATIONS[self.id] = BinaryASTOperation(
             id=self.id,
-            name="InnerProduct",
+            variant=proto_op.BinaryOperationVariant.INNER_PRODUCT,
             left=self.left.child.id,
             right=self.right.child.id,
             source_ref=self.source_ref,
@@ -470,24 +472,18 @@ class ArrayType(NadaType):
 
     is_compound = True
 
-    def __init__(self, contained_type: AllTypesType, size: int):
+    def __init__(self, contained_type: NadaType, size: int):
         self.contained_type = contained_type
         self.size = size
 
-    def to_mir(self):
+    def to_mir(self) -> proto_ty.NadaType:
         """Convert this generic type into a MIR Nada type."""
-        # TODO size is None when array used in function argument and used @nada_fn
-        # So you know the type but not the size, we should stop using @nada_fn decorator
-        # and apply the same logic when the function gets passed to .map() or .reduce()
-        # so we now the size of the array
-        if self.size is None:
-            raise NotImplementedError("ArrayType.to_mir")
-        return {
-            "Array": {
-                "inner_type": self.contained_type.to_mir(),
-                "size": self.size,
-            }
-        }
+        return proto_ty.NadaType(
+                array=proto_ty.Array(
+                    size=self.size,
+                    contained_type=self.contained_type.to_mir()
+                )
+            )
 
     def instantiate(self, child_or_value):
         return Array(child_or_value, self.size, self.contained_type)
@@ -510,10 +506,10 @@ class Array(Generic[T], DslType):
         The size of the array
     """
 
-    contained_type: T
+    contained_type: NadaType
     size: int
 
-    def __init__(self, child, size: int, contained_type: T = None):
+    def __init__(self, child, size: int, contained_type: NadaType = None):
         self.contained_type = (
             contained_type if contained_type is not None else child.type()
         )
@@ -629,11 +625,11 @@ class TupleNew(Generic[T, U]):
     source_ref: SourceRef
 
     def __init__(self, child: typing.Tuple[T, U], source_ref: SourceRef):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: object):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store this TupleNew in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,
@@ -655,11 +651,11 @@ class NTupleNew:
     source_ref: SourceRef
 
     def __init__(self, child: List[DslType], source_ref: SourceRef):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: object):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store this NTupleNew in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,
@@ -681,11 +677,11 @@ class ObjectNew:
     source_ref: SourceRef
 
     def __init__(self, child: Dict[str, DslType], source_ref: SourceRef):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: object):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store this Object in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,
@@ -720,11 +716,11 @@ class ArrayNew(Generic[T]):
     source_ref: SourceRef
 
     def __init__(self, child: List[T], source_ref: SourceRef):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.child = child
         self.source_ref = source_ref
 
-    def store_in_ast(self, ty: DslType):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store this ArrayNew object in the AST."""
         AST_OPERATIONS[self.id] = NewASTOperation(
             id=self.id,

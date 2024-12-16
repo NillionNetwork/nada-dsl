@@ -1,21 +1,33 @@
 """AST utilities."""
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import hashlib
 from typing import Dict, List
 from sortedcontainers import SortedDict
-from nada_dsl.nada_types import DslTypeRepr, Party
+from betterproto.lib.google.protobuf import Empty
+
+from nada_mir_proto.nillion.nada.operations import v1 as proto_op
+from nada_mir_proto.nillion.nada.types import v1 as proto_ty
+from nada_mir_proto.nillion.nada.mir import v1 as proto_mir
+
+from nada_dsl.nada_types import Party
 from nada_dsl.source_ref import SourceRef
 
-OPERATION_ID_COUNTER = 0
 
-
-def next_operation_id() -> int:
-    """Returns the next value of the operation id counter."""
-    global OPERATION_ID_COUNTER
-    OPERATION_ID_COUNTER += 1
-    return OPERATION_ID_COUNTER
+class OperationId:
+    """Operation identifier generator."""
+    current = 0
+    
+    @classmethod
+    def next(cls):
+        next_op_id = cls.current
+        cls.current += 1
+        return next_op_id
+    
+    @classmethod
+    def reset(cls):
+        cls.current = 0
 
 
 @dataclass
@@ -41,15 +53,17 @@ class ASTOperation(ABC):
 
     id: int
     source_ref: SourceRef
-    ty: DslTypeRepr
+    ty: proto_ty.NadaType
 
+    @abstractmethod
     def child_operations(self) -> List[int]:
         """Returns the list of identifiers of all the child operations of this operation."""
-        return []
+        raise NotImplementedError("Operation should implement child_operations method")
 
-    def to_mir(self):
+    @abstractmethod
+    def to_mir(self) -> proto_op.Operation:
         """Converts this AST Operation into a valid MIR data structure"""
-        return {}
+        raise NotImplementedError("Operation should implement to_mir method")
 
 
 # Map of operations identified by the Python compiler
@@ -64,44 +78,46 @@ LITERALS: Dict[str, int] = {}
 class BinaryASTOperation(ASTOperation):
     """Superclass of all the Binary operations in AST representation"""
 
-    name: str
+    variant: proto_op.BinaryOperationVariant
     left: int
     right: int
 
     def child_operations(self) -> List[int]:
         return [self.left, self.right]
 
-    def to_mir(self):
-        return {
-            self.name: {
-                "id": self.id,
-                "left": self.left,
-                "right": self.right,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            binary=proto_op.BinaryOperation(
+                variant=self.variant,
+                left=self.left,
+                right=self.right,
+            ),
+        )
 
 
 @dataclass
 class UnaryASTOperation(ASTOperation):
     """Superclass of all the unary operations in AST representation"""
 
-    name: str
+    variant: proto_op.UnaryOperationVariant
     child: int
 
     def child_operations(self):
         return [self.child]
 
-    def to_mir(self):
-        return {
-            self.name: {
-                "id": self.id,
-                "this": self.child,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            unary=proto_op.UnaryOperation(
+                variant=self.variant,
+                this=self.child,
+            ),
+        )
 
 
 @dataclass
@@ -115,17 +131,17 @@ class IfElseASTOperation(ASTOperation):
     def child_operations(self):
         return [self.condition, self.true_branch_child, self.false_branch_child]
 
-    def to_mir(self):
-        return {
-            "IfElse": {
-                "id": self.id,
-                "this": self.condition,
-                "arg_0": self.true_branch_child,
-                "arg_1": self.false_branch_child,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            ifelse=proto_op.IfElseOperation(
+                cond=self.condition,
+                first=self.true_branch_child,
+                second=self.false_branch_child,
+            ),
+        )
 
 
 @dataclass
@@ -135,14 +151,13 @@ class RandomASTOperation(ASTOperation):
     def child_operations(self):
         return []
 
-    def to_mir(self):
-        return {
-            "Random": {
-                "id": self.id,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            random=Empty(),
+        )
 
 
 @dataclass
@@ -153,15 +168,18 @@ class InputASTOperation(ASTOperation):
     party: Party
     doc: str
 
-    def to_mir(self):
-        return {
-            "InputReference": {
-                "id": self.id,
-                "refers_to": self.name,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            input_ref=proto_op.InputReference(
+                refers_to=self.name,
+            ),
+        )
+
+    def child_operations(self) -> List[int]:
+        return []
 
 
 @dataclass
@@ -199,15 +217,18 @@ class LiteralASTOperation(ASTOperation):
 
         super().__init__(id=self.id, source_ref=self.source_ref, ty=self.ty)
 
-    def to_mir(self):
-        return {
-            "LiteralReference": {
-                "id": self.id,
-                "refers_to": self.literal_index,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            literal_ref=proto_op.LiteralReference(
+                refers_to=self.literal_index,
+            ),
+        )
+
+    def child_operations(self) -> List[int]:
+        return []
 
 
 @dataclass
@@ -221,17 +242,17 @@ class ReduceASTOperation(ASTOperation):
     def child_operations(self):
         return [self.child, self.initial]
 
-    def to_mir(self):
-        return {
-            "Reduce": {
-                "id": self.id,
-                "fn": self.fn,
-                "inner": self.child,
-                "initial": self.initial,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            reduce=proto_op.ReduceOperation(
+                fn=self.fn,
+                child=self.child,
+                initial=self.initial,
+            ),
+        )
 
 
 @dataclass
@@ -244,16 +265,16 @@ class MapASTOperation(ASTOperation):
     def child_operations(self):
         return [self.child]
 
-    def to_mir(self):
-        return {
-            "Map": {
-                "id": self.id,
-                "fn": self.fn,
-                "inner": self.child,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            map=proto_op.MapOperation(
+                fn=self.fn,
+                child=self.child,
+            ),
+        )
 
 
 @dataclass
@@ -266,38 +287,15 @@ class NewASTOperation(ASTOperation):
     def child_operations(self):
         return self.elements
 
-    def to_mir(self):
-        return {
-            "New": {
-                "id": self.id,
-                "elements": self.elements,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
-
-
-@dataclass
-class NadaFunctionCallASTOperation(ASTOperation):
-    """AST representation of a NadaFunctionCall operation."""
-
-    args: List[int]
-    fn: int
-
-    def child_operations(self):
-        return self.args
-
-    def to_mir(self):
-        return {
-            "NadaFunctionCall": {
-                "id": self.id,
-                "function_id": self.fn,
-                "args": self.args,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-                "return_type": self.ty,
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            new=proto_op.NewOperation(
+                elements=self.elements,
+            ),
+        )
 
 
 @dataclass
@@ -307,16 +305,19 @@ class NadaFunctionArgASTOperation(ASTOperation):
     name: str
     fn: int
 
-    def to_mir(self):
-        return {
-            "NadaFunctionArgRef": {
-                "id": self.id,
-                "function_id": self.fn,
-                "refers_to": self.name,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            arg_ref=proto_op.NadaFunctionArgRef(
+                function_id=self.fn,
+                refers_to=self.name,
+            )
+        )
+
+    def child_operations(self) -> List[int]:
+        return []
 
 
 @dataclass
@@ -330,29 +331,29 @@ class NadaFunctionASTOperation(ASTOperation):
     # pylint: disable=arguments-differ
     def to_mir(self, operations):
         """Convert a function to MIR."""
-        arg_operations: List[NadaFunctionArgASTOperation] = [
-            AST_OPERATIONS[arg] for arg in self.args
+        args: List[proto_mir.NadaFunctionArg] = [
+            proto_mir.NadaFunctionArg(
+                name=AST_OPERATIONS[arg].name,
+                type=AST_OPERATIONS[arg].ty,
+                source_ref_index=AST_OPERATIONS[arg].source_ref.to_index(),
+            )
+            for arg in self.args
         ]  # type: ignore
-
-        return {
-            "id": self.id,
-            "args": [
-                {
-                    "name": arg.name,
-                    "type": arg.ty,
-                    "source_ref_index": arg.source_ref.to_index(),
-                }
-                for arg in arg_operations
-            ],
-            "function": self.name,
-            "return_operation_id": self.child,
-            "operations": operations,
-            "return_type": self.ty,
-            "source_ref_index": self.source_ref.to_index(),
-        }
+        return proto_mir.NadaFunction(
+            id=self.id,
+            args=args,
+            name=self.name,
+            return_operation_id=self.child,
+            operations=operations,
+            return_type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+        )
 
     def __hash__(self) -> int:
         return self.id
+
+    def child_operations(self) -> List[int]:
+        return self.args + [self.child]
 
 
 # Partially implemented
@@ -365,16 +366,16 @@ class CastASTOperation(ASTOperation):
     def child_operations(self):
         return [self.target]
 
-    def to_mir(self):
-        return {
-            "Cast": {
-                "id": self.id,
-                "target": self.target,
-                "to": self.ty,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            cast=proto_op.CastOperation(
+                target=self.target,
+                cast_to=self.ty,
+            ),
+        )
 
 
 @dataclass
@@ -387,16 +388,17 @@ class TupleAccessorASTOperation(ASTOperation):
     def child_operations(self):
         return [self.source]
 
-    def to_mir(self):
-        return {
-            "TupleAccessor": {
-                "id": self.id,
-                "index": self.index,
-                "source": self.source,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            tuple_accessor=proto_op.TupleAccessor(
+                index=proto_op.TupleIndex.LEFT
+                if self.index == 0
+                else proto_op.TupleIndex.RIGHT,
+            ),
+        )
 
 
 @dataclass
@@ -409,16 +411,16 @@ class NTupleAccessorASTOperation(ASTOperation):
     def child_operations(self):
         return [self.source]
 
-    def to_mir(self):
-        return {
-            "NTupleAccessor": {
-                "id": self.id,
-                "index": self.index,
-                "source": self.source,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            ntuple_accessor=proto_op.NtupleAccessor(
+                index=self.index,
+                source=self.source,
+            ),
+        )
 
 
 @dataclass
@@ -431,13 +433,13 @@ class ObjectAccessorASTOperation(ASTOperation):
     def child_operations(self):
         return [self.source]
 
-    def to_mir(self):
-        return {
-            "ObjectAccessor": {
-                "id": self.id,
-                "key": self.key,
-                "source": self.source,
-                "type": self.ty,
-                "source_ref_index": self.source_ref.to_index(),
-            }
-        }
+    def to_mir(self) -> proto_op.Operation:
+        return proto_op.Operation(
+            id=self.id,
+            type=self.ty,
+            source_ref_index=self.source_ref.to_index(),
+            object_accessor=proto_op.ObjectAccessor(
+                key=self.key,
+                source=self.source,
+            ),
+        )

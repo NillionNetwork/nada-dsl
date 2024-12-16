@@ -18,7 +18,7 @@ from nada_dsl.timer import add_timer, timer
 class CompilerOutput:
     """Compiler Output"""
 
-    mir: str
+    mir: bytes
 
 
 @add_timer(timer_name="nada_dsl.compile.compile")
@@ -82,7 +82,7 @@ def print_output(out: CompilerOutput):
     """
     output_json = {
         "result": "Success",
-        "mir": out.mir,
+        "mir": list(out.mir),
     }
     print(json.dumps(output_json))
 
