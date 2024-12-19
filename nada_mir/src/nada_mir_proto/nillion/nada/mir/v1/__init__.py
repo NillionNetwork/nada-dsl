@@ -38,7 +38,9 @@ class NadaFunction(betterproto.Message):
     name: str = betterproto.string_field(3)
     """The name of the function"""
 
-    operations: List["__operations_v1__.Operation"] = betterproto.message_field(4)
+    operations: Dict[int, "__operations_v1__.Operation"] = betterproto.map_field(
+        4, betterproto.TYPE_UINT64, betterproto.TYPE_MESSAGE
+    )
     """Table of operations for the function"""
 
     return_operation_id: int = betterproto.uint64_field(5)
@@ -74,7 +76,7 @@ class Input(betterproto.Message):
     type: "__types_v1__.NadaType" = betterproto.message_field(2)
     """Operation type"""
 
-    party_id: int = betterproto.uint64_field(3)
+    party: str = betterproto.string_field(3)
     """Party that contains this input"""
 
     name: str = betterproto.string_field(4)
@@ -123,7 +125,7 @@ class Output(betterproto.Message):
     """Output name"""
 
     operation_id: int = betterproto.int64_field(2)
-    """Output inner operation"""
+    """Output operation ID"""
 
     party: str = betterproto.string_field(3)
     """Party contains this output"""
@@ -157,7 +159,9 @@ class ProgramMir(betterproto.Message):
     outputs: List["Output"] = betterproto.message_field(5)
     """Program output"""
 
-    operations: List["__operations_v1__.Operation"] = betterproto.message_field(6)
+    operations: Dict[int, "__operations_v1__.Operation"] = betterproto.map_field(
+        6, betterproto.TYPE_UINT64, betterproto.TYPE_MESSAGE
+    )
     """Table of operations"""
 
     source_files: Dict[str, str] = betterproto.map_field(

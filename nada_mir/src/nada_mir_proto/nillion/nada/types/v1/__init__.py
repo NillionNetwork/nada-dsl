@@ -24,34 +24,21 @@ class ScalarType(betterproto.Enum):
     SECRET_INTEGER = 3
     SECRET_UNSIGNED_INTEGER = 4
     SECRET_BOOLEAN = 5
-    SECRET_BLOB = 6
-    SECRET_NON_ZERO_INTEGER = 7
-    SECRET_NON_ZERO_UNSIGNED_INTEGER = 8
-    ECDSA_PRIVATE_KEY = 9
+    ECDSA_PRIVATE_KEY = 6
     """ECDSA private key for the threshold ecdsa signature feature."""
 
-    ECDSA_DIGEST_MESSAGE = 10
+    ECDSA_DIGEST_MESSAGE = 7
     """Public ECDSA message digest."""
 
-
-@dataclass(eq=False, repr=False)
-class Object(betterproto.Message):
-    """Object: key-value hash map."""
-
-    types: Dict[str, "NadaType"] = betterproto.map_field(
-        1, betterproto.TYPE_STRING, betterproto.TYPE_MESSAGE
-    )
-    """/ Key-value types."""
+    ECDSA_SIGNATURE = 8
+    """Public ECDSA signature."""
 
 
 @dataclass(eq=False, repr=False)
 class Array(betterproto.Message):
     """Array type, defines a collection of homogeneous values"""
 
-    inner_type: "NadaType" = betterproto.message_field(1)
-    """Inner type of the elements of this array"""
-
-    size: int = betterproto.uint32_field(2)
+    size: int = betterproto.uint32_field(1)
     """Size of the array"""
 
 
@@ -67,22 +54,32 @@ class Tuple(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
-class NTuple(betterproto.Message):
-    """NTuple: any number of heterogeneous values."""
+class CollectionType(betterproto.Message):
+    """Collection type, defines a collection of same values"""
 
-    types: List["NadaType"] = betterproto.message_field(1)
-    """NTuple types."""
+    array: "Array" = betterproto.message_field(1, group="collection_type")
+    contained_type: "NadaType" = betterproto.message_field(2)
+    """Type of the elements of this collection"""
 
 
 @dataclass(eq=False, repr=False)
-class CompositeType(betterproto.Message):
-    array: "Array" = betterproto.message_field(1, group="composite_type")
-    tuple: "Tuple" = betterproto.message_field(2, group="composite_type")
-    ntuple: "NTuple" = betterproto.message_field(3, group="composite_type")
-    object: "Object" = betterproto.message_field(4, group="composite_type")
+class Ntuple(betterproto.Message):
+    fields: List["NadaType"] = betterproto.message_field(1)
+    """Number of elements in the tuple"""
+
+
+@dataclass(eq=False, repr=False)
+class Object(betterproto.Message):
+    fields: Dict[str, "NadaType"] = betterproto.map_field(
+        1, betterproto.TYPE_STRING, betterproto.TYPE_MESSAGE
+    )
+    """Number of elements in the object"""
 
 
 @dataclass(eq=False, repr=False)
 class NadaType(betterproto.Message):
     scalar: "ScalarType" = betterproto.enum_field(1, group="nada_type")
-    composite: "CompositeType" = betterproto.message_field(2, group="nada_type")
+    tuple: "Tuple" = betterproto.message_field(2, group="nada_type")
+    collection: "CollectionType" = betterproto.message_field(3, group="nada_type")
+    ntuple: "Ntuple" = betterproto.message_field(4, group="nada_type")
+    object: "Object" = betterproto.message_field(5, group="nada_type")
