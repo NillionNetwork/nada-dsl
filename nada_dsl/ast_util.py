@@ -22,12 +22,14 @@ class OperationId:
 
     @classmethod
     def next(cls):
+        """Returns the next operation identifier."""
         next_op_id = cls.current
         cls.current += 1
         return next_op_id
 
     @classmethod
     def reset(cls):
+        """Resets the operation identifier generator."""
         cls.current = 0
 
 

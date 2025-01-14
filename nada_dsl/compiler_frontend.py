@@ -5,14 +5,16 @@ that constitute the Nada embedded domain-specific language (EDSL).
 
 from dataclasses import dataclass, field
 import os
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 from sortedcontainers import SortedDict
 
-from nada_dsl import Party
+
 from nada_mir_proto.nillion.nada.mir import v1 as proto_mir
 from nada_mir_proto.nillion.nada.operations import v1 as proto_op
 from nada_mir_proto.nillion.nada.types import v1 as proto_ty
 
+
+from nada_dsl import Party
 from nada_dsl.ast_util import (
     AST_OPERATIONS,
     ASTOperation,
@@ -39,10 +41,12 @@ from nada_dsl.program_io import Output
 
 @dataclass
 class CompilationContext:
-    inputs: Dict[Tuple[str, str], InputASTOperation] = field(
-        default_factory=lambda: SortedDict()
-    )
-    parties: Dict[str, Party] = field(default_factory=lambda: SortedDict())
+    """
+    Compilation context that holds the state of the compilation process.
+    """
+
+    inputs: Dict[Tuple[str, str], InputASTOperation] = field(default_factory=SortedDict)
+    parties: Dict[str, Party] = field(default_factory=SortedDict)
     functions: Dict[int, NadaFunctionASTOperation] = field(default_factory=lambda: {})
     literals: Dict[str, Tuple[str, proto_ty.NadaType]] = field(
         default_factory=lambda: {}
@@ -297,33 +301,38 @@ def process_operation(
     ):
         return operation.to_mir()
 
-    elif isinstance(operation, InputASTOperation):
+    if isinstance(operation, InputASTOperation):
         add_input_to_map(operation, ctx)
         return operation.to_mir()
-    elif isinstance(operation, LiteralASTOperation):
+    if isinstance(operation, LiteralASTOperation):
         ctx.literals[operation.literal_index] = (str(operation.value), operation.ty)
         return operation.to_mir()
-    elif isinstance(operation, (MapASTOperation, ReduceASTOperation)):
+    if isinstance(operation, (MapASTOperation, ReduceASTOperation)):
         if operation.fn not in ctx.functions:
             ctx.functions[operation.fn] = AST_OPERATIONS[operation.fn]
         return operation.to_mir()
-    elif isinstance(operation, NadaFunctionASTOperation):
+    if isinstance(operation, NadaFunctionASTOperation):
         if operation.id not in ctx.functions:
             ctx.functions[operation.id] = AST_OPERATIONS[operation.id]
         return None
-    else:
-        raise CompilerException(
-            f"Compilation of Operation {operation} is not supported"
-        )
+
+    raise CompilerException(f"Compilation of Operation {operation} is not supported")
+
+
+class PrintMirException(Exception):
+    """Generic exception for printing MIR"""
 
 
 def print_mir(mir: proto_mir.ProgramMir):
+    """Prints the MIR in a human-readable format."""
     print("Parties:")
     for party in mir.parties:
         print(f"  {party.name}")
     print("Inputs:")
-    for input in mir.inputs:
-        print(f"  {input.name} ty({type_to_str(input.type)}) party({input.party})")
+    for mir_input in mir.inputs:
+        print(
+            f"  {mir_input.name} ty({type_to_str(mir_input.type)}) party({mir_input.party})"
+        )
     print("Literals:")
     for literal in mir.literals:
         print(f"  {literal.name} ty({type_to_str(literal.type)}) val({literal.value})")
@@ -344,7 +353,9 @@ def print_mir(mir: proto_mir.ProgramMir):
     print_operations(mir.operations)
 
 
+# pylint: disable=too-many-branches
 def print_operations(operation: List[proto_mir.OperationMapEntry]):
+    """Prints a list of operations in a human-readable format."""
     print()
     for entry in operation:
         op_id, op = entry.id, entry.operation
@@ -358,7 +369,7 @@ def print_operations(operation: List[proto_mir.OperationMapEntry]):
         elif hasattr(op, "ifelse"):
             line += f"ifelse cond({op.ifelse.cond}) true({op.ifelse.first}) false({op.ifelse.second})"
         elif hasattr(op, "random"):
-            line += f"random "
+            line += "random "
         elif hasattr(op, "input_ref"):
             line += f"input_ref to({op.input_ref.refers_to})"
         elif hasattr(op, "arg_ref"):
@@ -385,36 +396,37 @@ def print_operations(operation: List[proto_mir.OperationMapEntry]):
         elif hasattr(op, "cast"):
             line += f"cast oid({op.cast.target}) {op.cast.to}"
         else:
-            raise Exception(f"Unknown operation {op}")
+            raise PrintMirException(f"Unknown operation {op}")
         print(line)
 
 
+# pylint: disable=too-many-branches,too-many-return-statements
 def type_to_str(ty: proto_ty.NadaType):
+    """Converts a Nada type to a string."""
     if hasattr(ty, "integer"):
         return "Integer"
-    elif hasattr(ty, "unsigned_integer"):
+    if hasattr(ty, "unsigned_integer"):
         return "UnsignedInteger"
-    elif hasattr(ty, "boolean"):
+    if hasattr(ty, "boolean"):
         return "Boolean"
-    elif hasattr(ty, "secret_integer"):
+    if hasattr(ty, "secret_integer"):
         return "SecretInteger"
-    elif hasattr(ty, "secret_unsigned_integer"):
+    if hasattr(ty, "secret_unsigned_integer"):
         return "SecretUnsignedInteger"
-    elif hasattr(ty, "secret_boolean"):
+    if hasattr(ty, "secret_boolean"):
         return "SecretBoolean"
-    elif hasattr(ty, "ecdsa_private_key"):
+    if hasattr(ty, "ecdsa_private_key"):
         return "EcdsaPrivateKey"
-    elif hasattr(ty, "ecdsa_digest_message"):
+    if hasattr(ty, "ecdsa_digest_message"):
         return "EcdsaDigestMessage"
-    elif hasattr(ty, "ecdsa_signature"):
+    if hasattr(ty, "ecdsa_signature"):
         return "EcdsaSignature"
-    elif hasattr(ty, "array"):
+    if hasattr(ty, "array"):
         return f"Array[{type_to_str(ty.collection.contained_type)}:{ty.collection.array.size}]"
-    elif hasattr(ty, "tuple"):
+    if hasattr(ty, "tuple"):
         return f"Tuple[{type_to_str(ty.tuple.left)}, {type_to_str(ty.tuple.right)}]"
-    elif hasattr(ty, "object"):
-        return f"Object"
-    elif hasattr(ty, "ntuple"):
+    if hasattr(ty, "object"):
+        return "Object"
+    if hasattr(ty, "ntuple"):
         return f"NTuple[{', '.join([type_to_str(t) for t in ty.ntuple.fields])}]"
-    else:
-        raise Exception("Unknown type {ty}")
+    raise PrintMirException("Unknown type {ty}")
