@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package nillion.nada.mir.v1;
+
+import "nillion/nada/v1/operations.proto";
+import "nillion/nada/v1/types.proto";
+
+message OperationMapEntry {
+  // id
+  uint64 id = 1;
+  // Value
+  nillion.nada.operations.v1.Operation operation = 2;
+}
+
+message NadaFunctionArg {
+  // Argument name
+  string name = 1;
+  // Argument type
+  nillion.nada.types.v1.NadaType type = 2;
+  // Source code info about this element.
+  uint64 source_ref_index = 3;
+}
+
+message NadaFunction {
+  // Function identifier
+  uint64 id = 1;
+  // Function arguments
+  repeated NadaFunctionArg args = 2;
+  // The name of the function
+  string name = 3;
+  // Table of operations, we use repeated OperationMapEntry ordered by id to have deterministic compilation
+  repeated OperationMapEntry operations = 4;
+  // Identifier of the operation (in the operations map) that represents
+  // the return of this function
+  uint64 return_operation_id = 5;
+  // Function return type
+  nillion.nada.types.v1.NadaType return_type = 6;
+  // NadaFunction source file information.
+  uint64 source_ref_index = 7;
+}
+
+message Party {
+  // Name of the party
+  string name = 1;
+  // Source reference
+  uint64 source_ref_index = 2;
+}
+
+message Input {
+  // Operation type
+  nillion.nada.types.v1.NadaType type = 1;
+  // Party that contains this input
+  string party = 2;
+  // Input name
+  string name = 3;
+  // The documentation.
+  string doc = 4;
+  // Source file info related with this operation.
+  uint64 source_ref_index = 5;
+}
+
+message Literal {
+  // Name
+  string name = 2;
+  // Value
+  string value = 3;
+  // Type
+  nillion.nada.types.v1.NadaType type = 4;
+}
+
+message SourceRef {
+  // Nada-lang file that contains the elements
+  string file = 1;
+  // Line number into the file that contains the element
+  uint32 lineno = 2;
+  // Element's offset into the file
+  uint32 offset = 3;
+  // Element's length into the file
+  uint32 length = 4;
+}
+
+message Output {
+  // Output name
+  string name = 1;
+  // Output operation ID
+  uint64 operation_id = 2;
+  // Party contains this output
+  string party = 3;
+  // Output type
+  nillion.nada.types.v1.NadaType type = 4;
+  // Source file info related with this output.
+  uint64 source_ref_index = 5;
+}
+
+// The Program MIR.
+// This is the container of all the MIR representation for a program.
+message ProgramMIR {
+  // List of the functions are used by the program
+  repeated NadaFunction functions = 1;
+  // Program parties
+  repeated Party parties = 2;
+  // Program inputs
+  repeated Input inputs = 3;
+  // Program literals
+  repeated Literal literals = 4;
+  // Program output
+  repeated Output outputs = 5;
+  // Table of operations, we use repeated OperationMapEntry ordered by id to have deterministic compilation
+  repeated OperationMapEntry operations = 6;
+  // Source file info related with the program.
+  map<string, string> source_files = 7;
+  // Array of source references
+  repeated SourceRef source_refs = 8;
+}

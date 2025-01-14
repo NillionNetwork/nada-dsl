@@ -2,8 +2,8 @@
 
 from typing import TypeVar
 
-from nada_dsl.nada_types import NadaType
+from nada_dsl.nada_types import DslType
 
-R = TypeVar("R", bound=NadaType)
-T = TypeVar("T", bound=NadaType)
-U = TypeVar("U", bound=NadaType)
+R = TypeVar("R", bound=DslType)
+T = TypeVar("T", bound=DslType)
+U = TypeVar("U", bound=DslType)

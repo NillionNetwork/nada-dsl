@@ -6,18 +6,21 @@ import base64
 import os
 import json
 import pytest
-from nada_dsl.ast_util import AST_OPERATIONS
+from betterproto.lib.google.protobuf import Empty
+
+from nada_mir_proto.nillion.nada.mir import v1 as proto_mir
+from nada_mir_proto.nillion.nada.types import v1 as proto_ty
+from nada_mir_proto.nillion.nada.operations import v1 as proto_op
+
+from nada_dsl.ast_util import AST_OPERATIONS, OperationId
 from nada_dsl.compile import compile_script, compile_string, print_output
-from nada_dsl.compiler_frontend import FUNCTIONS, INPUTS, PARTIES
 from nada_dsl.errors import NotAllowedException
 
 
 @pytest.fixture(autouse=True)
 def clean_inputs():
-    PARTIES.clear()
-    INPUTS.clear()
-    FUNCTIONS.clear()
     AST_OPERATIONS.clear()
+    OperationId.reset()
     yield
 
 
@@ -29,18 +32,10 @@ def get_test_programs_folder():
     return this_directory + "../test-programs/"
 
 
-def test_compile_nada_fn_simple():
-    mir_str = compile_script(f"{get_test_programs_folder()}/nada_fn_simple.py").mir
-    assert mir_str != ""
-    mir = json.loads(mir_str)
-    mir_functions = mir["functions"]
-    assert len(mir_functions) == 1
-
-
 def test_compile_sum_integers():
-    mir_str = compile_script(f"{get_test_programs_folder()}/sum_integers.py").mir
-    assert mir_str != ""
-    mir = json.loads(mir_str)
+    mir_bytes = compile_script(f"{get_test_programs_folder()}/sum_integers.py").mir
+    assert len(mir_bytes) > 0
+    mir = proto_mir.ProgramMir().parse(mir_bytes)
     # The MIR operations look like this:
     # - 2 InputReference
     # - 1 LiteralReference for the initial accumulator
@@ -49,18 +44,21 @@ def test_compile_sum_integers():
     literal_id = 0
     input_ids = []
     additions = {}
-    for operation in mir["operations"].values():
-        for name, op in operation.items():
-            op_id = op["id"]
-            if name == "LiteralReference":
-                literal_id = op_id
-                assert op["type"] == "Integer"
-            elif name == "InputReference":
-                input_ids.append(op_id)
-            elif name == "Addition":
-                additions[op_id] = op
-            else:
-                raise Exception(f"Unexpected operation: {name}")
+    for entry in mir.operations:
+        op_id, operation = entry.id, entry.operation
+        if hasattr(operation, "literal_ref"):
+            literal_id = op_id
+            assert operation.type == proto_ty.NadaType(integer=Empty())
+        elif hasattr(operation, "input_ref"):
+            input_ids.append(op_id)
+        elif (
+            hasattr(operation, "binary")
+            and operation.binary.variant == proto_op.BinaryOperationVariant.ADDITION
+        ):
+            additions[op_id] = operation.binary
+        else:
+            raise Exception(f"Unexpected operation: {operation}")
+
     assert literal_id != 0
     assert len(input_ids) == 2
     assert len(additions) == 2
@@ -70,8 +68,8 @@ def test_compile_sum_integers():
     # left: addition, right: input reference
     second_addition_found = False
     for addition in additions.values():
-        left_id = addition["left"]
-        right_id = addition["right"]
+        left_id = addition.left
+        right_id = addition.right
         if left_id in input_ids and right_id == literal_id:
             first_addition_found = True
         if left_id in additions.keys() and right_id in input_ids:
@@ -88,11 +86,9 @@ def nada_main():
     my_int1 = SecretInteger(Input(name="my_int1", party=party1))
     my_int2 = SecretInteger(Input(name="my_int2", party=party1))
 
-    @nada_fn
     def add(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a + b
 
-    @nada_fn
     def add_times(a: SecretInteger, b: SecretInteger) -> SecretInteger:
         return a * add(a, b)
 
@@ -104,63 +100,43 @@ def nada_main():
     compile_string(encoded_program_str)
 
 
-# TODO recursive programs fail with `NameError` for now. This is incorrect.
-def test_compile_program_with_recursion():
-    program_str = """from nada_dsl import *
-
-def nada_main():
-    party1 = Party(name="Party1")
-    my_int1 = SecretInteger(Input(name="my_int1", party=party1))
-    my_int2 = SecretInteger(Input(name="my_int2", party=party1))
-
-    @nada_fn
-    def add_times(a: SecretInteger, b: SecretInteger) -> SecretInteger:
-        return a * add_times(a, b)
-
-    new_int = add_times(my_int1, my_int2)
-    return [Output(new_int, "my_output", party1)]
-"""
-    encoded_program_str = base64.b64encode(bytes(program_str, "utf-8")).decode("utf_8")
-
-    with pytest.raises(NameError):
-        compile_string(encoded_program_str)
-
-
-def test_compile_nada_fn_literals():
-    with pytest.raises(NotAllowedException):
-        mir_str = compile_script(f"{get_test_programs_folder()}/nada_fn_literal.py").mir
-
-
 def test_compile_map_simple():
-    mir_str = compile_script(f"{get_test_programs_folder()}/map_simple.py").mir
-    assert mir_str != ""
-    mir = json.loads(mir_str)
-    assert len(mir["operations"]) == 2
-    assert len(mir["functions"]) == 1
-    function_id = mir["functions"][0]["id"]
+    mir_bytes = compile_script(f"{get_test_programs_folder()}/map_simple.py").mir
+    assert len(mir_bytes) > 0
+    mir = proto_mir.ProgramMir().parse(mir_bytes)
+
+    assert len(mir.operations) == 2
+    assert len(mir.functions) == 1
+    function_id = mir.functions[0].id
     operations_found = 0
     array_input_id = 0
     map_inner = 0
-    output_id = mir["outputs"][0]["operation_id"]
+    output_id = mir.outputs[0].operation_id
     function_op_id = 0
-    for operation in mir["operations"].values():
-        for name, op in operation.items():
-            op_id = op["id"]
-            if name == "InputReference":
-                array_input_id = op_id
-                assert op["type"] == {
-                    "Array": {"inner_type": "SecretInteger", "size": 3}
-                }
-                operations_found += 1
-            elif name == "Map":
-                assert op["fn"] == function_id
-                map_inner = op["inner"]
-                function_op_id = op["id"]
-                operations_found += 1
-            else:
-                raise Exception(f"Unexpected operation: {name}")
-    assert map_inner > 0 and array_input_id > 0 and map_inner == array_input_id
-    assert function_op_id > 0 and output_id == function_op_id
+    for entry in mir.operations:
+        op_id, operation = entry.id, entry.operation
+        if hasattr(operation, "input_ref"):
+            array_input_id = op_id
+            assert operation.type == proto_ty.NadaType(
+                array=proto_ty.Array(
+                    size=3,
+                    contained_type=proto_ty.NadaType(secret_integer=Empty()),
+                )
+            )
+
+            operations_found += 1
+        elif hasattr(operation, "map"):
+            assert operation.map.fn == function_id
+            map_inner = operation.map.child
+            function_op_id = op_id
+            operations_found += 1
+        else:
+            raise Exception(f"Unexpected operation: {operation}")
+
+    assert map_inner > -1
+    assert array_input_id > -1
+    assert map_inner == array_input_id
+    assert 0 < function_op_id == output_id
 
 
 def test_compile_ecdsa_program():
@@ -176,15 +152,15 @@ def nada_main():
     return [Output(new_int, "my_output", party1)]
 """
     encoded_program_str = base64.b64encode(bytes(program_str, "utf-8")).decode("utf_8")
-    output = compile_string(encoded_program_str)
-    print_output(output)
+    mir_bytes = compile_string(encoded_program_str).mir
+    assert len(mir_bytes) > 0
 
 
 def test_compile_ntuple():
-    mir_str = compile_script(f"{get_test_programs_folder()}/ntuple_accessor.py").mir
-    assert mir_str != ""
+    mir_bytes = compile_script(f"{get_test_programs_folder()}/ntuple_accessor.py").mir
+    assert len(mir_bytes) > 0
 
 
 def test_compile_object():
     mir_str = compile_script(f"{get_test_programs_folder()}/object_accessor.py").mir
-    assert mir_str != ""
+    assert len(mir_str) > 0

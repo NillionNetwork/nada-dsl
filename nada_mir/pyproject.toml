@@ -15,7 +15,16 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-dependencies = ["grpcio-tools==1.62.3", "betterproto==2.0.0b7"]
+dependencies = [
+    "betterproto==2.0.0b7",
+    "pydantic==2.10.3"
+]
+
+[tool.uv]
+dev-dependencies = [
+    "grpcio-tools==1.62.3"
+]
 
 [project.optional-dependencies]
 dev = ["betterproto[compiler]==2.0.0b7"]
+protoc = ["grpcio-tools==1.62.3"]
