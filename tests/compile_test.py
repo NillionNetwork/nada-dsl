@@ -123,7 +123,7 @@ def test_compile_map_simple():
                     contained_type=proto_ty.NadaType(secret_integer=Empty()),
                 )
             )
-            
+
             operations_found += 1
         elif hasattr(operation, "map"):
             assert operation.map.fn == function_id

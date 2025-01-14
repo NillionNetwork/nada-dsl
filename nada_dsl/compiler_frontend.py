@@ -36,12 +36,17 @@ from nada_dsl.timer import timer
 from nada_dsl.source_ref import SourceRef
 from nada_dsl.program_io import Output
 
+
 @dataclass
 class CompilationContext:
-    inputs: Dict[Tuple[str, str], InputASTOperation] = field(default_factory=lambda: SortedDict())
+    inputs: Dict[Tuple[str, str], InputASTOperation] = field(
+        default_factory=lambda: SortedDict()
+    )
     parties: Dict[str, Party] = field(default_factory=lambda: SortedDict())
     functions: Dict[int, NadaFunctionASTOperation] = field(default_factory=lambda: {})
-    literals: Dict[str, Tuple[str, proto_ty.NadaType]] = field(default_factory=lambda: {})
+    literals: Dict[str, Tuple[str, proto_ty.NadaType]] = field(
+        default_factory=lambda: {}
+    )
 
 
 def get_target_dir() -> str:
@@ -93,7 +98,10 @@ def nada_dsl_to_nada_mir(outputs: List[Output]) -> proto_mir.ProgramMir:
             )
         )
 
-    operations = [proto_mir.OperationMapEntry(id=id, operation=op) for id, op in operations.items()]
+    operations = [
+        proto_mir.OperationMapEntry(id=id, operation=op)
+        for id, op in operations.items()
+    ]
 
     mir = proto_mir.ProgramMir(
         functions=process_functions(ctx),
@@ -123,15 +131,15 @@ def to_input_list(inputs: Dict[int, InputASTOperation]) -> List[proto_mir.Input]
     """Convert inputs to a list in MIR format."""
     input_list = []
     for input_ast in inputs.values():
-            input_list.append(
-                proto_mir.Input(
-                    name=input_ast.name,
-                    type=input_ast.ty,
-                    party=input_ast.party.name,
-                    doc=input_ast.doc,
-                    source_ref_index=input_ast.source_ref.to_index(),
-                )
+        input_list.append(
+            proto_mir.Input(
+                name=input_ast.name,
+                type=input_ast.ty,
+                party=input_ast.party.name,
+                doc=input_ast.doc,
+                source_ref_index=input_ast.source_ref.to_index(),
             )
+        )
     return input_list
 
 
@@ -188,16 +196,23 @@ def process_functions(
             stack.extend(ctx.functions.values())
             ctx.functions = {}
 
-        function_operations = [proto_mir.OperationMapEntry(id=id, operation=op) for id, op in function_operations.items()]
+        function_operations = [
+            proto_mir.OperationMapEntry(id=id, operation=op)
+            for id, op in function_operations.items()
+        ]
 
         mir_functions.append(function.to_mir(function_operations))
     return mir_functions
 
 
-def add_input_to_map(operation: InputASTOperation, ctx: CompilationContext) -> proto_op.Operation:
+def add_input_to_map(
+    operation: InputASTOperation, ctx: CompilationContext
+) -> proto_op.Operation:
     """Adds an input to the global INPUTS dictionary"""
     ctx.parties[operation.party.name] = operation.party
-    if (operation.party.name, operation.name) in ctx.inputs and ctx.inputs[(operation.party.name, operation.name)].id != operation.id:
+    if (operation.party.name, operation.name) in ctx.inputs and ctx.inputs[
+        (operation.party.name, operation.name)
+    ].id != operation.id:
         raise CompilerException(f"Input is duplicated: {operation.name}")
 
     ctx.inputs[(operation.party.name, operation.name)] = operation
@@ -314,15 +329,20 @@ def print_mir(mir: proto_mir.ProgramMir):
         print(f"  {literal.name} ty({type_to_str(literal.type)}) val({literal.value})")
     print("Outputs:")
     for output in mir.outputs:
-        print(f"  {output.name} ty({type_to_str(output.type)}) oid({output.operation_id})")
+        print(
+            f"  {output.name} ty({type_to_str(output.type)}) oid({output.operation_id})"
+        )
     print("Functions:")
     for function in mir.functions:
-        args = ', '.join([f"{arg.name}: ty({type_to_str(arg.type)})" for arg in function.args])
+        args = ", ".join(
+            [f"{arg.name}: ty({type_to_str(arg.type)})" for arg in function.args]
+        )
         print(f"  {function.name} fn_id({function.id}), args({args})")
         print_operations(function.operations)
 
     print("Operations:")
     print_operations(mir.operations)
+
 
 def print_operations(operation: List[proto_mir.OperationMapEntry]):
     print()
@@ -342,7 +362,9 @@ def print_operations(operation: List[proto_mir.OperationMapEntry]):
         elif hasattr(op, "input_ref"):
             line += f"input_ref to({op.input_ref.refers_to})"
         elif hasattr(op, "arg_ref"):
-            line += f"arg_ref fn_id({op.arg_ref.function_id}) to({op.arg_ref.refers_to})"
+            line += (
+                f"arg_ref fn_id({op.arg_ref.function_id}) to({op.arg_ref.refers_to})"
+            )
         elif hasattr(op, "literal_ref"):
             line += f"literal_ref to({op.literal_ref.refers_to})"
         elif hasattr(op, "map"):
@@ -365,6 +387,7 @@ def print_operations(operation: List[proto_mir.OperationMapEntry]):
         else:
             raise Exception(f"Unknown operation {op}")
         print(line)
+
 
 def type_to_str(ty: proto_ty.NadaType):
     if hasattr(ty, "integer"):

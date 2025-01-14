@@ -628,7 +628,7 @@ wheels = [
 
 [[package]]
 name = "nada-dsl"
-version = "0.7.1"
+version = "0.7.2"
 source = { editable = "." }
 dependencies = [
     { name = "asttokens" },
@@ -711,7 +711,6 @@ version = "0.1.0"
 source = { editable = "nada_mir" }
 dependencies = [
     { name = "betterproto" },
-    { name = "grpcio-tools" },
     { name = "pydantic" },
 ]
 
@@ -719,14 +718,25 @@ dependencies = [
 dev = [
     { name = "betterproto", extra = ["compiler"] },
 ]
+protoc = [
+    { name = "grpcio-tools" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "grpcio-tools" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "betterproto", specifier = "==2.0.0b7" },
     { name = "betterproto", extras = ["compiler"], marker = "extra == 'dev'", specifier = "==2.0.0b7" },
-    { name = "grpcio-tools", specifier = "==1.62.3" },
+    { name = "grpcio-tools", marker = "extra == 'protoc'", specifier = "==1.62.3" },
     { name = "pydantic", specifier = "==2.10.3" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "grpcio-tools", specifier = "==1.62.3" }]
 
 [[package]]
 name = "packaging"

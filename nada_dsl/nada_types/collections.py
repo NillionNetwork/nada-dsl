@@ -326,7 +326,9 @@ class ObjectType(NadaType):
         fields = SortedDict({name: ty.to_mir() for name, ty in self.types.items()})
         return proto_ty.NadaType(
             object=proto_ty.Object(
-                fields=[proto_ty.ObjectEntry(name=k, type=v) for k, v in fields.items()],
+                fields=[
+                    proto_ty.ObjectEntry(name=k, type=v) for k, v in fields.items()
+                ],
             )
         )
 
@@ -479,11 +481,10 @@ class ArrayType(NadaType):
     def to_mir(self) -> proto_ty.NadaType:
         """Convert this generic type into a MIR Nada type."""
         return proto_ty.NadaType(
-                array=proto_ty.Array(
-                    size=self.size,
-                    contained_type=self.contained_type.to_mir()
-                )
+            array=proto_ty.Array(
+                size=self.size, contained_type=self.contained_type.to_mir()
             )
+        )
 
     def instantiate(self, child_or_value):
         return Array(child_or_value, self.size, self.contained_type)

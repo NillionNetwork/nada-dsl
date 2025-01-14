@@ -17,14 +17,15 @@ from nada_dsl.source_ref import SourceRef
 
 class OperationId:
     """Operation identifier generator."""
+
     current = 0
-    
+
     @classmethod
     def next(cls):
         next_op_id = cls.current
         cls.current += 1
         return next_op_id
-    
+
     @classmethod
     def reset(cls):
         cls.current = 0
@@ -313,7 +314,7 @@ class NadaFunctionArgASTOperation(ASTOperation):
             arg_ref=proto_op.NadaFunctionArgRef(
                 function_id=self.fn,
                 refers_to=self.name,
-            )
+            ),
         )
 
     def child_operations(self) -> List[int]:

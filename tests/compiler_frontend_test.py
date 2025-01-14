@@ -29,7 +29,8 @@ from nada_dsl.program_io import Input, Output
 from nada_dsl.compiler_frontend import (
     nada_dsl_to_nada_mir,
     to_input_list,
-    process_operation, CompilationContext,
+    process_operation,
+    CompilationContext,
 )
 from nada_dsl.nada_types import AllTypes, Party
 from nada_dsl.nada_types.collections import Array, Tuple, NTuple, Object, unzip
@@ -95,13 +96,15 @@ def test_root_conversion():
     assert mir_output.type == proto_ty.NadaType(secret_integer=Empty())
     assert mir_output.party == "output_party"
 
-    assert list(filter(lambda op: op.id == mir_output.operation_id, operations))[0].operation.input_ref
+    assert list(filter(lambda op: op.id == mir_output.operation_id, operations))[
+        0
+    ].operation.input_ref
 
 
 def test_input_conversion():
     input = Input(name="input", party=Party("party"))
     input.store_in_ast(proto_ty.NadaType(secret_integer=Empty()))
-    inputs = { 0: AST_OPERATIONS[0] }
+    inputs = {0: AST_OPERATIONS[0]}
 
     converted_inputs = to_input_list(inputs)
     assert len(converted_inputs) == 1
