@@ -2,7 +2,7 @@
 # Based on https://github.com/maybe-hello-world/pyproject-check-version/blob/v4/version_checker.py
 import re
 import sys
-import tomli
+import tomllib
 import os
 import requests
 from packaging import version
@@ -21,7 +21,7 @@ def get_public_version(project_name: str) -> Version:
 if __name__ == "__main__":
     pyproject_toml_path = sys.argv[1]
     with open(pyproject_toml_path, "rb") as f:
-        project = tomli.load(f)
+        project = tomllib.load(f)
 
     project_version = version.parse(project["project"]["version"])
     public_project_version = get_public_version(project["project"]["name"])

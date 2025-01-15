@@ -41,7 +41,6 @@ dev-dependencies = [
     "pytest-cov>=4,<7",
     "pylint>=2.17,<3.4",
     "nada-mir-proto[dev]",
-    "tomli>=2.2.0",
     "requests>=2.32.3",
     "typing_extensions~=4.12.2",
     "ruff>=0.8.0"
