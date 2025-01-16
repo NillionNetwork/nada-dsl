@@ -70,6 +70,7 @@ jobs:
           cd nillion && cargo build -p test-programs
       - name: Run nada autotests
         run: |
+          pip install nillion/nada-lang/nada_dsl/nada_mir
           pip install nillion/nada-lang/nada_dsl
           mkdir target
           cd nillion 
