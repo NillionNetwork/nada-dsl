@@ -23,7 +23,7 @@ test-dependencies:
 	pip install .'[test]'
 
 test: test-dependencies
-	pytest
+	uv run pytest
 
 # Build protocol buffers definitions. 
 build_proto:

@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package nillion.nada.types.v1;
+
+// Array type, defines a collection of homogeneous values
+message Array {
+  // Type of the elements of this array
+  NadaType contained_type = 1;
+  // Size of the array
+  uint32 size = 2;
+}
+
+// Tuple type, a binary tuple
+message Tuple {
+  // Left type
+  NadaType left = 1;
+  // Right type
+  NadaType right = 2;
+}
+
+message Ntuple {
+  // Number of elements in the tuple
+  repeated NadaType fields = 1;
+}
+
+message ObjectEntry {
+  // Name of the field
+  string name = 1;
+  // Type of the field
+  NadaType type = 2;
+}
+
+message Object {
+  // Fields of the object, we use repeated ObjectEntry ordered by name to have deterministic compilation
+   repeated ObjectEntry fields = 1;
+}
+
+message NadaType {
+  oneof nada_type {
+    google.protobuf.Empty integer = 1;
+    google.protobuf.Empty unsigned_integer = 2;
+    google.protobuf.Empty boolean = 3;
+    google.protobuf.Empty secret_integer = 4;
+    google.protobuf.Empty secret_unsigned_integer = 5;
+    google.protobuf.Empty secret_boolean = 6;
+    google.protobuf.Empty ecdsa_private_key = 7;
+    google.protobuf.Empty ecdsa_digest_message = 8;
+    google.protobuf.Empty ecdsa_signature = 9;
+    Array array = 10;
+    Tuple tuple = 11;
+    Ntuple ntuple = 12;
+    Object object = 13;
+  }
+}

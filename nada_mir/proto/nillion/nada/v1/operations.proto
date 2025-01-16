@@ -1,0 +1,215 @@
+syntax = "proto3";
+
+package nillion.nada.operations.v1;
+
+import "nillion/nada/v1/types.proto";
+import "google/protobuf/empty.proto";
+
+// The variant of the binary operation.
+enum BinaryOperationVariant {
+  // Addition operation variant
+  ADDITION = 0;
+  // Addition operation variant
+  SUBTRACTION = 1;
+  // Multiplication operation variant
+  MULTIPLICATION = 2;
+  // Less-than comparison operation variant
+  LESS_THAN = 3;
+  // Less-or-equal-than comparison operation variant
+  LESS_EQ = 4;
+  // Greater-than comparison operation variant
+  GREATER_THAN = 5;
+  // Greater-or-equal-than comparison operation variant
+  GREATER_EQ = 6;
+  // Equals public output comparison operation variant
+  EQUALS_PUBLIC_OUTPUT = 7;
+  // Equals comparison operation variant also public-public
+  // comparisons
+  EQUALS = 8;
+  // Modulo operation variant
+  MODULO = 9;
+  // Power operation variant
+  POWER = 10;
+  // Division operation variant
+  DIVISION = 11;
+  // Left Shift operation variant
+  LEFT_SHIFT = 12;
+  // Right Shift operation variant
+  RIGHT_SHIFT = 13;
+  // Probabilistic truncation operation variant
+  TRUNC_PR = 14;
+  // Not equals operation
+  NOT_EQUALS = 15;
+  // Boolean AND operation variant
+  BOOL_AND = 16;
+  // Boolean OR operation variant
+  BOOL_OR = 17;
+  // Boolean XOR operation variant
+  BOOL_XOR = 18;
+  // Zip operation variant
+  ZIP = 19;
+  // Inner product operation variant
+  INNER_PRODUCT = 20;
+  // ECDSA sign operation variant
+  ECDSA_SIGN = 21;
+}
+
+// The variant of the binary operation.
+enum UnaryOperationVariant {
+  // Unzip operation variant
+  UNZIP = 0;
+  // Reveal operation variant
+  REVEAL = 1;
+  // Not operation variant
+  NOT = 2;
+}
+
+// MIR Binary operation.
+// Basically most arithmetic operations: Addition, Subtraction
+// Division, Modulo, Power, etc.
+message BinaryOperation {
+  // Operation variant
+  BinaryOperationVariant variant = 1;
+  // Left operand of the operation
+  uint64 left = 2;
+  // Right operand of the operation
+  uint64 right = 3;
+}
+
+// Represents a MIR Unary operation:
+// - Cast
+// - Not
+// - Reveal
+// - Unzip
+message UnaryOperation {
+  // Operation variant
+  UnaryOperationVariant variant = 1;
+  // The operand of the operation
+  uint64 this = 2;
+}
+
+message IfElseOperation {
+  // operand of the conditional operation
+  uint64 cond = 1;
+  // operand of the first operation
+  uint64 first = 2;
+  // operand of the second operation
+  uint64 second = 3;
+}
+
+// Input reference structure, can be used for:
+// - Input
+// - Literal
+// Also, it is used to describe the nada function arguments.
+message InputReference {
+  // Index of the input/literal operation referred by this operation
+  string refers_to = 1;
+}
+
+
+message LiteralReference {
+  // Literal refers to
+  string refers_to = 1;
+}
+
+message MapOperation {
+  // Function to execute
+  uint64 fn = 1;
+  // Map operation child
+  uint64 child = 2;
+}
+
+message ReduceOperation {
+  // Function to execute
+  uint64 fn = 1;
+  // Reduce operation child
+  uint64 child = 2;
+  // Initial accumulator value
+  uint64 initial = 3;
+}
+
+message NewOperation {
+  // The elements of this compound type
+  repeated uint64 elements = 1;
+}
+
+message ArrayAccessor {
+  // array index - for now an integer but eventually it could be the result of
+  // an operation
+  uint32 index = 1;
+  // source - The Operation that represents the array we are accessing
+  uint64 source = 2;
+}
+
+enum TupleIndex {
+  // The left element of the tuple
+  LEFT = 0;
+  // The right element of the tuple
+  RIGHT = 1;
+}
+
+message TupleAccessor {
+  // tuple index (left or right)
+  TupleIndex index = 1;
+  // source - The Operation that represents the tuple we are accessing
+  uint64 source = 2;
+}
+
+message NtupleAccessor {
+  // tuple index (left or right)
+  uint32 index = 1;
+  // source - The Operation that represents the tuple we are accessing
+  uint64 source = 2;
+}
+
+message ObjectAccessor {
+  // object key
+  string key = 1;
+  // source - The Operation that represents the object we are accessing
+  uint64 source = 2;
+}
+
+message NadaFunctionArgRef {
+  // Function owner of this argument
+  uint64 function_id = 1;
+  // Refers to the argument
+  string refers_to = 2;
+}
+
+message CastOperation {
+  // The operand of the operation
+  uint64 target = 1;
+  // The type to cast to
+  nillion.nada.types.v1.NadaType cast_to = 2;
+}
+
+// The Operation.
+// An operation is identified by:
+// - The operation variant
+message Operation {
+    // Operation identifier
+    uint64 id = 1;
+    // The output type of the operation
+    nillion.nada.types.v1.NadaType type = 2;
+    // Source file info related with this operation.
+    uint64 source_ref_index = 3;
+
+  oneof operation {
+    BinaryOperation binary = 4;
+    UnaryOperation unary = 5;
+    IfElseOperation ifelse = 6;
+    google.protobuf.Empty random = 7;
+    InputReference input_ref = 8;
+    LiteralReference literal_ref = 9;
+    NadaFunctionArgRef arg_ref = 10;
+    MapOperation map = 11;
+    ReduceOperation reduce = 12;
+    NewOperation new = 13;
+    ArrayAccessor array_accessor = 14;
+    TupleAccessor tuple_accessor = 15;
+    NtupleAccessor ntuple_accessor = 16;
+    ObjectAccessor object_accessor = 17;
+    CastOperation cast = 18;
+  }
+
+}

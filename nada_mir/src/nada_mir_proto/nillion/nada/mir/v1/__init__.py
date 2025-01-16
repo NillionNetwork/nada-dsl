@@ -16,6 +16,15 @@ from ...types import v1 as __types_v1__
 
 
 @dataclass(eq=False, repr=False)
+class OperationMapEntry(betterproto.Message):
+    id: int = betterproto.uint64_field(1)
+    """id"""
+
+    operation: "__operations_v1__.Operation" = betterproto.message_field(2)
+    """Value"""
+
+
+@dataclass(eq=False, repr=False)
 class NadaFunctionArg(betterproto.Message):
     name: str = betterproto.string_field(1)
     """Argument name"""
@@ -38,8 +47,10 @@ class NadaFunction(betterproto.Message):
     name: str = betterproto.string_field(3)
     """The name of the function"""
 
-    operations: List["__operations_v1__.Operation"] = betterproto.message_field(4)
-    """Table of operations for the function"""
+    operations: List["OperationMapEntry"] = betterproto.message_field(4)
+    """
+    Table of operations, we use repeated OperationMapEntry ordered by id to have deterministic compilation
+    """
 
     return_operation_id: int = betterproto.uint64_field(5)
     """
@@ -56,42 +67,33 @@ class NadaFunction(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class Party(betterproto.Message):
-    id: int = betterproto.uint64_field(1)
-    """Party index"""
-
-    name: str = betterproto.string_field(2)
+    name: str = betterproto.string_field(1)
     """Name of the party"""
 
-    source_ref_index: int = betterproto.uint64_field(3)
+    source_ref_index: int = betterproto.uint64_field(2)
     """Source reference"""
 
 
 @dataclass(eq=False, repr=False)
 class Input(betterproto.Message):
-    id: int = betterproto.uint64_field(1)
-    """Input index"""
-
-    type: "__types_v1__.NadaType" = betterproto.message_field(2)
+    type: "__types_v1__.NadaType" = betterproto.message_field(1)
     """Operation type"""
 
-    party_id: int = betterproto.uint64_field(3)
+    party: str = betterproto.string_field(2)
     """Party that contains this input"""
 
-    name: str = betterproto.string_field(4)
+    name: str = betterproto.string_field(3)
     """Input name"""
 
-    doc: str = betterproto.string_field(5)
+    doc: str = betterproto.string_field(4)
     """The documentation."""
 
-    source_ref_index: int = betterproto.uint64_field(6)
+    source_ref_index: int = betterproto.uint64_field(5)
     """Source file info related with this operation."""
 
 
 @dataclass(eq=False, repr=False)
 class Literal(betterproto.Message):
-    id: int = betterproto.uint64_field(1)
-    """Literal index"""
-
     name: str = betterproto.string_field(2)
     """Name"""
 
@@ -122,8 +124,8 @@ class Output(betterproto.Message):
     name: str = betterproto.string_field(1)
     """Output name"""
 
-    operation_id: int = betterproto.int64_field(2)
-    """Output inner operation"""
+    operation_id: int = betterproto.uint64_field(2)
+    """Output operation ID"""
 
     party: str = betterproto.string_field(3)
     """Party contains this output"""
@@ -131,7 +133,7 @@ class Output(betterproto.Message):
     type: "__types_v1__.NadaType" = betterproto.message_field(4)
     """Output type"""
 
-    source_ref_index: int = betterproto.int64_field(5)
+    source_ref_index: int = betterproto.uint64_field(5)
     """Source file info related with this output."""
 
 
@@ -157,8 +159,10 @@ class ProgramMir(betterproto.Message):
     outputs: List["Output"] = betterproto.message_field(5)
     """Program output"""
 
-    operations: List["__operations_v1__.Operation"] = betterproto.message_field(6)
-    """Table of operations"""
+    operations: List["OperationMapEntry"] = betterproto.message_field(6)
+    """
+    Table of operations, we use repeated OperationMapEntry ordered by id to have deterministic compilation
+    """
 
     source_files: Dict[str, str] = betterproto.map_field(
         7, betterproto.TYPE_STRING, betterproto.TYPE_STRING

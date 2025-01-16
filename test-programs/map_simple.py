@@ -6,7 +6,6 @@ def nada_main():
     my_array_1 = Array(SecretInteger(Input(name="my_array_1", party=party1)), size=3)
     my_int = SecretInteger(Input(name="my_int", party=party1))
 
-    @nada_fn
     def inc(a: SecretInteger) -> SecretInteger:
         return a + my_int
 

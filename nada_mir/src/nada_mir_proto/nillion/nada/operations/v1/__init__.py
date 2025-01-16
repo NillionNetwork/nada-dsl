@@ -7,126 +7,95 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 
 from ...types import v1 as __types_v1__
 
 
-class OperationVariant(betterproto.Enum):
-    """
-    The variant of the operation.
-     This enumeration effectively lists all the different operations supported
-    """
+class BinaryOperationVariant(betterproto.Enum):
+    """The variant of the binary operation."""
 
-    REDUCE = 0
-    """Reduce operation variant"""
-
-    MAP = 1
-    """Map operation variant"""
-
-    UNZIP = 2
-    """Unzip operation variant"""
-
-    ZIP = 3
-    """Zip operation variant"""
-
-    ADDITION = 4
+    ADDITION = 0
     """Addition operation variant"""
 
-    SUBTRACTION = 5
+    SUBTRACTION = 1
     """Addition operation variant"""
 
-    MULTIPLICATION = 6
+    MULTIPLICATION = 2
     """Multiplication operation variant"""
 
-    LESS_THAN = 7
+    LESS_THAN = 3
     """Less-than comparison operation variant"""
 
-    LESS_EQ = 8
+    LESS_EQ = 4
     """Less-or-equal-than comparison operation variant"""
 
-    GREATER_THAN = 9
+    GREATER_THAN = 5
     """Greater-than comparison operation variant"""
 
-    GREATER_EQ = 10
+    GREATER_EQ = 6
     """Greater-or-equal-than comparison operation variant"""
 
-    EQUALS_PUBLIC_OUTPUT = 11
+    EQUALS_PUBLIC_OUTPUT = 7
     """Equals public output comparison operation variant"""
 
-    EQUALS = 12
+    EQUALS = 8
     """
     Equals comparison operation variant also public-public
      comparisons
     """
 
-    CAST = 13
-    """Cast operation variant"""
-
-    INPUT_REF = 14
-    """InputReference operation variant"""
-
-    LITERAL_REF = 15
-    """LiteralReference operation variant"""
-
-    NADA_FN_ARG_REF = 16
-    """Nada function argument variant"""
-
-    MODULO = 17
+    MODULO = 9
     """Modulo operation variant"""
 
-    POWER = 18
+    POWER = 10
     """Power operation variant"""
 
-    DIVISION = 19
+    DIVISION = 11
     """Division operation variant"""
 
-    NADA_FN_CALL = 20
-    """Nada function call variant"""
-
-    ARRAY_ACC = 21
-    """Array accessor variant"""
-
-    TUPLE_ACC = 22
-    """Tuple accessor variant"""
-
-    NEW = 23
-    """New operation variant"""
-
-    RANDOM = 24
-    """Random operation variant"""
-
-    IF_ELSE = 25
-    """IfElse operation variant"""
-
-    REVEAL = 26
-    """Reveal operation variant"""
-
-    NOT = 27
-    """Not operation variant"""
-
-    LEFT_SHIFT = 28
+    LEFT_SHIFT = 12
     """Left Shift operation variant"""
 
-    RIGHT_SHIFT = 29
+    RIGHT_SHIFT = 13
     """Right Shift operation variant"""
 
-    TRUNC_PR = 30
+    TRUNC_PR = 14
     """Probabilistic truncation operation variant"""
 
-    INNER_PROD = 31
-    """Inner product operation"""
-
-    NOT_EQUALS = 32
+    NOT_EQUALS = 15
     """Not equals operation"""
 
-    BOOL_AND = 33
+    BOOL_AND = 16
     """Boolean AND operation variant"""
 
-    BOOL_OR = 34
+    BOOL_OR = 17
     """Boolean OR operation variant"""
 
-    BOOL_XOR = 35
+    BOOL_XOR = 18
     """Boolean XOR operation variant"""
+
+    ZIP = 19
+    """Zip operation variant"""
+
+    INNER_PRODUCT = 20
+    """Inner product operation variant"""
+
+    ECDSA_SIGN = 21
+    """ECDSA sign operation variant"""
+
+
+class UnaryOperationVariant(betterproto.Enum):
+    """The variant of the binary operation."""
+
+    UNZIP = 0
+    """Unzip operation variant"""
+
+    REVEAL = 1
+    """Reveal operation variant"""
+
+    NOT = 2
+    """Not operation variant"""
 
 
 class TupleIndex(betterproto.Enum):
@@ -138,26 +107,6 @@ class TupleIndex(betterproto.Enum):
 
 
 @dataclass(eq=False, repr=False)
-class OperationDescriptor(betterproto.Message):
-    """
-    The operation descriptor abstracts the base elements that identify any
-     operation:
-     - The operation identifier
-     - The output type of the operation
-     - The index of the source reference
-    """
-
-    id: int = betterproto.uint64_field(1)
-    """Operation identifier"""
-
-    type: "__types_v1__.NadaType" = betterproto.message_field(2)
-    """The output type of the operation"""
-
-    source_ref_index: int = betterproto.uint64_field(3)
-    """Source file info related with this operation."""
-
-
-@dataclass(eq=False, repr=False)
 class BinaryOperation(betterproto.Message):
     """
     MIR Binary operation.
@@ -165,8 +114,8 @@ class BinaryOperation(betterproto.Message):
      Division, Modulo, Power, etc.
     """
 
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
+    variant: "BinaryOperationVariant" = betterproto.enum_field(1)
+    """Operation variant"""
 
     left: int = betterproto.uint64_field(2)
     """Left operand of the operation"""
@@ -185,8 +134,8 @@ class UnaryOperation(betterproto.Message):
      - Unzip
     """
 
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
+    variant: "UnaryOperationVariant" = betterproto.enum_field(1)
+    """Operation variant"""
 
     this: int = betterproto.uint64_field(2)
     """The operand of the operation"""
@@ -194,23 +143,14 @@ class UnaryOperation(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class IfElseOperation(betterproto.Message):
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
-
-    cond: int = betterproto.uint64_field(2)
+    cond: int = betterproto.uint64_field(1)
     """operand of the conditional operation"""
 
-    first: int = betterproto.uint64_field(3)
+    first: int = betterproto.uint64_field(2)
     """operand of the first operation"""
 
-    second: int = betterproto.uint64_field(4)
+    second: int = betterproto.uint64_field(3)
     """operand of the second operation"""
-
-
-@dataclass(eq=False, repr=False)
-class RandomOperation(betterproto.Message):
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
 
 
 @dataclass(eq=False, repr=False)
@@ -222,95 +162,98 @@ class InputReference(betterproto.Message):
      Also, it is used to describe the nada function arguments.
     """
 
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
-
-    refers_to: int = betterproto.uint64_field(2)
+    refers_to: str = betterproto.string_field(1)
     """Index of the input/literal operation referred by this operation"""
 
 
 @dataclass(eq=False, repr=False)
-class MapOperation(betterproto.Message):
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
+class LiteralReference(betterproto.Message):
+    refers_to: str = betterproto.string_field(1)
+    """Literal refers to"""
 
-    fn: int = betterproto.uint64_field(2)
+
+@dataclass(eq=False, repr=False)
+class MapOperation(betterproto.Message):
+    fn: int = betterproto.uint64_field(1)
     """Function to execute"""
 
-    inner: int = betterproto.uint64_field(3)
-    """Map operation input"""
+    child: int = betterproto.uint64_field(2)
+    """Map operation child"""
 
 
 @dataclass(eq=False, repr=False)
 class ReduceOperation(betterproto.Message):
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
-
-    fn: int = betterproto.uint64_field(2)
+    fn: int = betterproto.uint64_field(1)
     """Function to execute"""
 
-    inner: int = betterproto.uint64_field(3)
-    """Map operation input"""
+    child: int = betterproto.uint64_field(2)
+    """Reduce operation child"""
 
-    initial: int = betterproto.uint64_field(4)
+    initial: int = betterproto.uint64_field(3)
     """Initial accumulator value"""
 
 
 @dataclass(eq=False, repr=False)
 class NewOperation(betterproto.Message):
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
-
-    elements: List[int] = betterproto.uint64_field(2)
+    elements: List[int] = betterproto.uint64_field(1)
     """The elements of this compound type"""
 
 
 @dataclass(eq=False, repr=False)
 class ArrayAccessor(betterproto.Message):
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
-
-    index: int = betterproto.uint32_field(2)
+    index: int = betterproto.uint32_field(1)
     """
     array index - for now an integer but eventually it could be the result of
      an operation
     """
 
-    source: int = betterproto.uint64_field(3)
+    source: int = betterproto.uint64_field(2)
     """source - The Operation that represents the array we are accessing"""
 
 
 @dataclass(eq=False, repr=False)
 class TupleAccessor(betterproto.Message):
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
-
-    index: "TupleIndex" = betterproto.enum_field(2)
+    index: "TupleIndex" = betterproto.enum_field(1)
     """tuple index (left or right)"""
 
-    source: int = betterproto.uint64_field(3)
+    source: int = betterproto.uint64_field(2)
     """source - The Operation that represents the tuple we are accessing"""
 
 
 @dataclass(eq=False, repr=False)
-class NadaFunctionArgRef(betterproto.Message):
-    arg: "InputReference" = betterproto.message_field(1)
-    """The input reference for this argument"""
+class NtupleAccessor(betterproto.Message):
+    index: int = betterproto.uint32_field(1)
+    """tuple index (left or right)"""
 
-    function_id: int = betterproto.uint64_field(2)
-    """Function owner of this argument"""
+    source: int = betterproto.uint64_field(2)
+    """source - The Operation that represents the tuple we are accessing"""
 
 
 @dataclass(eq=False, repr=False)
-class NadaFunctionCall(betterproto.Message):
-    op: "OperationDescriptor" = betterproto.message_field(1)
-    """Operation descriptor"""
+class ObjectAccessor(betterproto.Message):
+    key: str = betterproto.string_field(1)
+    """object key"""
 
-    function_id: int = betterproto.uint64_field(2)
-    """Function owner of this call"""
+    source: int = betterproto.uint64_field(2)
+    """source - The Operation that represents the object we are accessing"""
 
-    args: List[int] = betterproto.uint64_field(3)
-    """Arguments of the call"""
+
+@dataclass(eq=False, repr=False)
+class NadaFunctionArgRef(betterproto.Message):
+    function_id: int = betterproto.uint64_field(1)
+    """Function owner of this argument"""
+
+    refers_to: str = betterproto.string_field(2)
+    """Refers to the argument"""
+
+
+@dataclass(eq=False, repr=False)
+class CastOperation(betterproto.Message):
+    target: int = betterproto.uint64_field(1)
+    """The operand of the operation"""
+
+    cast_to: "__types_v1__.NadaType" = betterproto.message_field(2)
+    """The type to cast to"""
 
 
 @dataclass(eq=False, repr=False)
@@ -321,16 +264,29 @@ class Operation(betterproto.Message):
      - The operation variant
     """
 
-    id: "OperationVariant" = betterproto.enum_field(1)
-    binary: "BinaryOperation" = betterproto.message_field(2, group="operation")
-    unary: "UnaryOperation" = betterproto.message_field(3, group="operation")
-    ifelse: "IfElseOperation" = betterproto.message_field(4, group="operation")
-    random: "RandomOperation" = betterproto.message_field(5, group="operation")
-    input: "InputReference" = betterproto.message_field(6, group="operation")
-    map: "MapOperation" = betterproto.message_field(7, group="operation")
-    reduce: "ReduceOperation" = betterproto.message_field(8, group="operation")
-    new: "NewOperation" = betterproto.message_field(9, group="operation")
-    array_accessor: "ArrayAccessor" = betterproto.message_field(10, group="operation")
-    tuple_accessor: "TupleAccessor" = betterproto.message_field(11, group="operation")
-    arg: "NadaFunctionArgRef" = betterproto.message_field(12, group="operation")
-    call: "NadaFunctionCall" = betterproto.message_field(13, group="operation")
+    id: int = betterproto.uint64_field(1)
+    """Operation identifier"""
+
+    type: "__types_v1__.NadaType" = betterproto.message_field(2)
+    """The output type of the operation"""
+
+    source_ref_index: int = betterproto.uint64_field(3)
+    """Source file info related with this operation."""
+
+    binary: "BinaryOperation" = betterproto.message_field(4, group="operation")
+    unary: "UnaryOperation" = betterproto.message_field(5, group="operation")
+    ifelse: "IfElseOperation" = betterproto.message_field(6, group="operation")
+    random: "betterproto_lib_google_protobuf.Empty" = betterproto.message_field(
+        7, group="operation"
+    )
+    input_ref: "InputReference" = betterproto.message_field(8, group="operation")
+    literal_ref: "LiteralReference" = betterproto.message_field(9, group="operation")
+    arg_ref: "NadaFunctionArgRef" = betterproto.message_field(10, group="operation")
+    map: "MapOperation" = betterproto.message_field(11, group="operation")
+    reduce: "ReduceOperation" = betterproto.message_field(12, group="operation")
+    new: "NewOperation" = betterproto.message_field(13, group="operation")
+    array_accessor: "ArrayAccessor" = betterproto.message_field(14, group="operation")
+    tuple_accessor: "TupleAccessor" = betterproto.message_field(15, group="operation")
+    ntuple_accessor: "NtupleAccessor" = betterproto.message_field(16, group="operation")
+    object_accessor: "ObjectAccessor" = betterproto.message_field(17, group="operation")
+    cast: "CastOperation" = betterproto.message_field(18, group="operation")

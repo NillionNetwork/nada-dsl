@@ -6,20 +6,21 @@ Define the types used for inputs and outputs in Nada programs.
 
 from dataclasses import dataclass
 from typing import Any
+from nada_mir_proto.nillion.nada.types import v1 as proto_ty
 
 from nada_dsl.ast_util import (
     AST_OPERATIONS,
     InputASTOperation,
     LiteralASTOperation,
-    next_operation_id,
+    OperationId,
 )
 from nada_dsl.errors import InvalidTypeError
 from nada_dsl.nada_types import AllTypes, Party
-from nada_dsl.nada_types import NadaType
+from nada_dsl.nada_types import DslType
 from nada_dsl.source_ref import SourceRef
 
 
-class Input(NadaType):
+class Input(DslType):
     """
     Represents an input to the computation.
 
@@ -35,7 +36,7 @@ class Input(NadaType):
     source_ref: SourceRef
 
     def __init__(self, name, party, doc=""):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.name = name
         self.party = party
         self.doc = doc
@@ -43,7 +44,7 @@ class Input(NadaType):
         self.source_ref = SourceRef.back_frame()
         super().__init__(self.child)
 
-    def store_in_ast(self, ty: object):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store object in AST"""
         AST_OPERATIONS[self.id] = InputASTOperation(
             id=self.id,
@@ -55,7 +56,8 @@ class Input(NadaType):
         )
 
 
-class Literal(NadaType):
+@dataclass
+class Literal(DslType):
     """
     Represents a literal value.
 
@@ -67,13 +69,13 @@ class Literal(NadaType):
     source_ref: SourceRef
 
     def __init__(self, value, source_ref):
-        self.id = next_operation_id()
+        self.id = OperationId.next()
         self.value = value
         self.source_ref = source_ref
         self.child = None
         super().__init__(self.child)
 
-    def store_in_ast(self, ty: object):
+    def store_in_ast(self, ty: proto_ty.NadaType):
         """Store object in AST"""
         AST_OPERATIONS[self.id] = LiteralASTOperation(
             operation_id=self.id,
@@ -102,7 +104,7 @@ class Output:
 
     def __init__(self, child, name, party):
         self.source_ref = SourceRef.back_frame()
-        if not issubclass(type(child), NadaType):
+        if not issubclass(type(child), DslType):
             raise InvalidTypeError(
                 f"{self.source_ref.file}:{self.source_ref.lineno}: Output value "
                 f"{child} of type {type(child)} is not "

@@ -23,6 +23,10 @@ jobs:
       local_nada_mir_version_is_higher: ${{ steps.versioncheck_nada_mir.outputs.local_version_is_higher }}
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "^3.10"
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -32,12 +36,12 @@ jobs:
       - name: Check pypi versions
         id: versioncheck
         run: >-
-          python scripts/version_checker.py "./pyproject.toml"
+          uv run scripts/version_checker.py "./pyproject.toml"
 
       - name: Check pypi versions
         id: versioncheck_nada_mir
         run: >-
-          python scripts/version_checker.py "nada_mir/pyproject.toml"
+          uv run scripts/version_checker.py "nada_mir/pyproject.toml"
 
       - name: check output
         run: |
