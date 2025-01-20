@@ -52,5 +52,7 @@ message NadaType {
     Tuple tuple = 11;
     Ntuple ntuple = 12;
     Object object = 13;
+    google.protobuf.Empty ecdsa_public_key = 14;
+    google.protobuf.Empty store_id = 15;
   }
 }
