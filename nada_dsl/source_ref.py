@@ -33,7 +33,10 @@ class SourceRef:
     @classmethod
     def back_frame(cls) -> "SourceRef":
         """Get the source reference of the calling frame."""
-        backend_frame = inspect.currentframe().f_back.f_back
+        backend_frame = inspect.currentframe()
+        while "/nada_dsl/" in backend_frame.f_code.co_filename:
+            backend_frame = backend_frame.f_back
+
         lineno = backend_frame.f_lineno
         (offset, length) = SourceRef.try_get_line_info(backend_frame, lineno)
         return cls(
@@ -66,7 +69,9 @@ class SourceRef:
             return 0, 0
 
         lines = src.splitlines()
-        if lineno < len(lines):
+
+        # lineno starts counting from 1
+        if lineno <= len(lines):
             offset = 0
             for i in range(lineno - 1):
                 offset += len(lines[i]) + 1
