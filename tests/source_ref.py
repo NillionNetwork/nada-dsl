@@ -27,7 +27,12 @@ def mir_model(script_path) -> ProgramMir:
 
 
 def assert_source_ref(
-    mir: ProgramMir, source_ref_index: int, file: str, lineno: int, offset: int, length: int
+    mir: ProgramMir,
+    source_ref_index: int,
+    file: str,
+    lineno: int,
+    offset: int,
+    length: int,
 ):
     source_ref = mir.source_refs[source_ref_index]
     assert source_ref.file == file
@@ -39,54 +44,159 @@ def assert_source_ref(
 def test_multiple_operations():
     mir = mir_model(f"{get_test_programs_folder()}/multiple_operations.py")
 
-
     # party1 = Party(name="Party1")
-    assert_source_ref(mir, mir.parties[0].source_ref_index, "multiple_operations.py", 6, 67, 33)
+    assert_source_ref(
+        mir, mir.parties[0].source_ref_index, "multiple_operations.py", 6, 67, 33
+    )
 
     # my_int1 = PublicInteger(Input(name="my_int1", party=party1))
-    assert_source_ref(mir, mir.inputs[0].source_ref_index, "multiple_operations.py", 7, 101, 64)
-    assert_source_ref(mir, mir.operations[0].operation.source_ref_index, "multiple_operations.py", 7, 101, 64)
+    assert_source_ref(
+        mir, mir.inputs[0].source_ref_index, "multiple_operations.py", 7, 101, 64
+    )
+    assert_source_ref(
+        mir,
+        mir.operations[0].operation.source_ref_index,
+        "multiple_operations.py",
+        7,
+        101,
+        64,
+    )
     # my_int2 = PublicInteger(Input(name="my_int2", party=party1))
-    assert_source_ref(mir, mir.inputs[1].source_ref_index, "multiple_operations.py", 8, 166, 64)
-    assert_source_ref(mir, mir.operations[1].operation.source_ref_index, "multiple_operations.py", 8, 166, 64)
+    assert_source_ref(
+        mir, mir.inputs[1].source_ref_index, "multiple_operations.py", 8, 166, 64
+    )
+    assert_source_ref(
+        mir,
+        mir.operations[1].operation.source_ref_index,
+        "multiple_operations.py",
+        8,
+        166,
+        64,
+    )
 
     # addition = my_int1 * my_int2
-    assert_source_ref(mir, mir.operations[2].operation.source_ref_index, "multiple_operations.py", 10, 232, 32)
+    assert_source_ref(
+        mir,
+        mir.operations[2].operation.source_ref_index,
+        "multiple_operations.py",
+        10,
+        232,
+        32,
+    )
     # equals = my_int1 == my_int2
-    assert_source_ref(mir, mir.operations[3].operation.source_ref_index, "multiple_operations.py", 11, 265, 31)
+    assert_source_ref(
+        mir,
+        mir.operations[3].operation.source_ref_index,
+        "multiple_operations.py",
+        11,
+        265,
+        31,
+    )
     # pow = my_int1**my_int2
-    assert_source_ref(mir, mir.operations[4].operation.source_ref_index, "multiple_operations.py", 12, 297, 26)
+    assert_source_ref(
+        mir,
+        mir.operations[4].operation.source_ref_index,
+        "multiple_operations.py",
+        12,
+        297,
+        26,
+    )
     # sum_list = sum([my_int1, my_int2]) = 0 + my_int1 + my_int2
     # literal_ref
-    assert_source_ref(mir, mir.operations[5].operation.source_ref_index, "multiple_operations.py", 13, 324, 38)
+    assert_source_ref(
+        mir,
+        mir.operations[5].operation.source_ref_index,
+        "multiple_operations.py",
+        13,
+        324,
+        38,
+    )
     # 0 + my_int1
-    assert_source_ref(mir, mir.operations[6].operation.source_ref_index, "multiple_operations.py", 13, 324, 38)
+    assert_source_ref(
+        mir,
+        mir.operations[6].operation.source_ref_index,
+        "multiple_operations.py",
+        13,
+        324,
+        38,
+    )
     # 0 + my_int1 + my_int2
-    assert_source_ref(mir, mir.operations[7].operation.source_ref_index, "multiple_operations.py", 13, 324, 38)
+    assert_source_ref(
+        mir,
+        mir.operations[7].operation.source_ref_index,
+        "multiple_operations.py",
+        13,
+        324,
+        38,
+    )
     # shift_l = my_int1 << UnsignedInteger(2)
     # literal_ref
-    assert_source_ref(mir, mir.operations[8].operation.source_ref_index, "multiple_operations.py", 14, 363, 43)
+    assert_source_ref(
+        mir,
+        mir.operations[8].operation.source_ref_index,
+        "multiple_operations.py",
+        14,
+        363,
+        43,
+    )
     # my_int1 << UnsignedInteger(2)
-    assert_source_ref(mir, mir.operations[9].operation.source_ref_index, "multiple_operations.py", 14, 363, 43)
+    assert_source_ref(
+        mir,
+        mir.operations[9].operation.source_ref_index,
+        "multiple_operations.py",
+        14,
+        363,
+        43,
+    )
     # shift_l = my_int1 >> UnsignedInteger(2)
     # literal_ref
-    assert_source_ref(mir, mir.operations[10].operation.source_ref_index, "multiple_operations.py", 15, 407, 43)
+    assert_source_ref(
+        mir,
+        mir.operations[10].operation.source_ref_index,
+        "multiple_operations.py",
+        15,
+        407,
+        43,
+    )
     # my_int1 >> UnsignedInteger(2)
-    assert_source_ref(mir, mir.operations[11].operation.source_ref_index, "multiple_operations.py", 15, 407, 43)
+    assert_source_ref(
+        mir,
+        mir.operations[11].operation.source_ref_index,
+        "multiple_operations.py",
+        15,
+        407,
+        43,
+    )
     # function_result = function(my_int1, my_int2) -> return a + b
-    assert_source_ref(mir, mir.operations[12].operation.source_ref_index, "lib.py", 5, 104, 16)
+    assert_source_ref(
+        mir, mir.operations[12].operation.source_ref_index, "lib.py", 5, 104, 16
+    )
 
     # Output(addition, "addition", party1),
-    assert_source_ref(mir, mir.outputs[0].source_ref_index, "multiple_operations.py", 19, 514, 45)
+    assert_source_ref(
+        mir, mir.outputs[0].source_ref_index, "multiple_operations.py", 19, 514, 45
+    )
     # Output(equals, "equals", party1),
-    assert_source_ref(mir, mir.outputs[1].source_ref_index, "multiple_operations.py", 20, 560, 41)
+    assert_source_ref(
+        mir, mir.outputs[1].source_ref_index, "multiple_operations.py", 20, 560, 41
+    )
     # Output(pow, "pow", party1),
-    assert_source_ref(mir, mir.outputs[2].source_ref_index, "multiple_operations.py", 21, 602, 35)
+    assert_source_ref(
+        mir, mir.outputs[2].source_ref_index, "multiple_operations.py", 21, 602, 35
+    )
     # Output(sum_list, "sum_list", party1),
-    assert_source_ref(mir, mir.outputs[3].source_ref_index, "multiple_operations.py", 22, 638, 45)
+    assert_source_ref(
+        mir, mir.outputs[3].source_ref_index, "multiple_operations.py", 22, 638, 45
+    )
     # Output(shift_l, "shift_l", party1),
-    assert_source_ref(mir, mir.outputs[4].source_ref_index, "multiple_operations.py", 23, 684, 43)
+    assert_source_ref(
+        mir, mir.outputs[4].source_ref_index, "multiple_operations.py", 23, 684, 43
+    )
     # Output(shift_r, "shift_r", party1),
-    assert_source_ref(mir, mir.outputs[5].source_ref_index, "multiple_operations.py", 24, 728, 43)
+    assert_source_ref(
+        mir, mir.outputs[5].source_ref_index, "multiple_operations.py", 24, 728, 43
+    )
     # Output(function_result, "function_result", party1),
-    assert_source_ref(mir, mir.outputs[6].source_ref_index, "multiple_operations.py", 25, 772, 59)
+    assert_source_ref(
+        mir, mir.outputs[6].source_ref_index, "multiple_operations.py", 25, 772, 59
+    )
