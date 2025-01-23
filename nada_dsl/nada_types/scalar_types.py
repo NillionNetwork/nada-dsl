@@ -100,12 +100,12 @@ def equals_operation(
             return Boolean(value=bool(f(left.value, right.value)))
         case Mode.PUBLIC:
             operation = globals()[operation](
-                left=left, right=right, source_ref=SourceRef.back_frame().back_frame()
+                left=left, right=right, source_ref=SourceRef.back_frame()
             )
             return PublicBoolean(child=operation)
         case Mode.SECRET:
             operation = globals()[operation](
-                left=left, right=right, source_ref=SourceRef.back_frame().back_frame()
+                left=left, right=right, source_ref=SourceRef.back_frame()
             )
             return SecretBoolean(child=operation)
 
@@ -214,7 +214,6 @@ class NumericDslType(ScalarDslType):
                 other
             )
             return self.__add__(other_type)
-
         return self.__add__(other)
 
 
@@ -233,7 +232,7 @@ def binary_arithmetic_operation(
             return new_scalar_type(mode, base_type)(f(left.value, right.value))
         case Mode.PUBLIC | Mode.SECRET:
             child = globals()[operation](
-                left=left, right=right, source_ref=SourceRef.back_frame().back_frame()
+                left=left, right=right, source_ref=SourceRef.back_frame()
             )
             return new_scalar_type(mode, base_type)(child)
 
@@ -255,7 +254,7 @@ def shift_operation(
             return new_scalar_type(mode, base_type)(f(left.value, right.value))
         case Mode.PUBLIC | Mode.SECRET:
             child = globals()[operation](
-                left=left, right=right, source_ref=SourceRef.back_frame().back_frame()
+                left=left, right=right, source_ref=SourceRef.back_frame()
             )
             return new_scalar_type(mode, base_type)(child)
 
@@ -273,7 +272,7 @@ def binary_relational_operation(
             return new_scalar_type(mode, BaseType.BOOLEAN)(f(left.value, right.value))  # type: ignore
         case Mode.PUBLIC | Mode.SECRET:
             child = globals()[operation](
-                left=left, right=right, source_ref=SourceRef.back_frame().back_frame()
+                left=left, right=right, source_ref=SourceRef.back_frame()
             )
             return new_scalar_type(mode, BaseType.BOOLEAN)(child)  # type: ignore
 
@@ -290,7 +289,7 @@ def public_equals_operation(
 
     return PublicBoolean(
         child=PublicOutputEquality(
-            left=left, right=right, source_ref=SourceRef.back_frame().back_frame()
+            left=left, right=right, source_ref=SourceRef.back_frame()
         )  # type: ignore
     )
 
@@ -346,12 +345,12 @@ def binary_logical_operation(
         return Boolean(value=bool(f(left.value, right.value)))
     if mode == Mode.PUBLIC:
         operation = globals()[operation](
-            left=left, right=right, source_ref=SourceRef.back_frame().back_frame()
+            left=left, right=right, source_ref=SourceRef.back_frame()
         )
         return PublicBoolean(child=operation)
 
     operation = globals()[operation](
-        left=left, right=right, source_ref=SourceRef.back_frame().back_frame()
+        left=left, right=right, source_ref=SourceRef.back_frame()
     )
     return SecretBoolean(child=operation)
 

@@ -628,7 +628,7 @@ wheels = [
 
 [[package]]
 name = "nada-dsl"
-version = "0.8.0rc1"
+version = "0.8.0rc2"
 source = { editable = "." }
 dependencies = [
     { name = "asttokens" },
@@ -707,7 +707,7 @@ dev = [
 
 [[package]]
 name = "nada-mir-proto"
-version = "0.1.0"
+version = "0.2.0rc1"
 source = { editable = "nada_mir" }
 dependencies = [
     { name = "betterproto" },
