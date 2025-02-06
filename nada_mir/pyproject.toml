@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nada-mir-proto"
-version = "0.2.0rc1"
+version = "0.2.0"
 description = "The protocol buffers representation of the Nada MIR."
 requires-python = ">=3.10"
 license = { text = "MIT" }
