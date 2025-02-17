@@ -1,6 +1,6 @@
 # This workflow builds and tests the project.
 # It runs for every pull request.
-# For testing currently uses the tests in Nillion repo.
+# For testing currently uses the tests in nilvm repo.
 name: Build
 
 on:
@@ -36,7 +36,7 @@ jobs:
       - name: Test with pytest
         run: |
           uv run pytest
-  # Test that the compiled programs are compatible the Nillion backend.
+  # Test that the compiled programs are compatible the NilVm backend.
   test:
     runs-on: ubuntu-latest
 
@@ -45,33 +45,24 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: "3.10"
-      - name: Generate GitHub App token
-        id: generate-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.NILLION_GITHUB_ACTIONS_PUBLIC_APP_ID }}
-          owner: NillionNetwork
-          private-key: ${{ secrets.NILLION_GITHUB_ACTIONS_PUBLIC_APP_PRIVATE_KEY }}
-          repositories: nillion
       - name: Checkout tools repo
         uses: actions/checkout@v4
         with:
-          repository: NillionNetwork/nillion
-          path: nillion
-          token: ${{ steps.generate-token.outputs.token }}
+          repository: NillionNetwork/nilvm
+          path: nilvm
           ref: main
-      - name: Replace nillion's nada_dsl with this version
+      - name: Replace nilvms's nada_dsl with this version
         uses: actions/checkout@v4
         with:
-          path: nillion/nada-lang/nada_dsl
+          path: nilvm/nada-lang/nada_dsl
       - name: Check that test-programs compile
         run: |
           pip install -U virtualenv
-          cd nillion && cargo build -p test-programs
+          cd nilvm && cargo build -p test-programs
       - name: Run nada autotests
         run: |
-          pip install nillion/nada-lang/nada_dsl/nada_mir
-          pip install nillion/nada-lang/nada_dsl
+          pip install nilvm/nada-lang/nada_dsl/nada_mir
+          pip install nilvm/nada-lang/nada_dsl
           mkdir target
-          cd nillion 
+          cd nilvm 
           RUST_LOG=warn cargo run -p auto-tests

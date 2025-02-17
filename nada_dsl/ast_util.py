@@ -400,6 +400,7 @@ class TupleAccessorASTOperation(ASTOperation):
                 index=proto_op.TupleIndex.LEFT
                 if self.index == 0
                 else proto_op.TupleIndex.RIGHT,
+                source=self.source,
             ),
         )
 
