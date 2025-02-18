@@ -144,12 +144,51 @@ def test_compile_ecdsa_program():
 from nada_dsl import *
 
 def nada_main():
-    party1 = Party(name="Party1")
-    private_key = EcdsaPrivateKey(Input(name="private_key", party=party1))
-    digest = EcdsaDigestMessage(Input(name="digest", party=party1))
+    tecdsa_key_party = Party(name="tecdsa_key_party")
+    tecdsa_digest_message_party = Party(name="tecdsa_digest_message_party")
+    tecdsa_output_party = Party(name="tecdsa_output_party")
 
-    new_int = private_key.ecdsa_sign(digest)
-    return [Output(new_int, "my_output", party1)]
+    key = EcdsaPrivateKey(Input(name="tecdsa_private_key", party=tecdsa_key_party))
+    public_key = key.public_key()
+    digest = EcdsaDigestMessage(
+        Input(name="tecdsa_digest_message", party=tecdsa_digest_message_party)
+    )
+
+    signature = key.ecdsa_sign(digest)
+
+    return [
+        Output(signature, "tecdsa_signature", tecdsa_output_party),
+        Output(digest, "tecdsa_digest_message", tecdsa_output_party),
+        Output(public_key, "tecdsa_public_key", tecdsa_output_party),
+    ]
+"""
+    encoded_program_str = base64.b64encode(bytes(program_str, "utf-8")).decode("utf_8")
+    mir_bytes = compile_string(encoded_program_str).mir
+    assert len(mir_bytes) > 0
+
+
+def test_compile_eddsa_program():
+    program_str = """
+from nada_dsl import *
+
+def nada_main():
+    teddsa_key_party = Party(name="teddsa_key_party")
+    teddsa_message_party = Party(name="teddsa_message_party")
+    teddsa_output_party = Party(name="teddsa_output_party")
+
+    key = EddsaPrivateKey(Input(name="teddsa_private_key", party=teddsa_key_party))
+    public_key = key.public_key()
+    message = EddsaMessage(
+        Input(name="teddsa_message", party=teddsa_message_party)
+    )
+
+    signature = key.eddsa_sign(message)
+
+    return [
+        Output(signature, "teddsa_signature", teddsa_output_party),
+        Output(message, "teddsa_message", teddsa_output_party),
+        Output(public_key, "teddsa_public_key", teddsa_output_party),
+    ]
 """
     encoded_program_str = base64.b64encode(bytes(program_str, "utf-8")).decode("utf_8")
     mir_bytes = compile_string(encoded_program_str).mir

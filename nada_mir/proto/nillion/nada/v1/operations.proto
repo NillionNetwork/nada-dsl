@@ -52,6 +52,8 @@ enum BinaryOperationVariant {
   INNER_PRODUCT = 20;
   // ECDSA sign operation variant
   ECDSA_SIGN = 21;
+  // Eddsa sign operation variant
+  EDDSA_SIGN = 22;
 }
 
 // The variant of the binary operation.
@@ -62,6 +64,8 @@ enum UnaryOperationVariant {
   REVEAL = 1;
   // Not operation variant
   NOT = 2;
+  // Public key derive operation variant
+  PUBLIC_KEY_DERIVE = 3;
 }
 
 // MIR Binary operation.
@@ -81,6 +85,7 @@ message BinaryOperation {
 // - Not
 // - Reveal
 // - Unzip
+// - Public key derive
 message UnaryOperation {
   // Operation variant
   UnaryOperationVariant variant = 1;

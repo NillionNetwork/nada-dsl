@@ -796,6 +796,11 @@ class EcdsaPrivateKey(DslType):
             child=EcdsaSign(left=self, right=digest, source_ref=SourceRef.back_frame())
         )
 
+    def public_key(self: "EcdsaPrivateKey") -> "EcdsaPublicKey":
+        """Get the public key corresponding to this private key."""
+        operation = PublicKeyDerive(this=self, source_ref=SourceRef.back_frame())
+        return EcdsaPublicKey(child=operation)
+
     def type(self):
         return EcdsaPrivateKeyType()
 
@@ -805,3 +810,104 @@ class EcdsaPrivateKeyType(TypePassthroughMixin):
 
     ty = EcdsaPrivateKey
     proto_ty = "ecdsa_private_key"
+
+
+@dataclass
+class EcdsaPublicKey(DslType):
+    """The EcdsaPublicKey Nada MIR type."""
+
+    def __init__(self, child: OperationType):
+        super().__init__(child=child)
+
+    def type(self):
+        return EcdsaPublicKeyType()
+
+
+class EcdsaPublicKeyType(TypePassthroughMixin):
+    """Meta type for EcdsaPublicKeys"""
+
+    ty = EcdsaPublicKey
+    proto_ty = "ecdsa_public_key"
+
+
+@dataclass
+class EddsaSignature(DslType):
+    """The EddsaSignature Nada MIR type."""
+
+    def __init__(self, child: OperationType):
+        super().__init__(child=child)
+
+    def type(self):
+        return EddsaSignatureType()
+
+
+class EddsaSignatureType(TypePassthroughMixin):
+    """Meta type for EddsaSignatures"""
+
+    ty = EddsaSignature
+    proto_ty = "eddsa_signature"
+
+
+@dataclass
+class EddsaMessage(DslType):
+    """The EddsaMessage Nada MIR type."""
+
+    def __init__(self, child: OperationType):
+        super().__init__(child=child)
+
+    def type(self):
+        return EddsaMessageType()
+
+
+class EddsaMessageType(TypePassthroughMixin):
+    """Meta type for EddsaMessages"""
+
+    ty = EddsaMessage
+    proto_ty = "eddsa_message"
+
+
+@dataclass
+class EddsaPrivateKey(DslType):
+    """The EddsaPrivateKey Nada MIR type."""
+
+    def __init__(self, child: OperationType):
+        super().__init__(child=child)
+
+    def eddsa_sign(self, message: "EddsaMessage") -> "EddsaSignature":
+        """Random operation for Secret integers."""
+        return EddsaSignature(
+            child=EddsaSign(left=self, right=message, source_ref=SourceRef.back_frame())
+        )
+
+    def public_key(self: "EddsaPrivateKey") -> "EddsaPublicKey":
+        """Get the public key corresponding to this private key."""
+        operation = PublicKeyDerive(this=self, source_ref=SourceRef.back_frame())
+        return EddsaPublicKey(child=operation)
+
+    def type(self):
+        return EddsaPrivateKeyType()
+
+
+class EddsaPrivateKeyType(TypePassthroughMixin):
+    """Meta type for EddsaPrivateKeys"""
+
+    ty = EddsaPrivateKey
+    proto_ty = "eddsa_private_key"
+
+
+@dataclass
+class EddsaPublicKey(DslType):
+    """The EddsaPublicKey Nada MIR type."""
+
+    def __init__(self, child: OperationType):
+        super().__init__(child=child)
+
+    def type(self):
+        return EddsaPublicKeyType()
+
+
+class EddsaPublicKeyType(TypePassthroughMixin):
+    """Meta type for EddsaPublicKeys"""
+
+    ty = EddsaPublicKey
+    proto_ty = "eddsa_public_key"

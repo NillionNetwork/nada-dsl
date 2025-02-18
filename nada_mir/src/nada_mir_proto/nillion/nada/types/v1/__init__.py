@@ -88,3 +88,18 @@ class NadaType(betterproto.Message):
     tuple: "Tuple" = betterproto.message_field(11, group="nada_type")
     ntuple: "Ntuple" = betterproto.message_field(12, group="nada_type")
     object: "Object" = betterproto.message_field(13, group="nada_type")
+    ecdsa_public_key: "betterproto_lib_google_protobuf.Empty" = (
+        betterproto.message_field(14, group="nada_type")
+    )
+    eddsa_private_key: "betterproto_lib_google_protobuf.Empty" = (
+        betterproto.message_field(15, group="nada_type")
+    )
+    eddsa_public_key: "betterproto_lib_google_protobuf.Empty" = (
+        betterproto.message_field(16, group="nada_type")
+    )
+    eddsa_message: "betterproto_lib_google_protobuf.Empty" = betterproto.message_field(
+        17, group="nada_type"
+    )
+    eddsa_signature: "betterproto_lib_google_protobuf.Empty" = (
+        betterproto.message_field(18, group="nada_type")
+    )
