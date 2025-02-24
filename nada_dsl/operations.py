@@ -227,6 +227,15 @@ class Reveal(UnaryOperation):
         super().__init__(child=this, source_ref=source_ref)
 
 
+class PublicKeyDerive(UnaryOperation):
+    """Operation that derives a public key from its corresponding private key."""
+
+    variant = proto_op.UnaryOperationVariant.PUBLIC_KEY_DERIVE
+
+    def __init__(self, this: AllTypes, source_ref: SourceRef):
+        super().__init__(child=this, source_ref=source_ref)
+
+
 class TruncPr(BinaryOperation):
     """Probabilistic Truncation operation."""
 
@@ -246,3 +255,9 @@ class EcdsaSign(BinaryOperation):
     """Ecdsa signing operation."""
 
     variant = proto_op.BinaryOperationVariant.ECDSA_SIGN
+
+
+class EddsaSign(BinaryOperation):
+    """Eddsa signing operation."""
+
+    variant = proto_op.BinaryOperationVariant.EDDSA_SIGN

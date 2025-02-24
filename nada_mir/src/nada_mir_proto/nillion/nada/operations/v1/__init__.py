@@ -84,6 +84,9 @@ class BinaryOperationVariant(betterproto.Enum):
     ECDSA_SIGN = 21
     """ECDSA sign operation variant"""
 
+    EDDSA_SIGN = 22
+    """Eddsa sign operation variant"""
+
 
 class UnaryOperationVariant(betterproto.Enum):
     """The variant of the binary operation."""
@@ -96,6 +99,9 @@ class UnaryOperationVariant(betterproto.Enum):
 
     NOT = 2
     """Not operation variant"""
+
+    PUBLIC_KEY_DERIVE = 3
+    """Public key derive operation variant"""
 
 
 class TupleIndex(betterproto.Enum):
@@ -132,6 +138,7 @@ class UnaryOperation(betterproto.Message):
      - Not
      - Reveal
      - Unzip
+     - Public key derive
     """
 
     variant: "UnaryOperationVariant" = betterproto.enum_field(1)
