@@ -417,10 +417,20 @@ def type_to_str(ty: proto_ty.NadaType):
         return "SecretBoolean"
     if hasattr(ty, "ecdsa_private_key"):
         return "EcdsaPrivateKey"
+    if hasattr(ty, "ecdsa_public_key"):
+        return "EcdsaPublicKey"
     if hasattr(ty, "ecdsa_digest_message"):
         return "EcdsaDigestMessage"
     if hasattr(ty, "ecdsa_signature"):
         return "EcdsaSignature"
+    if hasattr(ty, "eddsa_private_key"):
+        return "EddsaPrivateKey"
+    if hasattr(ty, "eddsa_public_key"):
+        return "EddsaPublicKey"
+    if hasattr(ty, "eddsa_message"):
+        return "EddsaMessage"
+    if hasattr(ty, "eddsa_signature"):
+        return "EddsaSignature"
     if hasattr(ty, "array"):
         return f"Array[{type_to_str(ty.collection.contained_type)}:{ty.collection.array.size}]"
     if hasattr(ty, "tuple"):

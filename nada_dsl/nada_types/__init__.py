@@ -39,8 +39,13 @@ AllTypes = Union[
     "NTuple",
     "Object",
     "EcdsaPrivateKey",
+    "EcdsaPublicKey",
     "EcdsaDigestMessage",
     "EcdsaSignature",
+    "EddsaPrivateKey",
+    "EddsaPublicKey",
+    "EddsaMessage",
+    "EddsaSignature",
 ]
 AllTypesType = Union[
     Type["Integer"],
@@ -58,8 +63,13 @@ AllTypesType = Union[
     Type["NTuple"],
     Type["Object"],
     Type["EcdsaPrivateKey"],
+    Type["EcdsaPublicKey"],
     Type["EcdsaDigestMessage"],
     Type["EcdsaSignature"],
+    Type["EddsaPrivateKey"],
+    Type["EddsaPublicKey"],
+    Type["EddsaMessage"],
+    Type["EddsaSignature"],
 ]
 OperationType = Union[
     "Addition",
