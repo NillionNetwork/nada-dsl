@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nada_dsl"
-version = "0.8.1rc2"
+version = "0.8.1rc3"
 description = "Nillion Nada DSL to create Nillion MPC programs."
 requires-python = ">=3.10"
 readme = "README.pyproject.md"
@@ -14,7 +14,7 @@ dependencies = [
     "parsial~=0.1",
     "sortedcontainers~=2.4",
     "typing_extensions~=4.12.2",
-    "nada-mir-proto==0.2.0",
+    "nada-mir-proto==0.2.1rc1",
     "types-protobuf~=5.29"
 ]
 classifiers = ["License :: OSI Approved :: Apache Software License"]
